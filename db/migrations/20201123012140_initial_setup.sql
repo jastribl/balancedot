@@ -3,7 +3,7 @@
 -- Transaction Date,Post Date,Description,Category,Type,Amount,Memo
 CREATE TABLE IF NOT EXISTS cards (
   id SERIAL PRIMARY KEY NOT NULL,
-  last_four INT NOT NULL,
+  last_four VARCHAR(4) NOT NULL,
   bank_name VARCHAR NOT NULL,
   UNIQUE (last_four)
 );

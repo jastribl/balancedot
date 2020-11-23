@@ -17,10 +17,20 @@ func NewCardRepo(db *gorm.DB) *CardRepo {
 	}
 }
 
+// GetAllCards fetches all cards
+func (m *CardRepo) GetAllCards() ([]*entities.Card, error) {
+	var cards []*entities.Card
+	err := m.Find(&cards).Error
+	if err != nil {
+		return nil, err
+	}
+	return cards, nil
+}
+
 // GetCard returns the Card for the given lastFour
 func (m *CardRepo) GetCard(lastFour string) (*entities.Card, error) {
 	card := &entities.Card{}
-	err := m.Preload("CardActivity").Find(card, "last_four = ?", lastFour).Error
+	err := m.Preload("CardActivity").Find(card, &entities.Card{LastFour: lastFour}).Error
 	if err != nil {
 		return nil, err
 	}

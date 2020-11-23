@@ -10,8 +10,8 @@ import (
 type CardActivity struct {
 	ID              uint      `json"id" gorm:"AUTO_INCREMENT"`
 	UUID            uuid.UUID `json:"uuid"`
-	CardID          int       `json:"card_id"`
-	Card            Card      `json:"card"  gorm:"ForeignKey:CardID"`
+	CardID          uint      `json:"card_id"`
+	Card            *Card     `json:"card"  gorm:"ForeignKey:CardID"`
 	TransactionDate time.Time `json:"transaction_date"`
 	PostDate        time.Time `json:"post_date"`
 	Description     string    `json:"description"`

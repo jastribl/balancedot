@@ -11,10 +11,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const (
-	getCurrentUserURL = "https://secure.splitwise.com/api/v3.0/get_current_user"
-)
-
 // Client holds all things for Splitwise requests
 type Client struct {
 	httpClient *http.Client

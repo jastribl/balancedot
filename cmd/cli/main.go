@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 
-	"gihub.com/jastribl/balancedot/chase"
 	"gihub.com/jastribl/balancedot/config"
 	"gihub.com/jastribl/balancedot/helpers"
 	"gihub.com/jastribl/balancedot/repos"
@@ -29,15 +28,6 @@ func oauthCallback(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	cfg = config.NewConfig()
-	chaseCardActivities, err := chase.GetCardActivitiesFromFile("in.csv")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = chase.PrintCardActivitiesToFile(chaseCardActivities, "out.csv")
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	go func() {
 		browser.OpenURL(<-cfg.Splitwise.AuthURLChan)

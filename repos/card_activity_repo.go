@@ -21,7 +21,7 @@ func NewCardActivityRepo(db *gorm.DB) *CardActivityRepo {
 // GetCardActivity returns the CarActivity for the given uuid
 func (m *CardActivityRepo) GetCardActivity(uuid uuid.UUID) (*entities.CardActivity, error) {
 	cardActivity := &entities.CardActivity{}
-	err := m.Preload("Card").Find(cardActivity, "uuid = ?", uuid).Error
+	err := m.Preload("Card").Find(cardActivity, &entities.CardActivity{UUID: uuid}).Error
 	if err != nil {
 		return nil, err
 	}
