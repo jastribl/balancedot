@@ -2,3 +2,4 @@ input_files/
 in.csv
 out.csv
 main
+db.env

@@ -8,8 +8,11 @@ import (
 
 	"gihub.com/jastribl/balancedot/chase"
 	"gihub.com/jastribl/balancedot/config"
+	"gihub.com/jastribl/balancedot/helpers"
+	"gihub.com/jastribl/balancedot/repos"
 	"gihub.com/jastribl/balancedot/splitwise"
 	"github.com/pkg/browser"
+	uuid "github.com/satori/go.uuid"
 )
 
 var cfg *config.Config
@@ -64,4 +67,27 @@ func main() {
 
 	jsonEncoder := json.NewEncoder(log.Writer())
 	jsonEncoder.Encode(user)
+
+	db, err := helpers.DbConnect()
+	if err != nil {
+		log.Panic(err)
+	}
+
+	cardRepo := repos.NewCardRepo(db)
+	card, err := cardRepo.GetCard("2427")
+	if err != nil {
+		log.Panic(err)
+	}
+	jsonEncoder.Encode(card)
+
+	cardActivityRepo := repos.NewCardActivityRepo(db)
+	uuid, err := uuid.FromString("d2300ddd-e048-4aad-93e2-4e9d07850714")
+	if err != nil {
+		log.Panic(err)
+	}
+	cardActivity, err := cardActivityRepo.GetCardActivity(uuid)
+	if err != nil {
+		log.Panic(err)
+	}
+	jsonEncoder.Encode(cardActivity)
 }
