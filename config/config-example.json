@@ -1,0 +1,10 @@
+{
+    "splitwise": {
+        "consumer-key": "add-consumer-key-here",
+        "consumer-secret": "add-consumer-secret-here",
+        "oauth-callback-url": "add-oauth-callback-url",
+        "state": "todo-add-state-here",
+        "token-file-location": "add-token-file-location-here"
+    },
+    "server-url": "localhost:8080"
+}
