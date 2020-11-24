@@ -57,7 +57,11 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			cardIndex = newCard.ID
+			cards, err = cardRepo.GetAllCards()
+			if err != nil {
+				log.Fatal(err)
+			}
+			continue
 		}
 		cardIndex, err := strconv.Atoi(cardSelection)
 		if err == nil && cardIndex >= 0 && cardIndex < len(cards) {
@@ -87,7 +91,7 @@ func main() {
 
 	for _, cardActivity := range cardActivities {
 		newCardActivity := entities.CardActivity{
-			CardID:          card.ID,
+			CardUUID:        card.UUID,
 			TransactionDate: cardActivity.TransactionDate.Time,
 			PostDate:        cardActivity.PostDate.Time,
 			Description:     cardActivity.Description,

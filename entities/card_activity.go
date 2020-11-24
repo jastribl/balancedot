@@ -8,16 +8,15 @@ import (
 
 // CardActivity represents a singel card activity record from the user
 type CardActivity struct {
-	ID              uint      `json"id" gorm:"AUTO_INCREMENT"`
 	UUID            uuid.UUID `json:"uuid"`
-	CardID          uint      `json:"card_id"`
-	Card            *Card     `json:"card"  gorm:"ForeignKey:CardID"`
+	CardUUID        uuid.UUID `json:"card_uuid"`
+	Card            *Card     `json:"card"  gorm:"ForeignKey:CardUUID"`
 	TransactionDate time.Time `json:"transaction_date"`
 	PostDate        time.Time `json:"post_date"`
 	Description     string    `json:"description"`
 	Category        string    `json:"category"`
 	Type            string    `json:"type"`
-	Amount          float64   `json:"amount"` // todo: use models.MoneyAmount
+	Amount          float64   `json:"amount"`
 }
 
 // BeforeCreate is the before trigger for CardActivity

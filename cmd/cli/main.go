@@ -52,11 +52,17 @@ func main() {
 	user, err := splitwiseClient.GetCurrentUser()
 	if err != nil {
 		log.Fatal(err)
-		return
 	}
 
 	jsonEncoder := json.NewEncoder(log.Writer())
+
 	jsonEncoder.Encode(user)
+
+	expenses, err := splitwiseClient.GetExpenses()
+	if err != nil {
+		log.Fatal(err)
+	}
+	jsonEncoder.Encode(expenses)
 
 	db, err := helpers.DbConnect()
 	if err != nil {
