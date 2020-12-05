@@ -8,6 +8,7 @@ import (
 
 	"gihub.com/jastribl/balancedot/chase"
 	"gihub.com/jastribl/balancedot/entities"
+	"github.com/jinzhu/gorm"
 
 	"gihub.com/jastribl/balancedot/helpers"
 	"gihub.com/jastribl/balancedot/repos"
@@ -19,68 +20,8 @@ func main() {
 		log.Panic(err)
 	}
 
-	cardRepo := repos.NewCardRepo(db)
-
-	// cfg = config.NewConfig()
-	cards, err := cardRepo.GetAllCards()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var cardIndex uint
-	for {
-		fmt.Println("Please choose your card: ")
-		for i, card := range cards {
-			fmt.Printf("\t%d) %s\n", i, card.LastFour)
-		}
-		fmt.Printf("\tc) Create New Card\n")
-		fmt.Print("\nCard index: ")
-		var cardSelection string
-		fmt.Scanln(&cardSelection)
-		if cardSelection == "c" {
-			var lastFour, bankName string
-			for {
-				fmt.Print("Please Enter Last Four: ")
-				fmt.Scanln(&lastFour)
-				// TODO: check for numbers only
-				if len(lastFour) == 4 {
-					break
-				}
-			}
-			fmt.Print("Please Enter Bank Name: ")
-			fmt.Scanln(&bankName)
-			newCard := entities.Card{
-				LastFour: lastFour,
-				BankName: bankName,
-			}
-			err := db.Save(&newCard).Error
-			if err != nil {
-				log.Fatal(err)
-			}
-			cards, err = cardRepo.GetAllCards()
-			if err != nil {
-				log.Fatal(err)
-			}
-			continue
-		}
-		cardIndex, err := strconv.Atoi(cardSelection)
-		if err == nil && cardIndex >= 0 && cardIndex < len(cards) {
-			break
-		}
-	}
-
-	card := cards[cardIndex]
-
-	var fileName string
-	for {
-		fmt.Print("Input File: ")
-		fmt.Scanln(&fileName)
-		info, err := os.Stat(fileName)
-		if !os.IsNotExist(err) && !info.IsDir() {
-			break
-		}
-		fmt.Printf("Invalid input file (%s). Please choose again.\n", fileName)
-	}
+	card := getCardFromPrompt(db)
+	fileName := getFilePathFromPrompt()
 
 	log.Printf("Importing %s for card %s", fileName, card.LastFour)
 
@@ -103,6 +44,68 @@ func main() {
 		err = db.Save(&newCardActivity).Error
 		if err != nil {
 			log.Fatal(err)
+		}
+	}
+}
+
+func getFilePathFromPrompt() string {
+	for {
+		var fileName string
+		fmt.Print("Input File: ")
+		fmt.Scanln(&fileName)
+		info, err := os.Stat(fileName)
+		if !os.IsNotExist(err) && !info.IsDir() {
+			return fileName
+		}
+		fmt.Printf("Invalid input file (%s). Please choose again.\n", fileName)
+	}
+}
+
+func getCardFromPrompt(db *gorm.DB) *entities.Card {
+	cardRepo := repos.NewCardRepo(db)
+	cards, err := cardRepo.GetAllCards()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for {
+		fmt.Println("Please choose your card: ")
+		for i, card := range cards {
+			fmt.Printf("\t%d) %s\n", i, card.LastFour)
+		}
+		fmt.Printf("\tc) Create New Card\n")
+		fmt.Print("\nCard index: ")
+		var cardSelection string
+		fmt.Scanln(&cardSelection)
+		if cardSelection == "c" {
+			var lastFour, cardDescription string
+			for {
+				fmt.Print("Please Enter Last Four: ")
+				fmt.Scanln(&lastFour)
+				// TODO: check for numbers only
+				if len(lastFour) == 4 {
+					break
+				}
+			}
+			fmt.Print("Please Enter Bank Name: ")
+			fmt.Scanln(&cardDescription)
+			newCard := entities.Card{
+				LastFour:    lastFour,
+				Description: cardDescription,
+			}
+			err := db.Save(&newCard).Error
+			if err != nil {
+				log.Fatal(err)
+			}
+			cards, err = cardRepo.GetAllCards()
+			if err != nil {
+				log.Fatal(err)
+			}
+			continue
+		}
+		cardIndex, err := strconv.Atoi(cardSelection)
+		if err == nil && cardIndex >= 0 && cardIndex < len(cards) {
+			return cards[cardIndex]
 		}
 	}
 }

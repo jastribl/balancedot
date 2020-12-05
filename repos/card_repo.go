@@ -17,7 +17,7 @@ func NewCardRepo(db *gorm.DB) *CardRepo {
 	}
 }
 
-// GetAllCards fetches all cards
+// GetAllCards fetches all Cards
 func (m *CardRepo) GetAllCards() ([]*entities.Card, error) {
 	var cards []*entities.Card
 	err := m.Find(&cards).Error

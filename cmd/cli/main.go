@@ -46,7 +46,6 @@ func main() {
 	splitwiseClient, err := splitwise.NewClient(&cfg.Splitwise)
 	if err != nil {
 		log.Fatal(err)
-		return
 	}
 
 	user, err := splitwiseClient.GetCurrentUser()

@@ -18,6 +18,15 @@ const (
 	YearlyRepeat RepeatType = "yearly"
 )
 
+// ExpenseUser represents the Splitwise Expense User object
+type ExpenseUser struct {
+	User       User   `json:"user"`
+	UserID     int    `json:"user_id"`
+	PaidShare  string `json:"paid_share"`
+	OwedShare  string `json:"owed_share"`
+	NetBalance string `json:"net_balance"`
+}
+
 // Expense represents the Splitwise Expense object
 type Expense struct {
 	ID                     int          `json:"id"`
@@ -57,11 +66,5 @@ type Expense struct {
 		Large    *interface{} `json:"large"`
 		Original *interface{} `json:"original"`
 	} `json:"receipt"`
-	Users []struct {
-		User       User   `json:"user"`
-		UserID     int    `json:"user_id"`
-		PaidShare  string `json:"paid_share"`
-		OwedShare  string `json:"owed_share"`
-		NetBalance string `json:"net_balance"`
-	} `json:"users"`
+	Users []*ExpenseUser `json:"users"`
 }
