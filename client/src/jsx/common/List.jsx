@@ -1,7 +1,7 @@
-import React from 'react';
+import React from 'react'
 
 const List = (props) => {
-    const { items } = props;
+    const { items } = props
     if (!items) {
         return <div/>
     }
@@ -10,13 +10,12 @@ const List = (props) => {
             {items.map((item) => {
                 return (
                     <li key={item.id}>
-                        <span>{item.a} </span>
-                        <span>{item.b}</span>
+                        <span>{JSON.stringify(item, null, 4)}</span>
                     </li>
-                );
+                )
             })}
         </ul>
-    );
-};
+    )
+}
 
-export default List;
+export default List
