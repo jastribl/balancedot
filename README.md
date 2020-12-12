@@ -14,8 +14,9 @@ Server
 env $(cat db.env) CompileDaemon \
   -directory=./ \
   -exclude-dir="client" \
-  -build="go build -o server cmd/server/main.go" \
-  -command="./server" \
+  -exclude-dir=".git" \
+  -build="go build -o build/server cmd/server/main.go" \
+  -command="./build/server" \
   -color=true \
   -graceful-kill=true
 ```
