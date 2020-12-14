@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 
 import Spinner from './Spinner'
+import ErrorRow from './ErrorRow'
 
 const Form = ({ onSubmit, fieldInfos }) => {
     const getValidatorForFieldName = (fieldName) =>
@@ -68,21 +69,10 @@ const Form = ({ onSubmit, fieldInfos }) => {
         }
     }
 
-    let errorPanel = null;
-    if (errorMessage !== null) {
-        errorPanel = (
-            <div className="row isa_error">
-                <span>
-                    <div style={{ textAlign: 'center', color: 'red' }}>{errorMessage}</div>
-                </span>
-            </div>
-        )
-    }
-
     return (
         <form onSubmit={onSubmitInternal} autoComplete="off" style={{ position: 'relative' }}>
             <Spinner visible={isSubmitting} />
-            {errorPanel}
+            <ErrorRow message={errorMessage} />
             <div className="row">
                 {Object.entries(fieldInfos).map(([fieldName, fieldInfo]) =>
                     <div key={fieldName} className="row">

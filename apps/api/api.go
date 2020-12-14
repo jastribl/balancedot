@@ -8,13 +8,16 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+// UnexpectedError is the string for an unexpected error
+const UnexpectedError = "Unexpected Error"
+
 // App contains API handler methods
 type App struct {
 	db *gorm.DB
 }
 
 // DecodeParams decodes the request body into the params structure
-func (m *App) DecodeParams(r *http.Request, params interface{}) {
+func (m *App) DecodeParams(r Request, params interface{}) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&params)
 	if err != nil {
@@ -42,14 +45,38 @@ type Error struct {
 	Code    int
 }
 
+// FromErrUnexpected returns an unexpected 500 error from an err
+func FromErrUnexpected(err *error) *Error {
+	return &Error{
+		Message: UnexpectedError,
+		Error:   err,
+		Code:    500,
+	}
+}
+
 type errorResponse struct {
 	Message string `json:"message"`
 }
 
-func (e *Error) renderError(w http.ResponseWriter, r *http.Request) {
+// ResponseWriter is a normal http ResponseWriter but with extras
+type ResponseWriter struct {
+	http.ResponseWriter
+}
+
+// Request is a normal http Request but with extras
+type Request *http.Request
+
+// RenderJSON renders antying as json as a 200 response
+func (w *ResponseWriter) RenderJSON(toRender interface{}) interface{} {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(200)
+	return json.NewEncoder(w).Encode(toRender)
+}
+
+// RenderError renders an error as json with the given code
+func (w *ResponseWriter) RenderError(e *Error) {
 	defer json.NewEncoder(log.Writer()).Encode(e)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(e.Code)
 	json.NewEncoder(w).Encode(errorResponse{
 		Message: e.Message,
@@ -57,21 +84,38 @@ func (e *Error) renderError(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handler is a a generic handler for the api
-type Handler func(http.ResponseWriter, *http.Request) *Error
+type Handler func(ResponseWriter, Request) interface{}
 
-func (fn Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (fn Handler) ServeHTTP(wIn http.ResponseWriter, r *http.Request) {
+	w := ResponseWriter{wIn}
 	defer func() {
 		if ree := recover(); ree != nil {
-			unepxectedError := Error{
+			w.RenderError(&Error{
+				Message: UnexpectedError,
 				Error:   ree,
-				Message: "Unexpected Error",
 				Code:    500,
-			}
-			unepxectedError.renderError(w, r)
+			})
 		}
 	}()
 
 	if e := fn(w, r); e != nil {
-		e.renderError(w, r)
+		var toRender *Error
+		if err, ok := e.(error); ok {
+			toRender = FromErrUnexpected(&err)
+		} else if err, ok := e.(*error); ok {
+			toRender = FromErrUnexpected(err)
+		} else if err, ok := e.(Error); ok {
+			toRender = &err
+		} else if err, ok := e.(*Error); ok {
+			toRender = err
+		} else {
+			log.Panic(err)
+			toRender = &Error{
+				Message: UnexpectedError,
+				Error:   e,
+				Code:    500,
+			}
+		}
+		w.RenderError(toRender)
 	}
 }

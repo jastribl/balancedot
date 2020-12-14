@@ -1,33 +1,19 @@
 package api
 
 import (
-	"encoding/json"
-	"net/http"
-
 	"gihub.com/jastribl/balancedot/entities"
 	"gihub.com/jastribl/balancedot/repos"
 )
 
 // GetAllCards get all the Cards
-func (m *App) GetAllCards(w http.ResponseWriter, r *http.Request) (e *Error) {
+func (m *App) GetAllCards(w ResponseWriter, r Request) interface{} {
 	cardRepo := repos.NewCardRepo(m.db)
 	cards, err := cardRepo.GetAllCards()
 	if err != nil {
-		return &Error{
-			Message: err.Error(), // todo: message
-			Error:   err,
-			Code:    500, // todo: better code
-		}
+		return err
 	}
-	err = json.NewEncoder(w).Encode(cards)
-	if err != nil {
-		return &Error{
-			Message: err.Error(), // todo: better message
-			Error:   err,
-			Code:    500, // todo: better code
-		}
-	}
-	return
+
+	return w.RenderJSON(cards)
 }
 
 type newCardParams struct {
@@ -36,7 +22,7 @@ type newCardParams struct {
 }
 
 // CreateNewCard adds a new Card
-func (m *App) CreateNewCard(w http.ResponseWriter, r *http.Request) (e *Error) {
+func (m *App) CreateNewCard(w ResponseWriter, r Request) interface{} {
 	var p newCardParams
 	m.DecodeParams(r, &p)
 	card := entities.Card{
@@ -45,12 +31,8 @@ func (m *App) CreateNewCard(w http.ResponseWriter, r *http.Request) (e *Error) {
 	}
 	err := m.SaveEntity(&card)
 	if err != nil {
-		return &Error{
-			Message: err.Error(), // todo: better message
-			Error:   err,
-			Code:    500, // todo: better
-		}
+		return err
 	}
 
-	return m.GetAllCards(w, r)
+	return w.RenderJSON(card)
 }

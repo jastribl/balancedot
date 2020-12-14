@@ -13,11 +13,16 @@ const CardsPage = () => {
     const showModal = () => { setShowModal(true) }
     const hideModal = () => { setShowModal(false) }
 
+    const refreshCards = () => {
+        get('/api/cards')
+            .then((cards) => setCards(cards))
+    }
+
     const handleNewCardSubmit = (newCardData) => {
         return post('/api/card', newCardData)
-            .then(data => {
-                setCards(data)
+            .then(() => {
                 hideModal()
+                refreshCards()
             })
             .catch(e => {
                 throw e.message
@@ -25,8 +30,7 @@ const CardsPage = () => {
     }
 
     useEffect(() => {
-        get('/api/cards')
-            .then((cards) => setCards(cards))
+        refreshCards()
     }, [setCards])
 
     return (
