@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 
 import Spinner from './Spinner'
 
-const Form = ({ onSubmit, disableForm, fieldInfos }) => {
+const Form = ({ onSubmit, fieldInfos }) => {
     const getValidatorForFieldName = (fieldName) =>
         fieldInfos[fieldName].validate ?? (() => { return null })
 
@@ -12,12 +12,14 @@ const Form = ({ onSubmit, disableForm, fieldInfos }) => {
     })
     const [formState, setFormState] = useState(initialState)
     const [validationErrors, setValidationErrors] = useState({})
+    const [errorMessage, setErrorMessage] = useState(null)
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
 
     const handleFormFieldChange = (event) => {
         const fieldName = event.target.name
         const fieldValue = event.target.value
-        const fieldInfo = fieldInfos[fieldName];
+        const fieldInfo = fieldInfos[fieldName]
 
         if (fieldName in validationErrors) {
             const validationResult = getValidatorForFieldName(fieldName)(fieldInfo.fieldLabel, fieldValue)
@@ -52,13 +54,35 @@ const Form = ({ onSubmit, disableForm, fieldInfos }) => {
             })
             return true
         })) {
-            onSubmit(formState).then(() => setFormState(initialState))
+            setErrorMessage(null)
+            setIsSubmitting(true)
+            onSubmit(formState)
+                .then(() => {
+                    setFormState(initialState)
+                    setIsSubmitting(false)
+                })
+                .catch((e) => {
+                    setErrorMessage(e)
+                    setIsSubmitting(false)
+                })
         }
+    }
+
+    let errorPanel = null;
+    if (errorMessage !== null) {
+        errorPanel = (
+            <div className="row isa_error">
+                <span>
+                    <div style={{ textAlign: 'center', color: 'red' }}>{errorMessage}</div>
+                </span>
+            </div>
+        )
     }
 
     return (
         <form onSubmit={onSubmitInternal} autoComplete="off" style={{ position: 'relative' }}>
-            <Spinner visible={disableForm} />
+            <Spinner visible={isSubmitting} />
+            {errorPanel}
             <div className="row">
                 {Object.entries(fieldInfos).map(([fieldName, fieldInfo]) =>
                     <div key={fieldName} className="row">
@@ -72,7 +96,7 @@ const Form = ({ onSubmit, disableForm, fieldInfos }) => {
                                 value={formState[fieldName]}
                                 onChange={handleFormFieldChange}
                                 placeholder={fieldInfo.placeholder}
-                                disabled={disableForm}
+                                disabled={isSubmitting}
                             />
                             <span style={{ float: 'right', color: 'red' }}>{validationErrors[fieldName]}</span>
                         </div>
@@ -80,7 +104,7 @@ const Form = ({ onSubmit, disableForm, fieldInfos }) => {
                 )}
             </div>
             <div className="row">
-                <input type="submit" value="Add" disabled={disableForm} />
+                <input type="submit" value="Add" disabled={isSubmitting} />
             </div>
         </form >
     )

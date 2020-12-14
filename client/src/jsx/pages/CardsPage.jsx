@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 
+import { post, get } from '../../utils/api'
+
 import Table from "../common/Table"
 import Modal from "../common/Modal"
 import Form from "../common/Form"
@@ -7,33 +9,23 @@ import Form from "../common/Form"
 const CardsPage = () => {
     const [cards, setCards] = useState(null)
     const [modalVisible, setShowModal] = useState(false)
-    const [modalSubmitting, setModalSubmitting] = useState(false)
-    // const [formState, setFormState] = useState({
-    //     last_four: null,
-    //     description: null,
-    // })
 
     const showModal = () => { setShowModal(true) }
     const hideModal = () => { setShowModal(false) }
 
     const handleNewCardSubmit = (newCardData) => {
-        setModalSubmitting(true)
-        return fetch('/api/card', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newCardData)
-        })
-            .then(response => response.json())
+        return post('/api/card', newCardData)
             .then(data => {
                 setCards(data)
-                setModalSubmitting(false)
                 hideModal()
-            });
+            })
+            .catch(e => {
+                throw e.message
+            })
     }
 
     useEffect(() => {
-        fetch(`/api/cards`)
-            .then((res) => res.json())
+        get('/api/cards')
             .then((cards) => setCards(cards))
     }, [setCards])
 
@@ -50,7 +42,6 @@ const CardsPage = () => {
             <Modal headerText="New Card" visible={modalVisible} handleClose={hideModal}>
                 <Form
                     onSubmit={handleNewCardSubmit}
-                    disableForm={modalSubmitting}
                     fieldInfos={{
                         last_four: {
                             fieldLabel: "Last Four",
@@ -59,9 +50,9 @@ const CardsPage = () => {
                             inputType: "text",
                             validate: (fieldLabel, fieldValue) => {
                                 if (!/^[0-9][0-9][0-9][0-9]$/.test(fieldValue)) {
-                                    return `${fieldLabel} invalid. Must follow '####' format`
+                                    return `${fieldLabel} must follow '####' format`
                                 }
-                                return null;
+                                return null
                             }
                         },
                         description: {
@@ -69,6 +60,12 @@ const CardsPage = () => {
                             fieldName: "description",
                             placeholder: "Description...",
                             inputType: "text",
+                            validate: (fieldLabel, fieldValue) => {
+                                if (!/.....*/.test(fieldValue)) {
+                                    return `${fieldLabel} must be at least 4 characters long`
+                                }
+                                return null
+                            }
                         }
                     }}
                 />
