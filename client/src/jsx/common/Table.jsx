@@ -1,7 +1,9 @@
 import React from 'react'
 
-const Table = (props) => {
-    const { rowKey, columns, rows } = props
+const Table = ({ rowKey, columns, rows, customRenders }) => {
+    if (customRenders === undefined) {
+        customRenders = {};
+    }
     if (!rows) {
         return <div />
     }
@@ -17,7 +19,9 @@ const Table = (props) => {
                     {rows.map((row, i) =>
                         <tr key={row[rowKey]}>{
                             Object.keys(columns).map((key) =>
-                                <td key={key}>{row[key]}</td>
+                                <td key={key}>{
+                                    key in customRenders ? customRenders[key](row) : row[key]
+                                }</td>
                             )
                         }</tr>
                     )}

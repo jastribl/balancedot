@@ -11,6 +11,16 @@ type CardActivityRepo struct {
 	*gorm.DB
 }
 
+// GetAllCardActivitiesForCard fetches all CardActivities for a given CardUUID
+func (m *CardActivityRepo) GetAllCardActivitiesForCard(cardUUID string) ([]*entities.CardActivity, error) {
+	var cardActivities []*entities.CardActivity
+	err := m.Where("card_uuid = ?", cardUUID).Find(&cardActivities).Error
+	if err != nil {
+		return nil, err
+	}
+	return cardActivities, nil
+}
+
 // NewCardActivityRepo returns a new CardActivityRepo using the given db
 func NewCardActivityRepo(db *gorm.DB) *CardActivityRepo {
 	return &CardActivityRepo{

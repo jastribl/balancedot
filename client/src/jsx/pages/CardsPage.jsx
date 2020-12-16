@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import { post, get } from '../../utils/api'
 
@@ -41,7 +42,10 @@ const CardsPage = () => {
                 <Table rowKey="uuid" columns={{
                     'last_four': 'Last Four',
                     'description': 'Description'
-                }} rows={cards} />
+                }} rows={cards} customRenders={{
+                    'last_four': (data) =>
+                        <Link to={"/cards/" + data['uuid'] + '/activities'}>{data['last_four']}</Link>
+                }} />
             </div>
             <Modal headerText="New Card" visible={modalVisible} handleClose={hideModal}>
                 <Form

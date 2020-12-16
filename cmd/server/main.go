@@ -26,6 +26,9 @@ func main() {
 		log.Fatal(err)
 	}
 
+	mainRouter.Handle("/api/cards/{cardUUID}/activities", api.Handler(apiApp.GetAllCardActivitiesForCard)).Methods("GET")
+
+	mainRouter.Handle("/api/cards/{cardUUID}", api.Handler(apiApp.GetCardByUUID)).Methods("GET")
 	mainRouter.Handle("/api/cards", api.Handler(apiApp.GetAllCards)).Methods("GET")
 	mainRouter.Handle("/api/card", api.Handler(apiApp.CreateNewCard)).Methods("POST")
 

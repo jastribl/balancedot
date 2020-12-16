@@ -4,6 +4,7 @@ import (
 	"gihub.com/jastribl/balancedot/entities"
 	"gihub.com/jastribl/balancedot/helpers"
 	"gihub.com/jastribl/balancedot/repos"
+	"github.com/gorilla/mux"
 )
 
 // GetAllCards get all the Cards
@@ -39,6 +40,18 @@ func (m *App) CreateNewCard(w ResponseWriter, r Request) interface{} {
 				Code:    409,
 			}
 		}
+		return err
+	}
+
+	return w.RenderJSON(card)
+}
+
+// GetCardByUUID gets a single Card by UUID
+func (m *App) GetCardByUUID(w ResponseWriter, r Request) interface{} {
+	params := mux.Vars(r)
+	cardRepo := repos.NewCardRepo(m.db)
+	card, err := cardRepo.GetCardByUUID(params["cardUUID"])
+	if err != nil {
 		return err
 	}
 

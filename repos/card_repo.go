@@ -27,6 +27,16 @@ func (m *CardRepo) GetAllCards() ([]*entities.Card, error) {
 	return cards, nil
 }
 
+// GetCardByUUID fetches a single Card by UUID
+func (m *CardRepo) GetCardByUUID(uuid string) (*entities.Card, error) {
+	card := &entities.Card{}
+	err := m.Where("uuid = ?", uuid).Find(card).Error
+	if err != nil {
+		return nil, err
+	}
+	return card, nil
+}
+
 // GetCard returns the Card for the given lastFour
 func (m *CardRepo) GetCard(lastFour string) (*entities.Card, error) {
 	card := &entities.Card{}

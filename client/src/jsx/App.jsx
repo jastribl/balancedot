@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Switch, NavLink } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import ErrorPage from './pages/ErrorPage'
 import CardsPage from './pages/CardsPage'
+import CardActivitiesPage from './pages/CardActivitiesPage'
 
 const App = () => (
     <div id="app">
@@ -15,7 +16,8 @@ const App = () => (
                 </div>
                 <Switch>
                     <Route path="/" component={HomePage} exact />
-                    <Route path="/cards" component={CardsPage} />
+                    <Route path="/cards" component={CardsPage} exact />
+                    <Route path="/cards/:cardUUID/activities" component={CardActivitiesPage} />
                     <Route component={ErrorPage} />
                 </Switch>
             </div>
