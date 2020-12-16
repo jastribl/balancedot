@@ -2,6 +2,7 @@ package api
 
 import (
 	"gihub.com/jastribl/balancedot/entities"
+	"gihub.com/jastribl/balancedot/helpers"
 	"gihub.com/jastribl/balancedot/repos"
 )
 
@@ -31,6 +32,13 @@ func (m *App) CreateNewCard(w ResponseWriter, r Request) interface{} {
 	}
 	err := m.SaveEntity(&card)
 	if err != nil {
+		if helpers.IsUniqueConstraintError(err, "cards_last_four_unique") {
+			return &Error{
+				Message: "Card already exists",
+				Error:   err,
+				Code:    409,
+			}
+		}
 		return err
 	}
 
