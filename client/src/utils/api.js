@@ -1,5 +1,5 @@
 
-function post (path, data) {
+function post(path, data) {
     return fetch(path, {
         method: 'POST',
         body: data
