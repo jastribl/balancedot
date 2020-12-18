@@ -27,6 +27,7 @@ func main() {
 	}
 
 	mainRouter.Handle("/api/cards/{cardUUID}/activities", api.Handler(apiApp.GetAllCardActivitiesForCard)).Methods("GET")
+	mainRouter.Handle("/api/cards/{cardUUID}/activity", api.Handler(apiApp.UploadCardActivities)).Methods("POST")
 
 	mainRouter.Handle("/api/cards/{cardUUID}", api.Handler(apiApp.GetCardByUUID)).Methods("GET")
 	mainRouter.Handle("/api/cards", api.Handler(apiApp.GetAllCards)).Methods("GET")

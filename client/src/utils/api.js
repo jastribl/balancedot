@@ -1,9 +1,8 @@
 
-export function post(path, data) {
+function post (path, data) {
     return fetch(path, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: data
     })
         .then(response => {
             if (response.ok) {
@@ -16,6 +15,14 @@ export function post(path, data) {
                 }
             })
         })
+}
+
+export function postJSON(path, jsonData) {
+    return post(path, JSON.stringify(jsonData))
+}
+
+export function postForm(path, formData) {
+    return post(path, formData)
 }
 
 export function get(path) {

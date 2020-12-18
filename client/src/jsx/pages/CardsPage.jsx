@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { post, get } from '../../utils/api'
+import { postJSON, get } from '../../utils/api'
 
 import Table from "../common/Table"
 import Modal from "../common/Modal"
@@ -20,7 +20,7 @@ const CardsPage = () => {
     }
 
     const handleNewCardSubmit = (newCardData) => {
-        return post('/api/card', newCardData)
+        return postJSON('/api/card', newCardData)
             .then(() => {
                 hideModal()
                 refreshCards()

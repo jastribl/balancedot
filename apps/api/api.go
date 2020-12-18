@@ -17,7 +17,7 @@ type App struct {
 }
 
 // DecodeParams decodes the request body into the params structure
-func (m *App) DecodeParams(r Request, params interface{}) {
+func (m *App) DecodeParams(r *http.Request, params interface{}) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&params)
 	if err != nil {
@@ -63,9 +63,6 @@ type ResponseWriter struct {
 	http.ResponseWriter
 }
 
-// Request is a normal http Request but with extras
-type Request *http.Request
-
 // RenderJSON renders antying as json as a 200 response
 func (w *ResponseWriter) RenderJSON(toRender interface{}) interface{} {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -84,12 +81,13 @@ func (w *ResponseWriter) RenderError(e *Error) {
 }
 
 // Handler is a a generic handler for the api
-type Handler func(ResponseWriter, Request) interface{}
+type Handler func(ResponseWriter, *http.Request) interface{}
 
 func (fn Handler) ServeHTTP(wIn http.ResponseWriter, r *http.Request) {
 	w := ResponseWriter{wIn}
 	defer func() {
 		if ree := recover(); ree != nil {
+			log.Printf("recovering from fatal: %+v", ree)
 			w.RenderError(&Error{
 				Message: UnexpectedError,
 				Error:   ree,

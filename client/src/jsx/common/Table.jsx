@@ -2,7 +2,7 @@ import React from 'react'
 
 const Table = ({ rowKey, columns, rows, customRenders }) => {
     if (customRenders === undefined) {
-        customRenders = {};
+        customRenders = {}
     }
     if (!rows) {
         return <div />
@@ -28,7 +28,7 @@ const Table = ({ rowKey, columns, rows, customRenders }) => {
                 </tbody>
             </table>
         </div>
-    );
+    )
 }
 
 export default Table

@@ -2,7 +2,7 @@ import React from 'react'
 
 const ErrorRow = ({ message }) => {
     if (message === null) {
-        return null;
+        return null
     }
 
     return (

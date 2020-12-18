@@ -17,7 +17,7 @@ const Modal = ({ headerText, handleClose, visible, children }) => {
                 </div>
             </section>
         </div>
-    );
-};
+    )
+}
 
 export default Modal

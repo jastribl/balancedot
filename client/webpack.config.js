@@ -8,6 +8,7 @@ module.exports = {
     resolve: {
         extensions: [".jsx", ".js", "json", "css"],
     },
+    mode: 'development',
     module: {
         rules: [
             {

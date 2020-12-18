@@ -7,11 +7,12 @@ const Form = ({ onSubmit, fieldInfos }) => {
     const getValidatorForFieldName = (fieldName) =>
         fieldInfos[fieldName].validate ?? (() => { return null })
 
-    let initialState = {}
+    let initialValues = {}
     Object.entries(fieldInfos).map(([fieldName, fieldInfo]) => {
-        initialState[fieldName] = fieldInfo.initialValue ?? ''
+        initialValues[fieldName] = fieldInfo.initialValue ?? ''
     })
-    const [formState, setFormState] = useState(initialState)
+    const [formState, setFormState] = useState(initialValues)
+    const [formValues, setFormValues] = useState(initialValues)
     const [validationErrors, setValidationErrors] = useState({})
     const [errorMessage, setErrorMessage] = useState(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -19,11 +20,20 @@ const Form = ({ onSubmit, fieldInfos }) => {
 
     const handleFormFieldChange = (event) => {
         const fieldName = event.target.name
-        const fieldValue = event.target.value
         const fieldInfo = fieldInfos[fieldName]
+        const fieldValue = event.target.value
+        setFormValues({
+            ...formValues,
+            [fieldName]: fieldValue
+        })
+        let formValue = fieldValue;
+        if (fieldInfo.inputType === 'file') {
+            console.log("getting update from file")
+            formValue = event.target.files[0]
+        }
 
         if (fieldName in validationErrors) {
-            const validationResult = getValidatorForFieldName(fieldName)(fieldInfo.fieldLabel, fieldValue)
+            const validationResult = getValidatorForFieldName(fieldName)(fieldInfo.fieldLabel, formValue)
             if (validationResult !== null) {
                 setValidationErrors({
                     ...validationErrors,
@@ -38,7 +48,7 @@ const Form = ({ onSubmit, fieldInfos }) => {
         }
         setFormState({
             ...formState,
-            [fieldName]: fieldValue
+            [fieldName]: formValue
         })
     }
 
@@ -59,7 +69,7 @@ const Form = ({ onSubmit, fieldInfos }) => {
             setIsSubmitting(true)
             onSubmit(formState)
                 .then(() => {
-                    setFormState(initialState)
+                    setFormState(initialValues)
                     setIsSubmitting(false)
                 })
                 .catch((e) => {
@@ -83,7 +93,7 @@ const Form = ({ onSubmit, fieldInfos }) => {
                             <input
                                 type={fieldInfo.inputType}
                                 name={fieldName}
-                                value={formState[fieldName]}
+                                value={formValues[fieldName]}
                                 onChange={handleFormFieldChange}
                                 placeholder={fieldInfo.placeholder}
                                 disabled={isSubmitting}

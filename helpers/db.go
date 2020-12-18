@@ -28,3 +28,16 @@ func IsUniqueConstraintError(err error, constraintName string) bool {
 	}
 	return false
 }
+
+// RowExists checks if a given search row exists for a given model
+func RowExists(db *gorm.DB, model interface{}, search interface{}) (bool, error) {
+	foundRows, err := db.Model(model).Where(search).Select("*").Rows()
+	if err != nil {
+		return false, err
+	}
+	if foundRows.Next() {
+		return true, nil
+	}
+
+	return false, nil
+}
