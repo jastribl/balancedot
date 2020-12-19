@@ -7,6 +7,8 @@ import (
 	"gihub.com/jastribl/balancedot/splitwise/models"
 )
 
+const getCurrentUserURL = "https://secure.splitwise.com/api/v3.0/get_current_user"
+
 // GetCurrentUser fetches and returns the currently logged in user
 func (c *Client) GetCurrentUser() (*models.User, error) {
 	type userReponse struct {

@@ -6,10 +6,12 @@ import (
 	"log"
 	"net/http"
 
-	"gihub.com/jastribl/balancedot/chase"
 	"gihub.com/jastribl/balancedot/config"
+	"gihub.com/jastribl/balancedot/helpers"
+	"gihub.com/jastribl/balancedot/repos"
 	"gihub.com/jastribl/balancedot/splitwise"
 	"github.com/pkg/browser"
+	uuid "github.com/satori/go.uuid"
 )
 
 var cfg *config.Config
@@ -26,15 +28,6 @@ func oauthCallback(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	cfg = config.NewConfig()
-	chaseCardActivities, err := chase.GetCardActivitiesFromFile("in.csv")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = chase.PrintCardActivitiesToFile(chaseCardActivities, "out.csv")
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	go func() {
 		browser.OpenURL(<-cfg.Splitwise.AuthURLChan)
@@ -53,15 +46,43 @@ func main() {
 	splitwiseClient, err := splitwise.NewClient(&cfg.Splitwise)
 	if err != nil {
 		log.Fatal(err)
-		return
 	}
 
 	user, err := splitwiseClient.GetCurrentUser()
 	if err != nil {
 		log.Fatal(err)
-		return
 	}
 
 	jsonEncoder := json.NewEncoder(log.Writer())
+
 	jsonEncoder.Encode(user)
+
+	expenses, err := splitwiseClient.GetExpenses()
+	if err != nil {
+		log.Fatal(err)
+	}
+	jsonEncoder.Encode(expenses)
+
+	db, err := helpers.DbConnect()
+	if err != nil {
+		log.Panic(err)
+	}
+
+	cardRepo := repos.NewCardRepo(db)
+	card, err := cardRepo.GetCard("2427")
+	if err != nil {
+		log.Panic(err)
+	}
+	jsonEncoder.Encode(card)
+
+	cardActivityRepo := repos.NewCardActivityRepo(db)
+	uuid, err := uuid.FromString("d2300ddd-e048-4aad-93e2-4e9d07850714")
+	if err != nil {
+		log.Panic(err)
+	}
+	cardActivity, err := cardActivityRepo.GetCardActivity(uuid)
+	if err != nil {
+		log.Panic(err)
+	}
+	jsonEncoder.Encode(cardActivity)
 }

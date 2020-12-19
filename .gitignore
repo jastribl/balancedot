@@ -1,4 +1,4 @@
-input_files/
-in.csv
-out.csv
+*.csv
 main
+db.env
+build
