@@ -9,6 +9,7 @@ import (
 	"gihub.com/jastribl/balancedot/helpers"
 
 	"github.com/gocarina/gocsv"
+	"github.com/jinzhu/gorm"
 
 	"gihub.com/jastribl/balancedot/chase/models"
 	"gihub.com/jastribl/balancedot/repos"
@@ -19,7 +20,6 @@ import (
 // GetAllCardActivitiesForCard get all the Cards
 func (m *App) GetAllCardActivitiesForCard(w ResponseWriter, r *http.Request) interface{} {
 	params := mux.Vars(r)
-	// todo: verify cardUUID is a param, prob assert
 	cardActivityRepo := repos.NewCardActivityRepo(m.db)
 	cardActivities, err := cardActivityRepo.GetAllCardActivitiesForCard(params["cardUUID"])
 	if err != nil {
@@ -28,11 +28,6 @@ func (m *App) GetAllCardActivitiesForCard(w ResponseWriter, r *http.Request) int
 
 	return w.RenderJSON(cardActivities)
 }
-
-// type cardActivitiesParams struct {
-// 	LastFour    string `json:"last_four"`
-// 	Description string `json:"description"`
-// }
 
 // UploadCardActivities uploads new CardActivities
 func (m *App) UploadCardActivities(w ResponseWriter, r *http.Request) interface{} {
@@ -59,83 +54,52 @@ func (m *App) UploadCardActivities(w ResponseWriter, r *http.Request) interface{
 		return err
 	}
 
-	// todo: make helper function for this that i like the retuns value of instead of db.Transaction
-	tx := m.db.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
 	var newCardActivities []*entities.CardActivity
-	for _, cardActivity := range cardActivities {
-		search := entities.CardActivity{
-			CardUUID:        cardUUID,
-			TransactionDate: cardActivity.TransactionDate.Time,
-			PostDate:        cardActivity.PostDate.Time,
-			Description:     cardActivity.Description,
-			Type:            cardActivity.Type,
-			Amount:          cardActivity.Amount.ToFloat64(),
-		}
-		// todo: use tx instead to check for duplicate inside the same transaction
-		exists, err := helpers.RowExists(m.db, &entities.CardActivity{}, search)
-		if err != nil {
-			tx.Rollback()
-			return err
-		}
-		if exists {
-			tx.Rollback()
-			return Error{
-				Message: "Duplicate activity found", // todo: better messaging
-				Error:   nil,
-				Code:    409, // todo: is this the right code?
+	txError := helpers.NewTransaction(m.db, func(tx *gorm.DB) interface{} {
+		for _, cardActivity := range cardActivities {
+			search := entities.CardActivity{
+				CardUUID:        cardUUID,
+				TransactionDate: cardActivity.TransactionDate.Time,
+				PostDate:        cardActivity.PostDate.Time,
+				Description:     cardActivity.Description,
+				Type:            cardActivity.Type,
+				Amount:          cardActivity.Amount.ToFloat64(),
+			}
+			// note: use tx instead to check for duplicate inside the same transaction
+			exists, err := helpers.RowExists(m.db, &entities.CardActivity{}, search)
+			if err != nil {
+				return err
+			}
+			if exists {
+				return Error{
+					Message: "Duplicate activity found",
+					Error:   nil,
+					Code:    409,
+				}
+			}
+			newCardActivity := &entities.CardActivity{
+				CardUUID:        cardUUID,
+				TransactionDate: cardActivity.TransactionDate.Time,
+				PostDate:        cardActivity.PostDate.Time,
+				Description:     cardActivity.Description,
+				Category:        cardActivity.Category,
+				Type:            cardActivity.Type,
+				Amount:          cardActivity.Amount.ToFloat64(),
+			}
+			newCardActivities = append(newCardActivities, newCardActivity)
+			err = tx.Save(newCardActivity).Error
+			if err != nil {
+				return err
 			}
 		}
-		newCardActivity := &entities.CardActivity{
-			CardUUID:        cardUUID,
-			TransactionDate: cardActivity.TransactionDate.Time,
-			PostDate:        cardActivity.PostDate.Time,
-			Description:     cardActivity.Description,
-			Category:        cardActivity.Category,
-			Type:            cardActivity.Type,
-			Amount:          cardActivity.Amount.ToFloat64(),
-		}
-		newCardActivities = append(newCardActivities, newCardActivity)
-		err = tx.Save(newCardActivity).Error
-		if err != nil {
-			tx.Rollback()
-			return err
-		}
-	}
+		return nil
+	})
 
-	err = tx.Commit().Error
-	if err != nil {
-		return err
+	if txError != nil {
+		return txError
 	}
 
 	// todo: make the return type into the number of records inserted or something
 
 	return w.RenderJSON(newCardActivities)
 }
-
-// // CreateNewCard adds a new Card
-// func (m *App) CreateNewCard(w ResponseWriter, r Request) interface{} {
-// 	var p newCardParams
-// 	m.DecodeParams(r, &p)
-// 	card := entities.Card{
-// 		LastFour:    p.LastFour,
-// 		Description: p.Description,
-// 	}
-// 	err := m.SaveEntity(&card)
-// 	if err != nil {
-// 		if helpers.IsUniqueConstraintError(err, "cards_last_four_unique") {
-// 			return &Error{
-// 				Message: "Card already exists",
-// 				Error:   err,
-// 				Code:    409,
-// 			}
-// 		}
-// 		return err
-// 	}
-
-// 	return w.RenderJSON(card)
-// }

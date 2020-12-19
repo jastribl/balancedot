@@ -41,3 +41,21 @@ func RowExists(db *gorm.DB, model interface{}, search interface{}) (bool, error)
 
 	return false, nil
 }
+
+// NewTransaction wraps some transaction logic with rollback and commit
+func NewTransaction(db *gorm.DB, fn func(tx *gorm.DB) interface{}) interface{} {
+	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			panic(r)
+		}
+	}()
+	err := fn(tx)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+	return nil
+}
