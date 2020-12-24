@@ -38,6 +38,12 @@ func main() {
 	// Setup routing
 	mainRouter := mux.NewRouter()
 
+	// Auth Routes
+	mainRouter.Handle("/api/register")
+	// router.POST("/register", authApp.UnAuthorizedRequest(authApp.Register))
+	// router.POST("/login", authApp.UnAuthorizedRequest(authApp.Login))
+	// router.GET("/logout", authApp.UnAuthorizedRequest(authApp.Logout)
+
 	// Splitwise
 	mainRouter.Handle("/api/splitwise_login_check", api.Handler(apiApp.SplitwiseLoginCheck))
 	mainRouter.Handle("/api/splitwise_oauth_callback", api.Handler(apiApp.SplitwiseOauthCallback))
@@ -80,11 +86,12 @@ func main() {
 	mainRouter.Handle("/api/accounts", api.Handler(apiApp.GetAllAccounts)).Methods("GET")
 	mainRouter.Handle("/api/account", api.Handler(apiApp.CreateNewAccount)).Methods("POST")
 
+	// Static routing
 	mainRouter.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./client/public"))))
 	mainRouter.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./client/public/index.html")
 	})
 
 	// Run the server
-	log.Fatal(http.ListenAndServe("localhost:8080", mainRouter))
+	log.Fatal(http.ListenAndServe("localhost:8080", router))
 }

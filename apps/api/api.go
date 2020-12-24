@@ -3,6 +3,7 @@ package api
 import (
 	"gihub.com/jastribl/balancedot/config"
 	"gihub.com/jastribl/balancedot/repos"
+	"gihub.com/jastribl/balancedot/services/auth"
 	"gorm.io/gorm"
 )
 
@@ -10,13 +11,16 @@ import (
 type App struct {
 	db     *gorm.DB
 	config *config.Config
+	Auth   *auth.Auth
 }
 
 // NewApp returns a new App
 func NewApp(db *gorm.DB, config *config.Config) (*App, error) {
+	newAuth := auth.NewAPIAuth(db, "todo-cookie-name")
 	return &App{
 		db:     db,
 		config: config,
+		Auth:   newauth,
 	}, nil
 }
 

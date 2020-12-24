@@ -30,7 +30,7 @@ const SplitwiseExpensesPage = () => {
     }
 
     const handleRefreshExpenses = () => {
-        setIsRefreshing(true)
+        setPageLoading(true)
         return postJSON('/api/refresh_splitwise')
             .then(data => {
                 setRefreshResponse(data)
