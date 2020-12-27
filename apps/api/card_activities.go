@@ -13,34 +13,33 @@ import (
 
 	"gihub.com/jastribl/balancedot/chase/models"
 	"gihub.com/jastribl/balancedot/repos"
-	"github.com/gorilla/mux"
 	uuid "github.com/satori/go.uuid"
 )
 
 // GetAllCardActivitiesForCard get all the Cards
-func (m *App) GetAllCardActivitiesForCard(w ResponseWriter, r *http.Request) interface{} {
-	params := mux.Vars(r)
+func (m *App) GetAllCardActivitiesForCard(w ResponseWriter, r *Request) WriterResponse {
+	params := r.GetParams()
 	cardActivityRepo := repos.NewCardActivityRepo(m.db)
 	cardActivities, err := cardActivityRepo.GetAllCardActivitiesForCard(params["cardUUID"])
 	if err != nil {
-		return err
+		return w.SendUnexpectedError(err)
 	}
 
-	return w.RenderJSON(cardActivities)
+	return w.SendResponse(cardActivities)
 }
 
 // UploadCardActivities uploads new CardActivities
-func (m *App) UploadCardActivities(w ResponseWriter, r *http.Request) interface{} {
-	params := mux.Vars(r)
+func (m *App) UploadCardActivities(w ResponseWriter, r *Request) WriterResponse {
+	params := r.GetParams()
 	cardUUID, err := uuid.FromString(params["cardUUID"])
 	if err != nil {
-		return err
+		return w.SendUnexpectedError(err)
 	}
 
 	r.ParseMultipartForm(10 << 20) // 10MB file size limit
 	file, handler, err := r.FormFile("file")
 	if err != nil {
-		return err
+		return w.SendUnexpectedError(err)
 	}
 	defer file.Close()
 	fmt.Printf("Uploaded File: %+v\n", handler.Filename)
@@ -51,11 +50,11 @@ func (m *App) UploadCardActivities(w ResponseWriter, r *http.Request) interface{
 	cardActivities := []*models.CardActivity{}
 	err = gocsv.Unmarshal(bufferedReader, &cardActivities)
 	if err != nil {
-		return err
+		return w.SendUnexpectedError(err)
 	}
 
 	var newCardActivities []*entities.CardActivity
-	txError := helpers.NewTransaction(m.db, func(tx *gorm.DB) interface{} {
+	success := helpers.NewTransaction(m.db, func(tx *gorm.DB) helpers.TransactionAction {
 		for _, cardActivity := range cardActivities {
 			search := entities.CardActivity{
 				CardUUID:        cardUUID,
@@ -68,14 +67,12 @@ func (m *App) UploadCardActivities(w ResponseWriter, r *http.Request) interface{
 			// note: use tx instead to check for duplicate inside the same transaction
 			exists, err := helpers.RowExists(m.db, &entities.CardActivity{}, search)
 			if err != nil {
-				return err
+				w.SendUnexpectedError(err)
+				return helpers.TransactionActionRollback
 			}
 			if exists {
-				return Error{
-					Message: "Duplicate activity found",
-					Error:   nil,
-					Code:    409,
-				}
+				w.SendError("Duplicate activity found", http.StatusConflict)
+				return helpers.TransactionActionRollback
 			}
 			newCardActivity := &entities.CardActivity{
 				CardUUID:        cardUUID,
@@ -89,17 +86,17 @@ func (m *App) UploadCardActivities(w ResponseWriter, r *http.Request) interface{
 			newCardActivities = append(newCardActivities, newCardActivity)
 			err = tx.Save(newCardActivity).Error
 			if err != nil {
-				return err
+				w.SendUnexpectedError(err)
+				return helpers.TransactionActionRollback
 			}
 		}
-		return nil
+		return helpers.TransactionActionCommit
 	})
 
-	if txError != nil {
-		return txError
+	// todo: make the return type into the number of records inserted or something
+	if success {
+		return w.SendResponse(newCardActivities)
 	}
 
-	// todo: make the return type into the number of records inserted or something
-
-	return w.RenderJSON(newCardActivities)
+	return WriterResponseSuccess
 }

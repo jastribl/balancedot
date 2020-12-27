@@ -42,8 +42,52 @@ func RowExists(db *gorm.DB, model interface{}, search interface{}) (bool, error)
 	return false, nil
 }
 
+// TransactionResponse is a response for a transaction callback
+type TransactionResponse struct {
+	Rollback bool
+	Handle   func() error
+}
+
+// TransactionResponseFromUnexpectedError returns an unexpected error response
+func TransactionResponseFromUnexpectedError(err error) TransactionResponse {
+	return TransactionResponse{
+		Rollback: true,
+		Handle: func() error {
+			return err
+		},
+	}
+}
+
+// TransactionFailedHandle returns a normal failed transation with proper handling
+func TransactionFailedHandle(fn func() error) TransactionResponse {
+	return TransactionResponse{
+		Rollback: true,
+		Handle:   fn,
+	}
+}
+
+// TransactionSuccess returns a successful transaction result
+func TransactionSuccess() TransactionResponse {
+	return TransactionResponse{
+		Rollback: false,
+		Handle: func() error {
+			return nil
+		},
+	}
+}
+
+// TransactionAction is the action that wishes to be taken from the transaction
+type TransactionAction int
+
+const (
+	// TransactionActionCommit means the transaction should be committed
+	TransactionActionCommit TransactionAction = iota
+	// TransactionActionRollback means the transaction should be rolled back
+	TransactionActionRollback
+)
+
 // NewTransaction wraps some transaction logic with rollback and commit
-func NewTransaction(db *gorm.DB, fn func(tx *gorm.DB) interface{}) interface{} {
+func NewTransaction(db *gorm.DB, fn func(tx *gorm.DB) TransactionAction) bool {
 	tx := db.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -51,11 +95,12 @@ func NewTransaction(db *gorm.DB, fn func(tx *gorm.DB) interface{}) interface{} {
 			panic(r)
 		}
 	}()
-	err := fn(tx)
-	if err != nil {
-		tx.Rollback()
-		return err
+	action := fn(tx)
+	if action == TransactionActionCommit {
+		tx.Commit()
+		return true
 	}
-	tx.Commit()
-	return nil
+
+	tx.Rollback()
+	return false
 }
