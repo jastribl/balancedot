@@ -1,10 +1,15 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
+	"gihub.com/jastribl/balancedot/entities"
+	"gihub.com/jastribl/balancedot/helpers"
 	"gihub.com/jastribl/balancedot/repos"
 	"gihub.com/jastribl/balancedot/splitwise"
+	"gihub.com/jastribl/balancedot/splitwise/models"
 )
 
 // SplitwiseLoginCheck todo
@@ -54,7 +59,7 @@ func (m *App) SplitiwseOatuhCallback(w ResponseWriter, r *Request) WriterRespons
 // GetAllSplitwiseExpenses get all the SplitwiseExpenses
 func (m *App) GetAllSplitwiseExpenses(w ResponseWriter, r *Request) WriterResponse {
 	splitwiseExpenseRepo := repos.NewSplitwiseExpenseRepo(m.db)
-	splitwiseExpenses, err := splitwiseExpenseRepo.GetAllExpenses()
+	splitwiseExpenses, err := splitwiseExpenseRepo.GetAllExpensesOrdered()
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}
@@ -64,14 +69,8 @@ func (m *App) GetAllSplitwiseExpenses(w ResponseWriter, r *Request) WriterRespon
 
 // RefreshSplitwise refreshes the data from the Splitwise API
 func (m *App) RefreshSplitwise(w ResponseWriter, r *Request) WriterResponse {
-	splitwiseClient, err := splitwise.NewClient(&m.config.Splitwise)
+	splitwiseClient, err := splitwise.NewClientForUser(&m.config.Splitwise)
 	if err != nil {
-		if e, ok := err.(splitwise.ClientSetupError); ok {
-			return w.SendResponseWithCode(map[string]interface{}{
-				"message":      "Splitwise Redirect Required",
-				"redirect_url": e.RedirectURL,
-			}, http.StatusInternalServerError)
-		}
 		return w.SendUnexpectedError(err)
 	}
 
@@ -80,5 +79,55 @@ func (m *App) RefreshSplitwise(w ResponseWriter, r *Request) WriterResponse {
 		return w.SendUnexpectedError(err)
 	}
 
-	return w.SendResponse(currentUser)
+	expenses, err := splitwiseClient.GetExpenses()
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	enterExpenseForUser := func(expense *models.Expense, user *models.ExpenseUser) error {
+		amountPaid, err := strconv.ParseFloat(user.PaidShare, 64)
+		if err != nil {
+			return err
+		}
+		amountOwed, err := strconv.ParseFloat(user.OwedShare, 64)
+		if err != nil {
+			return err
+		}
+		newSplitwiseExpnese := entities.SplitwiseExpense{
+			SplitwiseID:  expense.ID,
+			Description:  expense.Description,
+			Details:      expense.Details,
+			CurrencyCode: expense.CurrencyCode,
+			Amount:       amountOwed,
+			AmountPaid:   amountPaid,
+			Date:         expense.Date,
+			CreatedAt:    expense.CreatedAt,
+			UpdatedAt:    expense.UpdatedAt,
+			DeletedAt:    expense.DeletedAt,
+			Category:     *expense.Category.Name,
+		}
+		// TODO: update entry on duplicate somehow
+		return m.db.Create(&newSplitwiseExpnese).Error
+	}
+
+	for _, expense := range *expenses {
+		for _, user := range expense.Users {
+			if user.UserID == currentUser.ID {
+				err := enterExpenseForUser(expense, user)
+				if err != nil {
+					if helpers.IsUniqueConstraintError(err, "splitwise_expenses_splitwise_id_key") {
+						break
+						return w.SendError(
+							fmt.Sprintf("Attempted to add duplicate splitwise expense entry: %#v\n", expense.ID),
+							http.StatusConflict,
+						)
+					}
+					return w.SendUnexpectedError(err)
+				}
+				break
+			}
+		}
+	}
+
+	return m.GetAllSplitwiseExpenses(w, r)
 }

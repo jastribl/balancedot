@@ -11,11 +11,6 @@ type App struct {
 	config *config.Config
 }
 
-// SaveEntity saves an entity and handles errors
-func (m *App) SaveEntity(entity interface{}) error {
-	return m.db.Save(entity).Error
-}
-
 // NewApp returns a new App
 func NewApp(db *gorm.DB, config *config.Config) (*App, error) {
 	return &App{

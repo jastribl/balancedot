@@ -79,8 +79,8 @@ func (e ClientSetupError) Error() string {
 	return e.Err.Error()
 }
 
-// NewClient gets a new client
-func NewClient(cfg *config.Config) (*Client, error) {
+// NewClientForCLI gets a new client for a CLI using local token
+func NewClientForCLI(cfg *config.Config) (*Client, error) {
 	tokFile := cfg.TokenFileLocation
 	tok, err := tokenFromFile(tokFile)
 	if err != nil {
@@ -92,6 +92,20 @@ func NewClient(cfg *config.Config) (*Client, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	return &Client{
+		getAuthConfig(cfg).Client(context.Background(), tok),
+	}, nil
+}
+
+// NewClientForUser gets a new client for a user using the user token
+func NewClientForUser(cfg *config.Config) (*Client, error) {
+	// todo: make this work with users
+	tokFile := cfg.TokenFileLocation
+	tok, err := tokenFromFile(tokFile)
+	if err != nil {
+		return nil, err
 	}
 
 	return &Client{

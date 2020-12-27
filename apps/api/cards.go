@@ -35,7 +35,7 @@ func (m *App) CreateNewCard(w ResponseWriter, r *Request) WriterResponse {
 		LastFour:    p.LastFour,
 		Description: p.Description,
 	}
-	err = m.SaveEntity(&card)
+	err = m.db.Create(&card).Error
 	if err != nil {
 		if helpers.IsUniqueConstraintError(err, "cards_last_four_unique") {
 			return w.SendError("Card already exists", http.StatusConflict, err)

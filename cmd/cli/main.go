@@ -43,7 +43,7 @@ func main() {
 		log.Fatal(s.ListenAndServe())
 	}()
 
-	splitwiseClient, err := splitwise.NewClient(&cfg.Splitwise)
+	splitwiseClient, err := splitwise.NewClientForCLI(&cfg.Splitwise)
 	if err != nil {
 		log.Fatal(err)
 	}

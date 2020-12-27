@@ -48,7 +48,7 @@ func main() {
 		log.Fatal(s.ListenAndServe())
 	}()
 
-	splitwiseClient, err := splitwise.NewClient(&cfg.Splitwise)
+	splitwiseClient, err := splitwise.NewClientForCLI(&cfg.Splitwise)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -89,7 +89,7 @@ func main() {
 			Category:     *expense.Category.Name,
 		}
 		// TODO: update entry on duplicate somehow
-		err = db.Save(&newSplitwiseExpnese).Error
+		err = db.Create(&newSplitwiseExpnese).Error
 		if err != nil {
 			if helpers.IsUniqueConstraintError(err, "splitwise_expenses_splitwise_id_key") {
 				log.Printf("Attempted to add duplicate splitwise expense entry: %#v\n", newSplitwiseExpnese.SplitwiseID)

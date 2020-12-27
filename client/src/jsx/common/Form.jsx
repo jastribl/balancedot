@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import Spinner from './Spinner'
 import ErrorRow from './ErrorRow'
@@ -16,7 +16,6 @@ const Form = ({ onSubmit, fieldInfos }) => {
     const [validationErrors, setValidationErrors] = useState({})
     const [errorMessage, setErrorMessage] = useState(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
-
 
     const handleFormFieldChange = (event) => {
         const fieldName = event.target.name
@@ -69,6 +68,7 @@ const Form = ({ onSubmit, fieldInfos }) => {
             onSubmit(formState)
                 .then(() => {
                     setFormState(initialValues)
+                    setFormValues(initialValues)
                 })
                 .catch((e) => {
                     setErrorMessage(e)
