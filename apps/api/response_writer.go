@@ -19,9 +19,9 @@ const (
 
 // ResponseWriter is a normal http ResponseWriter but with extras
 type ResponseWriter interface {
-	SendResponse(i interface{}) WriterResponse
-	SendResponseWithCode(i interface{}, code int) WriterResponse
-	SendSimpleMessage(message string) WriterResponse
+	SendResponse(i interface{}, extras ...interface{}) WriterResponse
+	SendResponseWithCode(i interface{}, code int, extras ...interface{}) WriterResponse
+	SendSimpleMessage(message string, extras ...interface{}) WriterResponse
 	SendError(message string, code int, extras ...interface{}) WriterResponse
 	SendUnexpectedError(err interface{}, extras ...interface{}) WriterResponse
 }
@@ -38,9 +38,10 @@ func NewResponseWriter(w http.ResponseWriter) ResponseWriter {
 }
 
 // SendResponseWithCode sends arbitrary data as JSON with the given code
-func (w *writer) SendResponseWithCode(i interface{}, code int) WriterResponse {
+func (w *writer) SendResponseWithCode(i interface{}, code int, extras ...interface{}) WriterResponse {
 	w.WriteHeader(code)
 	err := json.NewEncoder(w).Encode(i)
+	w.printExtras(extras...)
 	if err != nil {
 		http.Error(w, "Serialization error", http.StatusInternalServerError)
 	}
@@ -48,25 +49,30 @@ func (w *writer) SendResponseWithCode(i interface{}, code int) WriterResponse {
 }
 
 // SendResponse sends arbitrary data as JSON
-func (w *writer) SendResponse(i interface{}) WriterResponse {
-	return w.SendResponseWithCode(i, http.StatusOK)
+func (w *writer) SendResponse(i interface{}, extras ...interface{}) WriterResponse {
+	return w.SendResponseWithCode(i, http.StatusOK, extras...)
 }
 
 // SendSimpleMessage sends a simple "message" response with http.StatusOK
-func (w *writer) SendSimpleMessage(message string) WriterResponse {
-	return w.SendResponseWithCode(&map[string]string{"message": message}, http.StatusOK)
+func (w *writer) SendSimpleMessage(message string, extras ...interface{}) WriterResponse {
+	return w.SendResponseWithCode(&map[string]string{"message": message}, http.StatusOK, extras...)
 }
 
 // SendError sends an error with message and code, and logs any extras for debugging
 func (w *writer) SendError(message string, code int, extras ...interface{}) WriterResponse {
 	log.Printf("Http error occured, sending back: '%s', %d", message, code)
-	for i, extra := range extras {
-		log.Printf("Extra %d: %+v", i, extra)
-	}
-	return w.SendResponseWithCode(&map[string]string{"message": message}, code)
+	return w.SendResponseWithCode(&map[string]string{"message": message}, code, extras...)
 }
 
 // SendUnexpectedError sends a response when an unexpected error is found along with extras
 func (w *writer) SendUnexpectedError(err interface{}, extras ...interface{}) WriterResponse {
 	return w.SendError("Unexpected Error", http.StatusInternalServerError, err, extras)
+}
+
+func (w *writer) printExtras(extras ...interface{}) {
+	go func() {
+		for i, extra := range extras {
+			log.Printf("Extra %d: %+v", i, extra)
+		}
+	}()
 }
