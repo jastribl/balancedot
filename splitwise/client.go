@@ -16,12 +16,34 @@ type Client struct {
 	httpClient *http.Client
 }
 
-func getTokenFromWeb(oauthConfig *oauth2.Config, cfg *config.Config) (*oauth2.Token, error) {
+func getTokenFromWeb(cfg *config.Config) (*oauth2.Token, error) {
 	// Get the url and pass it through the channel to be followed
-	cfg.AuthURLChan <- oauthConfig.AuthCodeURL(cfg.State, oauth2.AccessTypeOffline)
+	cfg.AuthURLChan <- GetAuthPortalURL(cfg)
 
 	// Get the code passsed back and exchange client token info
-	return oauthConfig.Exchange(context.TODO(), <-cfg.AuthCodeChan)
+	return GetTokenFromCode(cfg, <-cfg.AuthCodeChan)
+}
+
+// GetAuthPortalURL todo
+func GetAuthPortalURL(cfg *config.Config) string {
+	return getAuthConfig(cfg).AuthCodeURL(cfg.State, oauth2.AccessTypeOffline)
+}
+
+// GetTokenFromCode todo
+func GetTokenFromCode(cfg *config.Config, code string) (*oauth2.Token, error) {
+	return getAuthConfig(cfg).Exchange(context.TODO(), code)
+}
+
+// HasToken todo
+func HasToken(cfg *config.Config) bool {
+	f, err := os.Open(cfg.TokenFileLocation)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+	tok := &oauth2.Token{}
+	err = json.NewDecoder(f).Decode(tok)
+	return err == nil
 }
 
 // Retrieves a token from a local file.
@@ -36,19 +58,49 @@ func tokenFromFile(file string) (*oauth2.Token, error) {
 	return tok, err
 }
 
-// Saves a token to a file path.
-func saveToken(path string, token *oauth2.Token) {
-	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+// SaveToken saves a token given a config
+func SaveToken(cfg *config.Config, token *oauth2.Token) error {
+	f, err := os.OpenFile(cfg.TokenFileLocation, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		log.Fatalf("Unable to cache oauth token: %v", err)
 	}
 	defer f.Close()
-	json.NewEncoder(f).Encode(token)
+	return json.NewEncoder(f).Encode(token)
+}
+
+// ClientSetupError is a custom client setup error
+type ClientSetupError struct {
+	RedirectURL string
+	Err         error
+}
+
+// Error returns the error
+func (e ClientSetupError) Error() string {
+	return e.Err.Error()
 }
 
 // NewClient gets a new client
 func NewClient(cfg *config.Config) (*Client, error) {
-	oauthConfig := &oauth2.Config{
+	tokFile := cfg.TokenFileLocation
+	tok, err := tokenFromFile(tokFile)
+	if err != nil {
+		tok, err = getTokenFromWeb(cfg)
+		if err != nil {
+			return nil, err
+		}
+		err = SaveToken(cfg, tok)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &Client{
+		getAuthConfig(cfg).Client(context.Background(), tok),
+	}, nil
+}
+
+func getAuthConfig(cfg *config.Config) *oauth2.Config {
+	return &oauth2.Config{
 		ClientID:     cfg.ConsumerKey,
 		ClientSecret: cfg.ConsumerSecret,
 		Endpoint: oauth2.Endpoint{
@@ -57,18 +109,4 @@ func NewClient(cfg *config.Config) (*Client, error) {
 		},
 		RedirectURL: cfg.OAuthCallbackURL,
 	}
-
-	tokFile := cfg.TokenFileLocation
-	tok, err := tokenFromFile(tokFile)
-	if err != nil {
-		tok, err = getTokenFromWeb(oauthConfig, cfg)
-		if err != nil {
-			return nil, err
-		}
-		saveToken(tokFile, tok)
-	}
-
-	return &Client{
-		oauthConfig.Client(context.Background(), tok),
-	}, nil
 }

@@ -22,6 +22,7 @@ type ResponseWriter interface {
 	SendResponse(i interface{}, extras ...interface{}) WriterResponse
 	SendResponseWithCode(i interface{}, code int, extras ...interface{}) WriterResponse
 	SendSimpleMessage(message string, extras ...interface{}) WriterResponse
+	SendSimpleMessageWithCode(message string, code int, extras ...interface{}) WriterResponse
 	SendError(message string, code int, extras ...interface{}) WriterResponse
 	SendUnexpectedError(err interface{}, extras ...interface{}) WriterResponse
 }
@@ -55,7 +56,12 @@ func (w *writer) SendResponse(i interface{}, extras ...interface{}) WriterRespon
 
 // SendSimpleMessage sends a simple "message" response with http.StatusOK
 func (w *writer) SendSimpleMessage(message string, extras ...interface{}) WriterResponse {
-	return w.SendResponseWithCode(&map[string]string{"message": message}, http.StatusOK, extras...)
+	return w.SendSimpleMessageWithCode(message, http.StatusOK, extras...)
+}
+
+// SendSimpleMessageWithCode sends a simple "message" response with a given code
+func (w *writer) SendSimpleMessageWithCode(message string, code int, extras ...interface{}) WriterResponse {
+	return w.SendResponseWithCode(&map[string]string{"message": message}, code, extras...)
 }
 
 // SendError sends an error with message and code, and logs any extras for debugging
@@ -66,7 +72,7 @@ func (w *writer) SendError(message string, code int, extras ...interface{}) Writ
 
 // SendUnexpectedError sends a response when an unexpected error is found along with extras
 func (w *writer) SendUnexpectedError(err interface{}, extras ...interface{}) WriterResponse {
-	return w.SendError("Unexpected Error", http.StatusInternalServerError, err, extras)
+	return w.SendError("Unexpected Error", http.StatusInternalServerError, append([]interface{}{err}, extras)...)
 }
 
 func (w *writer) printExtras(extras ...interface{}) {

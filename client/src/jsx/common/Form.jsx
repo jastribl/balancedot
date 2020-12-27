@@ -28,7 +28,6 @@ const Form = ({ onSubmit, fieldInfos }) => {
         })
         let formValue = fieldValue;
         if (fieldInfo.inputType === 'file') {
-            console.log("getting update from file")
             formValue = event.target.files[0]
         }
 
@@ -70,10 +69,11 @@ const Form = ({ onSubmit, fieldInfos }) => {
             onSubmit(formState)
                 .then(() => {
                     setFormState(initialValues)
-                    setIsSubmitting(false)
                 })
                 .catch((e) => {
                     setErrorMessage(e)
+                })
+                .finally(() => {
                     setIsSubmitting(false)
                 })
         }

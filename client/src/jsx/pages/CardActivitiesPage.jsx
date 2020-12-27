@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import Moment from 'moment'
 
+import { formatAsMoney } from '../../utils/format'
 import { postForm, get } from '../../utils/api'
 
-import Table from "../common/Table"
-import Modal from "../common/Modal"
 import Form from "../common/Form"
+import Modal from "../common/Modal"
+import Table from "../common/Table"
 
 const CardActivitiesPage = ({ match }) => {
     const cardUUID = match.params.cardUUID
@@ -19,12 +20,12 @@ const CardActivitiesPage = ({ match }) => {
 
     const refreshCard = () => {
         get(`/api/cards/${cardUUID}`)
-            .then((card) => setCard(card))
+            .then(cardResponse => setCard(cardResponse))
     }
 
     const refreshCardActivities = () => {
         get(`/api/cards/${cardUUID}/activities`)
-            .then((cardActivities) => setCardActivities(cardActivities))
+            .then(cardActivities => setCardActivities(cardActivities))
     }
 
     const handleActivityUpload = (activityData) => {
@@ -63,7 +64,7 @@ const CardActivitiesPage = ({ match }) => {
                         Moment(data['transaction_date']).format('YYYY-MM-DD'),
                     'post_date': (data) =>
                         Moment(data['post_date']).format('YYYY-MM-DD'),
-                    'amount': (data) => (data['amount'] < 0 ? '-' : '') + '$' + Math.abs(data['amount'])
+                    'amount': (data) => formatAsMoney(data['amount']),
                 }} />
             </div>
             <Modal headerText="Activity Upload" visible={modalVisible} handleClose={hideModal}>

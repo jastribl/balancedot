@@ -25,10 +25,7 @@ func (m *Request) GetParams() map[string]string {
 }
 
 // DecodeParams decodes the request body into the params structure
-func (m *Request) DecodeParams(params interface{}) {
+func (m *Request) DecodeParams(params interface{}) error {
 	decoder := json.NewDecoder(m.Request.Body)
-	err := decoder.Decode(&params)
-	if err != nil {
-		panic(err)
-	}
+	return decoder.Decode(&params)
 }
