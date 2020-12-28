@@ -11,25 +11,22 @@ function errorHandler(pm) {
         })
 }
 
-function post(path, data, redirect = null) {
+function post(path, data) {
     let options = {
         method: 'POST',
         body: data
-    }
-    if (redirect !== null) {
-        options['redirect'] = redirect
     }
     return errorHandler(
         fetch(path, options)
     )
 }
 
-export function postJSON(path, jsonData, redirect = null) {
-    return post(path, JSON.stringify(jsonData), redirect)
+export function postJSON(path, jsonData) {
+    return post(path, JSON.stringify(jsonData))
 }
 
-export function postForm(path, formData = null, redirect = null) {
-    return post(path, formData, redirect)
+export function postForm(path, formData = null) {
+    return post(path, formData)
 }
 
 export function get(path) {
