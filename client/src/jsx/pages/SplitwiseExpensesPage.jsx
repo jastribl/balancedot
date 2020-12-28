@@ -4,6 +4,7 @@ import Moment from 'moment'
 import { formatAsMoney } from '../../utils/format'
 import { postJSON, get } from '../../utils/api'
 
+import ErrorRow from "../common/ErrorRow"
 import Spinner from "../common/Spinner"
 import SplitwiseLoginCheck from '../SplitwiseLoginCheck'
 import Table from "../common/Table"
@@ -11,6 +12,8 @@ import Table from "../common/Table"
 const SplitwiseExpensesPage = () => {
     const [splitiwseExpenses, setSplitwiseExpenses] = useState(null)
     const [pageLoading, setPageLoading] = useState(false)
+    const [errorMessage, setErrorMessage] = useState(null)
+    const [refreshResponse, setRefreshResponse] = useState(null)
 
     const refreshSplitwiseExpenses = () => {
         setPageLoading(true)
@@ -18,7 +21,9 @@ const SplitwiseExpensesPage = () => {
             .then(splitwiseExpensesResponse => {
                 setSplitwiseExpenses(splitwiseExpensesResponse)
             })
-            .catch(e => { })
+            .catch(e => {
+                setErrorMessage(e.message)
+            })
             .finally(() => {
                 setPageLoading(false)
             })
@@ -28,7 +33,7 @@ const SplitwiseExpensesPage = () => {
         setPageLoading(true)
         return postJSON('/api/refresh_splitwise', null, 'follow')
             .then((data) => {
-                console.log('got back data', data)
+                setRefreshResponse(data)
                 refreshSplitwiseExpenses()
             })
             .catch(e => {
@@ -36,6 +41,7 @@ const SplitwiseExpensesPage = () => {
                     window.open(e.redirect_url)
                     return
                 }
+                setErrorMessage(e.message)
             })
             .finally(() => {
                 setPageLoading(false)
@@ -46,15 +52,26 @@ const SplitwiseExpensesPage = () => {
         refreshSplitwiseExpenses()
     }, [setSplitwiseExpenses])
 
+    // todo: make this nicer looking and more functional
+    let refreshResponseRender = null
+    if (refreshResponse !== null) {
+        refreshResponseRender = (
+            <div><pre>{JSON.stringify(refreshResponse, null, 4)}</pre></div>
+        )
+    }
+
     return (
         <div>
             <Spinner visible={pageLoading} />
             <h1>Splitwise Expenses</h1>
+            <ErrorRow message={errorMessage} />
             <SplitwiseLoginCheck>
                 <input type="button" onClick={handleRefreshExpenses} value="Refresh Splitwise" style={{ marginBottom: 25 + 'px' }} />
+                {refreshResponseRender}
                 <div>
                     <Table rowKey="uuid" columns={{
                         'uuid': 'UUID',
+                        'splitwise_id': 'splitwise_id',
                         'description': 'Description',
                         'details': 'Details',
                         'amount': 'Amount',

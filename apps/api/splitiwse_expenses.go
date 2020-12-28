@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -9,7 +8,6 @@ import (
 	"gihub.com/jastribl/balancedot/helpers"
 	"gihub.com/jastribl/balancedot/repos"
 	"gihub.com/jastribl/balancedot/splitwise"
-	"gihub.com/jastribl/balancedot/splitwise/models"
 )
 
 // SplitwiseLoginCheck todo
@@ -25,8 +23,8 @@ func (m *App) SplitwiseLoginCheck(w ResponseWriter, r *Request) WriterResponse {
 		responseCode = http.StatusUnauthorized
 		responseMap["redirect_url"] = splitwise.GetAuthPortalURL(splitwiseConfig)
 	}
-	return w.SendResponseWithCode(responseMap, responseCode)
 
+	return w.SendResponseWithCode(responseMap, responseCode)
 }
 
 type oauthCallbackParams struct {
@@ -84,50 +82,85 @@ func (m *App) RefreshSplitwise(w ResponseWriter, r *Request) WriterResponse {
 		return w.SendUnexpectedError(err)
 	}
 
-	enterExpenseForUser := func(expense *models.Expense, user *models.ExpenseUser) error {
-		amountPaid, err := strconv.ParseFloat(user.PaidShare, 64)
-		if err != nil {
-			return err
-		}
-		amountOwed, err := strconv.ParseFloat(user.OwedShare, 64)
-		if err != nil {
-			return err
-		}
-		newSplitwiseExpnese := entities.SplitwiseExpense{
-			SplitwiseID:  expense.ID,
-			Description:  expense.Description,
-			Details:      expense.Details,
-			CurrencyCode: expense.CurrencyCode,
-			Amount:       amountOwed,
-			AmountPaid:   amountPaid,
-			Date:         expense.Date,
-			CreatedAt:    expense.CreatedAt,
-			UpdatedAt:    expense.UpdatedAt,
-			DeletedAt:    expense.DeletedAt,
-			Category:     *expense.Category.Name,
-		}
-		// TODO: update entry on duplicate somehow
-		return m.db.Create(&newSplitwiseExpnese).Error
-	}
+	expensesAdded := []*entities.SplitwiseExpense{}
+	expensesUpdated := []*entities.SplitwiseExpense{}
 
 	for _, expense := range *expenses {
 		for _, user := range expense.Users {
-			if user.UserID == currentUser.ID {
-				err := enterExpenseForUser(expense, user)
+			if user.UserID != currentUser.ID {
+				continue
+			}
+			amountPaid, err := strconv.ParseFloat(user.PaidShare, 64)
+			if err != nil {
+				return w.SendUnexpectedError(err)
+			}
+			amountOwed, err := strconv.ParseFloat(user.OwedShare, 64)
+			if err != nil {
+				return w.SendUnexpectedError(err)
+			}
+			newSplitwiseExpense := &entities.SplitwiseExpense{
+				SplitwiseID:  expense.ID,
+				Description:  expense.Description,
+				Details:      expense.Details,
+				CurrencyCode: expense.CurrencyCode,
+				Amount:       amountOwed,
+				AmountPaid:   amountPaid,
+				Date:         expense.Date,
+				CreatedAt:    expense.CreatedAt,
+				UpdatedAt:    expense.UpdatedAt,
+				DeletedAt:    expense.DeletedAt,
+				Category:     *expense.Category.Name,
+			}
+
+			idExists, err := helpers.RowExistsIncludingDeleted(
+				m.db,
+				&entities.SplitwiseExpense{},
+				entities.SplitwiseExpense{
+					SplitwiseID: expense.ID,
+				},
+			)
+			if err != nil {
+				return w.SendUnexpectedError(err)
+			}
+			if idExists {
+				nothingChanged, err := helpers.RowExistsIncludingDeleted(
+					m.db,
+					&entities.SplitwiseExpense{},
+					newSplitwiseExpense,
+				)
 				if err != nil {
-					if helpers.IsUniqueConstraintError(err, "splitwise_expenses_splitwise_id_key") {
-						break
-						return w.SendError(
-							fmt.Sprintf("Attempted to add duplicate splitwise expense entry: %#v\n", expense.ID),
-							http.StatusConflict,
-						)
-					}
 					return w.SendUnexpectedError(err)
 				}
-				break
+				if nothingChanged {
+					break
+				}
+				expensesUpdated = append(expensesUpdated, newSplitwiseExpense)
+				err = m.db.
+					Model(&entities.SplitwiseExpense{}).
+					Where("splitwise_id = ?", newSplitwiseExpense.SplitwiseID).
+					Updates(newSplitwiseExpense).
+					Error
+			} else {
+				expensesAdded = append(expensesAdded, newSplitwiseExpense)
+				err = m.db.Create(newSplitwiseExpense).Error
 			}
+			if err != nil {
+				// todo: redo migration to name the constraint explicitly
+				if helpers.IsUniqueConstraintError(err, "splitwise_expenses_splitwise_id_key") {
+					return w.SendError(
+						"got duplicate even though this shouldn't be possible",
+						http.StatusInternalServerError,
+						newSplitwiseExpense,
+					)
+				}
+				return w.SendUnexpectedError(err)
+			}
+			break
 		}
 	}
 
-	return m.GetAllSplitwiseExpenses(w, r)
+	return w.SendResponse(map[string][]*entities.SplitwiseExpense{
+		"expenses_added":   expensesAdded,
+		"expenses_updated": expensesUpdated,
+	})
 }
