@@ -24,7 +24,7 @@ func getTokenFromWeb(cfg *config.Config) (*oauth2.Token, error) {
 	return GetTokenFromCode(cfg, <-cfg.AuthCodeChan)
 }
 
-// GetAuthPortalURL todo
+// GetAuthPortalURL fetches the url required to redirect for Splitiwse OAuth Authentication
 func GetAuthPortalURL(cfg *config.Config) string {
 	return getAuthConfig(cfg).AuthCodeURL(cfg.State, oauth2.AccessTypeOffline)
 }

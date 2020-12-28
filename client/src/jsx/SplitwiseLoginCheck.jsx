@@ -2,9 +2,12 @@ import React, { useEffect, useState } from 'react'
 
 import { postJSON, get } from '../utils/api'
 
+import ErrorBar from './common/ErrorRow'
+
 const SplitwiseLoginCheck = (props) => {
-    const [hasSplitwiseSetup, setHasSplitiwseSetup] = useState(false)
+    const [hasSplitwiseSetup, setHasSplitwiseSetup] = useState(false)
     const [authURL, setAuthURL] = useState(null)
+    const [errorMessage, setErrorMessage] = useState(null)
 
     const onAuthClick = () => {
         if (authURL !== null) {
@@ -15,18 +18,28 @@ const SplitwiseLoginCheck = (props) => {
     useEffect(() => {
         get('/api/splitwise_login_check')
             .then(splitwiseLoginCheckResponse => {
-                setHasSplitiwseSetup(true)
-            })
-            .catch(e => {
-                setHasSplitiwseSetup(false)
-                if (e.status === 401 && e.message === "Authentication Response") {
-                    setAuthURL(e['redirect_url'])
+                if (splitwiseLoginCheckResponse['message'] === 'success') {
+                    setHasSplitwiseSetup(true)
+                } else {
+                    setErrorMessage('Unknown state white checking splitwise authentication')
                 }
             })
-    }, [setHasSplitiwseSetup, setAuthURL])
+            .catch(e => {
+                setHasSplitwiseSetup(false)
+                if (e.status === 401 && e.message === "Authentication Required") {
+                    setAuthURL(e['redirect_url'])
+                } else {
+                    setErrorMessage(e.message)
+                }
+            })
+    }, [setHasSplitwiseSetup, setAuthURL])
 
     if (hasSplitwiseSetup) {
         return props.children
+    }
+
+    if (errorMessage !== null) {
+        return <ErrorBar message={errorMessage} />
     }
 
     if (authURL !== null) {

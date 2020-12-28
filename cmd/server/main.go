@@ -40,7 +40,7 @@ func main() {
 	mainRouter := mux.NewRouter()
 
 	mainRouter.Handle("/api/splitwise_login_check", api.Handler(apiApp.SplitwiseLoginCheck))
-	mainRouter.Handle("/api/splitwise_oauth_callback", api.Handler(apiApp.SplitiwseOatuhCallback))
+	mainRouter.Handle("/api/splitwise_oauth_callback", api.Handler(apiApp.SplitwiseOatuhCallback))
 
 	mainRouter.Handle("/api/cards/{cardUUID}/activities", api.Handler(apiApp.GetAllCardActivitiesForCard)).Methods("GET")
 	mainRouter.Handle("/api/cards/{cardUUID}/activity", api.Handler(apiApp.UploadCardActivities)).Methods("POST")

@@ -10,15 +10,16 @@ import (
 	"gihub.com/jastribl/balancedot/splitwise"
 )
 
-// SplitwiseLoginCheck todo
+// SplitwiseLoginCheck checks to see if the current user has an authorized splitwise token
 func (m *App) SplitwiseLoginCheck(w ResponseWriter, r *Request) WriterResponse {
 	responseMap := map[string]string{
-		"message": "Authentication Response",
+		"message": "Authentication Required",
 	}
 	splitwiseConfig := &m.config.Splitwise
 	var responseCode int
 	if splitwise.HasToken(splitwiseConfig) {
 		responseCode = http.StatusOK
+		responseMap["message"] = "success"
 	} else {
 		responseCode = http.StatusUnauthorized
 		responseMap["redirect_url"] = splitwise.GetAuthPortalURL(splitwiseConfig)
@@ -32,8 +33,8 @@ type oauthCallbackParams struct {
 	State string `json:"state"`
 }
 
-// SplitiwseOatuhCallback todo
-func (m *App) SplitiwseOatuhCallback(w ResponseWriter, r *Request) WriterResponse {
+// SplitwiseOatuhCallback todo
+func (m *App) SplitwiseOatuhCallback(w ResponseWriter, r *Request) WriterResponse {
 	var p oauthCallbackParams
 	err := r.DecodeParams(&p)
 	if err != nil {
