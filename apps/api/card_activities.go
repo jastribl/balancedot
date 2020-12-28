@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"gihub.com/jastribl/balancedot/chase/models"
 	"gihub.com/jastribl/balancedot/entities"
 	"gihub.com/jastribl/balancedot/helpers"
-
+	"gihub.com/jastribl/balancedot/repos"
 	"github.com/gocarina/gocsv"
 	"github.com/jinzhu/gorm"
-
-	"gihub.com/jastribl/balancedot/chase/models"
-	"gihub.com/jastribl/balancedot/repos"
 	uuid "github.com/satori/go.uuid"
 )
 

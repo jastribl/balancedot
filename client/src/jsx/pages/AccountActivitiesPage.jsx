@@ -1,4 +1,3 @@
-import Moment from 'moment'
 import React, { useEffect, useState } from 'react'
 
 import { get, postForm } from '../../utils/api'
@@ -7,33 +6,33 @@ import Form from '../common/Form'
 import Modal from '../common/Modal'
 import Table from '../common/Table'
 
-const CardActivitiesPage = ({ match }) => {
-    const cardUUID = match.params.cardUUID
+const AccountActivitiesPage = ({ match }) => {
+    const accountUUID = match.params.accountUUID
 
-    const [card, setCard] = useState(null)
-    const [cardActivities, setCardActivities] = useState([])
+    const [account, setAccount] = useState(null)
+    const [accountActivities, setAccountActivities] = useState([])
     const [modalVisible, setShowModal] = useState(false)
 
     const showModal = () => { setShowModal(true) }
     const hideModal = () => { setShowModal(false) }
 
-    const refreshCard = () => {
-        get(`/api/cards/${cardUUID}`)
-            .then(cardResponse => setCard(cardResponse))
+    const refreshAccount = () => {
+        get(`/api/accounts/${accountUUID}`)
+            .then(accountResponse => setAccount(accountResponse))
     }
 
-    const refreshCardActivities = () => {
-        get(`/api/cards/${cardUUID}/activities`)
-            .then(cardActivities => setCardActivities(cardActivities))
+    const refreshAccountActivities = () => {
+        get(`/api/accounts/${accountUUID}/activities`)
+            .then(accountActivities => setAccountActivities(accountActivities))
     }
 
     const handleActivityUpload = (activityData) => {
         let formData = new FormData();
         formData.append('file', activityData['file'])
-        return postForm(`/api/cards/${cardUUID}/activities`, formData)
+        return postForm(`/api/accounts/${accountUUID}/activities`, formData)
             .then(() => {
                 hideModal()
-                refreshCardActivities()
+                refreshAccountActivities()
             })
             .catch(e => {
                 throw e.message
@@ -41,26 +40,24 @@ const CardActivitiesPage = ({ match }) => {
     }
 
     useEffect(() => {
-        refreshCard()
-        refreshCardActivities()
-    }, [setCardActivities])
+        refreshAccount()
+        refreshAccountActivities()
+    }, [setAccountActivities])
 
     return (
         <div>
-            <h1>Card Activities for {card?.last_four}</h1>
+            <h1>Account Activities for {account?.last_four}</h1>
             <input type='button' onClick={showModal} value='Upload Activities' style={{ marginBottom: 25 + 'px' }} />
             <div>
                 <Table rowKey='uuid' columns={{
                     'uuid': 'Activity UUID',
-                    'transaction_date': 'Transaction Date',
-                    'post_date': 'Post Date',
+                    'details': 'Details',
+                    'posting_date': 'Post Date',
                     'description': 'Description',
-                    'category': 'Category',
-                    'type': 'Type',
                     'amount': 'Amount',
-                }} rows={cardActivities} customRenders={{
-                    'transaction_date': (data) => formatAsDate(data['transaction_date']),
-                    'post_date': (data) => formatAsDate(data['post_date']),
+                    'type': 'Type',
+                }} rows={accountActivities} customRenders={{
+                    'posting_date': (data) => formatAsDate(data['posting_date']),
                     'amount': (data) => formatAsMoney(data['amount']),
                 }} />
             </div>
@@ -81,4 +78,4 @@ const CardActivitiesPage = ({ match }) => {
     )
 }
 
-export default CardActivitiesPage
+export default AccountActivitiesPage

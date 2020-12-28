@@ -4,9 +4,9 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS cards (
-  uuid        UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
-  last_four   VARCHAR(4)  NOT NULL,
-  description TEXT        NOT NULL
+  uuid        UUID       PRIMARY KEY DEFAULT uuid_generate_v4(),
+  last_four   VARCHAR(4) NOT NULL,
+  description TEXT       NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS card_activities (

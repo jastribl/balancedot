@@ -1,6 +1,8 @@
 import React from 'react'
 import { BrowserRouter, NavLink, Route, Switch } from 'react-router-dom'
 
+import AccountActivitiesPage from './pages/AccountActivitiesPage'
+import AccountsPage from './pages/AccountsPage'
 import CardActivitiesPage from './pages/CardActivitiesPage'
 import CardsPage from './pages/CardsPage'
 import ErrorPage from './pages/ErrorPage'
@@ -14,11 +16,14 @@ const App = () => (
             <div>
                 <div className='nav-hold'>
                     <NavLink className='nav-item' activeClassName='active-nav-item' to='/' exact>Home</NavLink>
+                    <NavLink className='nav-item' activeClassName='active-nav-item' to='/accounts'>Accounts</NavLink>
                     <NavLink className='nav-item' activeClassName='active-nav-item' to='/cards'>Cards</NavLink>
                     <NavLink className='nav-item' activeClassName='active-nav-item' to='/splitwise_expenses'>Splitwise Expenses</NavLink>
                 </div>
                 <Switch>
                     <Route path='/' component={HomePage} exact />
+                    <Route path='/accounts' component={AccountsPage} exact />
+                    <Route path='/accounts/:accountUUID/activities' component={AccountActivitiesPage} exact />
                     <Route path='/cards' component={CardsPage} exact />
                     <Route path='/cards/:cardUUID/activities' component={CardActivitiesPage} />
                     <Route path='/splitwise_expenses' component={SplitwiseExpensesPage} />
