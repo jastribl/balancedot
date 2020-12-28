@@ -30,7 +30,7 @@ func GetTokenFromCode(cfg *config.Config, code string) (*oauth2.Token, error) {
 func HasToken(cfg *config.Config) bool {
 	// todo: make work with user
 	_, err := tokenFromFile(cfg)
-	return err != nil
+	return err == nil
 }
 
 // Retrieves a token from a local file.
