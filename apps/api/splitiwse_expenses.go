@@ -101,17 +101,17 @@ func (m *App) RefreshSplitwise(w ResponseWriter, r *Request) WriterResponse {
 				return w.SendUnexpectedError(err)
 			}
 			newSplitwiseExpense := &entities.SplitwiseExpense{
-				SplitwiseID:  expense.ID,
-				Description:  expense.Description,
-				Details:      expense.Details,
-				CurrencyCode: expense.CurrencyCode,
-				Amount:       amountOwed,
-				AmountPaid:   amountPaid,
-				Date:         expense.Date,
-				CreatedAt:    expense.CreatedAt,
-				UpdatedAt:    expense.UpdatedAt,
-				DeletedAt:    expense.DeletedAt,
-				Category:     *expense.Category.Name,
+				SplitwiseID:        expense.ID,
+				Description:        expense.Description,
+				Details:            expense.Details,
+				CurrencyCode:       expense.CurrencyCode,
+				Amount:             amountOwed,
+				AmountPaid:         amountPaid,
+				Date:               expense.Date,
+				SplitwiseCreatedAt: expense.CreatedAt,
+				SplitwiseUpdatedAt: expense.UpdatedAt,
+				SplitwiseDeletedAt: expense.DeletedAt,
+				Category:           *expense.Category.Name,
 			}
 
 			idExists, err := helpers.RowExistsIncludingDeleted(
