@@ -6,7 +6,7 @@ const ErrorRow = ({ message }) => {
     }
 
     return (
-        <div className="row isa_error">
+        <div className='row isa_error'>
             <span>
                 <div style={{ textAlign: 'center', color: 'red' }}>{message}</div>
             </span>

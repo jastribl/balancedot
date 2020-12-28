@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 
 import { postJSON } from '../../utils/api'
-
 import ErrorRow from '../common/ErrorRow'
 import Spinner from '../common/Spinner'
 

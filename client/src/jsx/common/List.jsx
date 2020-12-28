@@ -3,7 +3,7 @@ import React from 'react'
 const List = (props) => {
     const { items } = props
     if (!items) {
-        return <div/>
+        return <div />
     }
     return (
         <ul>

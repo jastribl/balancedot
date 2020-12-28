@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
-import { postJSON, get } from '../utils/api'
-
+import { get } from '../utils/api'
 import ErrorBar from './common/ErrorRow'
 
 const SplitwiseLoginCheck = (props) => {
@@ -26,7 +25,7 @@ const SplitwiseLoginCheck = (props) => {
             })
             .catch(e => {
                 setHasSplitwiseSetup(false)
-                if (e.status === 401 && e.message === "Authentication Required") {
+                if (e.status === 401 && e.message === 'Authentication Required') {
                     setAuthURL(e['redirect_url'])
                 } else {
                     setErrorMessage(e.message)
@@ -43,7 +42,7 @@ const SplitwiseLoginCheck = (props) => {
     }
 
     if (authURL !== null) {
-        return <input type="button" onClick={onAuthClick} value="Link Splitwise" style={{ marginBottom: 25 + 'px' }} />
+        return <input type='button' onClick={onAuthClick} value='Link Splitwise' style={{ marginBottom: 25 + 'px' }} />
     }
 
     return <div />

@@ -9,9 +9,8 @@ function errorHandler(pm) {
                 throw e
             })
         })
+}
 
-
-    }
 function post(path, data, redirect = null) {
     let options = {
         method: 'POST',

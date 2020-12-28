@@ -1,13 +1,12 @@
-import React, { useEffect, useState } from 'react'
 import Moment from 'moment'
+import React, { useEffect, useState } from 'react'
 
+import { get, postJSON } from '../../utils/api'
 import { formatAsMoney } from '../../utils/format'
-import { postJSON, get } from '../../utils/api'
-
-import ErrorRow from "../common/ErrorRow"
-import Spinner from "../common/Spinner"
+import ErrorRow from '../common/ErrorRow'
+import Spinner from '../common/Spinner'
+import Table from '../common/Table'
 import SplitwiseLoginCheck from '../SplitwiseLoginCheck'
-import Table from "../common/Table"
 
 const SplitwiseExpensesPage = () => {
     const [splitwiseExpenses, setSplitwiseExpenses] = useState(null)
@@ -66,10 +65,10 @@ const SplitwiseExpensesPage = () => {
             <h1>Splitwise Expenses</h1>
             <ErrorRow message={errorMessage} />
             <SplitwiseLoginCheck>
-                <input type="button" onClick={handleRefreshExpenses} value="Refresh Splitwise" style={{ marginBottom: 25 + 'px' }} />
+                <input type='button' onClick={handleRefreshExpenses} value='Refresh Splitwise' style={{ marginBottom: 25 + 'px' }} />
                 {refreshResponseRender}
                 <div>
-                    <Table rowKey="uuid" columns={{
+                    <Table rowKey='uuid' columns={{
                         'uuid': 'UUID',
                         'splitwise_id': 'splitwise_id',
                         'description': 'Description',

@@ -9,7 +9,7 @@ const Table = ({ rowKey, columns, rows, customRenders }) => {
     }
     return (
         <div>
-            <table className="styled-table">
+            <table className='styled-table'>
                 <thead>
                     <tr>
                         {Object.keys(columns).map((key) => <th key={key}>{columns[key]}</th>)}
