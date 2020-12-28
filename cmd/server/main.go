@@ -18,8 +18,7 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	// Setup config and splitwise auth
-	var cfg *config.Config
-	cfg = config.NewConfig()
+	cfg := config.NewConfig()
 	go func() {
 		browser.OpenURL(<-cfg.Splitwise.AuthURLChan)
 	}()
@@ -40,7 +39,7 @@ func main() {
 	mainRouter := mux.NewRouter()
 
 	mainRouter.Handle("/api/splitwise_login_check", api.Handler(apiApp.SplitwiseLoginCheck))
-	mainRouter.Handle("/api/splitwise_oauth_callback", api.Handler(apiApp.SplitwiseOatuhCallback))
+	mainRouter.Handle("/api/splitwise_oauth_callback", api.Handler(apiApp.SplitwiseOauthCallback))
 
 	mainRouter.Handle("/api/cards/{cardUUID}/activities", api.Handler(apiApp.GetAllCardActivitiesForCard)).Methods("GET")
 	mainRouter.Handle("/api/cards/{cardUUID}/activity", api.Handler(apiApp.UploadCardActivities)).Methods("POST")

@@ -21,13 +21,14 @@ func GetAuthPortalURL(cfg *config.Config) string {
 	return getAuthConfig(cfg).AuthCodeURL(cfg.State, oauth2.AccessTypeOffline)
 }
 
-// GetTokenFromCode todo
+// GetTokenFromCode takes the code and exchanes it for the token
 func GetTokenFromCode(cfg *config.Config, code string) (*oauth2.Token, error) {
 	return getAuthConfig(cfg).Exchange(context.TODO(), code)
 }
 
-// HasToken todo
+// HasToken returns if the user has a token
 func HasToken(cfg *config.Config) bool {
+	// todo: make work with user
 	f, err := os.Open(cfg.TokenFileLocation)
 	if err != nil {
 		return false

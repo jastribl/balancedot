@@ -33,8 +33,9 @@ type oauthCallbackParams struct {
 	State string `json:"state"`
 }
 
-// SplitwiseOatuhCallback todo
-func (m *App) SplitwiseOatuhCallback(w ResponseWriter, r *Request) WriterResponse {
+// SplitwiseOauthCallback takes in the code and state and configures the token
+func (m *App) SplitwiseOauthCallback(w ResponseWriter, r *Request) WriterResponse {
+	// todo: make work with user
 	var p oauthCallbackParams
 	err := r.DecodeParams(&p)
 	if err != nil {
