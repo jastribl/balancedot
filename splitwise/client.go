@@ -16,14 +16,6 @@ type Client struct {
 	httpClient *http.Client
 }
 
-func getTokenFromWeb(cfg *config.Config) (*oauth2.Token, error) {
-	// Get the url and pass it through the channel to be followed
-	cfg.AuthURLChan <- GetAuthPortalURL(cfg)
-
-	// Get the code passsed back and exchange client token info
-	return GetTokenFromCode(cfg, <-cfg.AuthCodeChan)
-}
-
 // GetAuthPortalURL fetches the url required to redirect for Splitiwse OAuth Authentication
 func GetAuthPortalURL(cfg *config.Config) string {
 	return getAuthConfig(cfg).AuthCodeURL(cfg.State, oauth2.AccessTypeOffline)
@@ -66,37 +58,6 @@ func SaveToken(cfg *config.Config, token *oauth2.Token) error {
 	}
 	defer f.Close()
 	return json.NewEncoder(f).Encode(token)
-}
-
-// ClientSetupError is a custom client setup error
-type ClientSetupError struct {
-	RedirectURL string
-	Err         error
-}
-
-// Error returns the error
-func (e ClientSetupError) Error() string {
-	return e.Err.Error()
-}
-
-// NewClientForCLI gets a new client for a CLI using local token
-func NewClientForCLI(cfg *config.Config) (*Client, error) {
-	tokFile := cfg.TokenFileLocation
-	tok, err := tokenFromFile(tokFile)
-	if err != nil {
-		tok, err = getTokenFromWeb(cfg)
-		if err != nil {
-			return nil, err
-		}
-		err = SaveToken(cfg, tok)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return &Client{
-		getAuthConfig(cfg).Client(context.Background(), tok),
-	}, nil
 }
 
 // NewClientForUser gets a new client for a user using the user token
