@@ -16,7 +16,7 @@ type Client struct {
 	httpClient *http.Client
 }
 
-// GetAuthPortalURL fetches the url required to redirect for Splitiwse OAuth Authentication
+// GetAuthPortalURL fetches the url required to redirect for Splitwise OAuth Authentication
 func GetAuthPortalURL(cfg *config.Config) string {
 	return getAuthConfig(cfg).AuthCodeURL(cfg.State, oauth2.AccessTypeOffline)
 }

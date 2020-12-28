@@ -10,7 +10,7 @@ import SplitwiseLoginCheck from '../SplitwiseLoginCheck'
 import Table from "../common/Table"
 
 const SplitwiseExpensesPage = () => {
-    const [splitiwseExpenses, setSplitwiseExpenses] = useState(null)
+    const [splitwiseExpenses, setSplitwiseExpenses] = useState(null)
     const [pageLoading, setPageLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState(null)
     const [refreshResponse, setRefreshResponse] = useState(null)
@@ -78,7 +78,7 @@ const SplitwiseExpensesPage = () => {
                         'amount_paid': 'Amount Paid',
                         'date': 'Date',
                         'category': 'Category',
-                    }} rows={splitiwseExpenses} customRenders={{
+                    }} rows={splitwiseExpenses} customRenders={{
                         'details': (data) => data['details'].trim(),
                         'date': (data) =>
                             Moment(data['date']).format('YYYY-MM-DD'),
