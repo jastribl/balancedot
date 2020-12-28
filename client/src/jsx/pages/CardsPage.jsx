@@ -15,7 +15,7 @@ const CardsPage = () => {
 
     const refreshCards = () => {
         get('/api/cards')
-            .then((cards) => setCards(cards))
+            .then(cardsResponse => setCards(cardsResponse))
     }
 
     const handleNewCardSubmit = (newCardData) => {

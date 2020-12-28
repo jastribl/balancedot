@@ -16,7 +16,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-// GetAllCardActivitiesForCard get all the Cards
+// GetAllCardActivitiesForCard gets all the Card Activities
 func (m *App) GetAllCardActivitiesForCard(w ResponseWriter, r *Request) WriterResponse {
 	params := r.GetParams()
 	cardActivityRepo := repos.NewCardActivityRepo(m.db)

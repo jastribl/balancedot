@@ -2,7 +2,7 @@ import Moment from 'moment'
 import React, { useEffect, useState } from 'react'
 
 import { get, postForm } from '../../utils/api'
-import { formatAsMoney } from '../../utils/format'
+import { formatAsDate, formatAsMoney } from '../../utils/format'
 import Form from '../common/Form'
 import Modal from '../common/Modal'
 import Table from '../common/Table'
@@ -59,10 +59,8 @@ const CardActivitiesPage = ({ match }) => {
                     'type': 'Type',
                     'amount': 'Amount',
                 }} rows={cardActivities} customRenders={{
-                    'transaction_date': (data) =>
-                        Moment(data['transaction_date']).format('YYYY-MM-DD'),
-                    'post_date': (data) =>
-                        Moment(data['post_date']).format('YYYY-MM-DD'),
+                    'transaction_date': (data) => formatAsDate(data['transaction_date']),
+                    'post_date': (data) => formatAsDate(data['post_date']),
                     'amount': (data) => formatAsMoney(data['amount']),
                 }} />
             </div>
