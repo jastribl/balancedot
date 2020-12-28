@@ -29,19 +29,13 @@ func GetTokenFromCode(cfg *config.Config, code string) (*oauth2.Token, error) {
 // HasToken returns if the user has a token
 func HasToken(cfg *config.Config) bool {
 	// todo: make work with user
-	f, err := os.Open(cfg.TokenFileLocation)
-	if err != nil {
-		return false
-	}
-	defer f.Close()
-	tok := &oauth2.Token{}
-	err = json.NewDecoder(f).Decode(tok)
-	return err == nil
+	_, err := tokenFromFile(cfg)
+	return err != nil
 }
 
 // Retrieves a token from a local file.
-func tokenFromFile(file string) (*oauth2.Token, error) {
-	f, err := os.Open(file)
+func tokenFromFile(cfg *config.Config) (*oauth2.Token, error) {
+	f, err := os.Open(cfg.TokenFileLocation)
 	if err != nil {
 		return nil, err
 	}
@@ -64,8 +58,7 @@ func SaveToken(cfg *config.Config, token *oauth2.Token) error {
 // NewClientForUser gets a new client for a user using the user token
 func NewClientForUser(cfg *config.Config) (*Client, error) {
 	// todo: make this work with users
-	tokFile := cfg.TokenFileLocation
-	tok, err := tokenFromFile(tokFile)
+	tok, err := tokenFromFile(cfg)
 	if err != nil {
 		return nil, err
 	}
