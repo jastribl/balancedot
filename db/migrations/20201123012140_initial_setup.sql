@@ -25,18 +25,18 @@ CREATE TABLE IF NOT EXISTS card_activities (
 );
 
 CREATE TABLE IF NOT EXISTS splitwise_expenses (
-  uuid          UUID             PRIMARY KEY DEFAULT uuid_generate_v4(),
-  splitwise_id  int              NOT NULL UNIQUE,
-  description   TEXT             NOT NULL,
-  details       TEXT             NOT NULL,
-  currency_code TEXT             NOT NULL,
-  amount        NUMERIC(10, 2)   NOT NULL,
-  amount_paid   NUMERIC(10, 2)   NOT NULL,
-  date          TIMESTAMP        NOT NULL,
-  created_at    TIMESTAMP        NOT NULL,
-  updated_at    TIMESTAMP,
-  deleted_at    TIMESTAMP,
-  category      TEXT   
+  uuid                 UUID           PRIMARY KEY DEFAULT uuid_generate_v4(),
+  splitwise_id         int            NOT NULL UNIQUE,
+  description          TEXT           NOT NULL,
+  details              TEXT           NOT NULL,
+  currency_code        TEXT           NOT NULL,
+  amount               NUMERIC(10, 2) NOT NULL,
+  amount_paid          NUMERIC(10, 2) NOT NULL,
+  date                 TIMESTAMP      NOT NULL,
+  splitwise_created_at TIMESTAMP      NOT NULL,
+  splitwise_updated_at TIMESTAMP,
+  splitwise_deleted_at TIMESTAMP,
+  category             TEXT   
 );
 
 CREATE TABLE IF NOT EXISTS expense_links (

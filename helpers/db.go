@@ -35,11 +35,17 @@ func RowExists(db *gorm.DB, model interface{}, search interface{}) (bool, error)
 	if err != nil {
 		return false, err
 	}
+	defer foundRows.Close()
 	if foundRows.Next() {
 		return true, nil
 	}
 
 	return false, nil
+}
+
+// RowExistsIncludingDeleted checks if a given search row exists for a given model - but also includes deleted rows
+func RowExistsIncludingDeleted(db *gorm.DB, model interface{}, search interface{}) (bool, error) {
+	return RowExists(db.Unscoped(), model, search)
 }
 
 // TransactionResponse is a response for a transaction callback

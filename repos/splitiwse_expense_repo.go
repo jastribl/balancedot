@@ -17,10 +17,10 @@ func NewSplitwiseExpenseRepo(db *gorm.DB) *SplitwiseExpenseRepo {
 	}
 }
 
-// GetAllExpenses fetches all SplitwiseExpenses
-func (m *SplitwiseExpenseRepo) GetAllExpenses() ([]*entities.SplitwiseExpense, error) {
+// GetAllExpensesOrdered fetches all SplitwiseExpenses ordered
+func (m *SplitwiseExpenseRepo) GetAllExpensesOrdered() ([]*entities.SplitwiseExpense, error) {
 	var expenses []*entities.SplitwiseExpense
-	err := m.Find(&expenses).Error
+	err := m.Order("date DESC").Find(&expenses).Error
 	if err != nil {
 		return nil, err
 	}

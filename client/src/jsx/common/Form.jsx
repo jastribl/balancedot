@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 
-import Spinner from './Spinner'
 import ErrorRow from './ErrorRow'
+import Spinner from './Spinner'
 
 const Form = ({ onSubmit, fieldInfos }) => {
     const getValidatorForFieldName = (fieldName) =>
@@ -17,7 +17,6 @@ const Form = ({ onSubmit, fieldInfos }) => {
     const [errorMessage, setErrorMessage] = useState(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
-
     const handleFormFieldChange = (event) => {
         const fieldName = event.target.name
         const fieldInfo = fieldInfos[fieldName]
@@ -28,7 +27,6 @@ const Form = ({ onSubmit, fieldInfos }) => {
         })
         let formValue = fieldValue;
         if (fieldInfo.inputType === 'file') {
-            console.log("getting update from file")
             formValue = event.target.files[0]
         }
 
@@ -70,26 +68,28 @@ const Form = ({ onSubmit, fieldInfos }) => {
             onSubmit(formState)
                 .then(() => {
                     setFormState(initialValues)
-                    setIsSubmitting(false)
+                    setFormValues(initialValues)
                 })
                 .catch((e) => {
                     setErrorMessage(e)
+                })
+                .finally(() => {
                     setIsSubmitting(false)
                 })
         }
     }
 
     return (
-        <form onSubmit={onSubmitInternal} autoComplete="off" style={{ position: 'relative' }}>
+        <form onSubmit={onSubmitInternal} autoComplete='off' style={{ position: 'relative' }}>
             <Spinner visible={isSubmitting} />
             <ErrorRow message={errorMessage} />
-            <div className="row">
+            <div className='row'>
                 {Object.entries(fieldInfos).map(([fieldName, fieldInfo]) =>
-                    <div key={fieldName} className="row">
-                        <div className="col-25">
+                    <div key={fieldName} className='row'>
+                        <div className='col-25'>
                             <label>{fieldInfo.fieldLabel}</label>
                         </div>
-                        <div className="col-75">
+                        <div className='col-75'>
                             <input
                                 type={fieldInfo.inputType}
                                 name={fieldName}
@@ -103,8 +103,8 @@ const Form = ({ onSubmit, fieldInfos }) => {
                     </div>
                 )}
             </div>
-            <div className="row">
-                <input type="submit" value="Add" disabled={isSubmitting} />
+            <div className='row'>
+                <input type='submit' value='Add' disabled={isSubmitting} />
             </div>
         </form >
     )

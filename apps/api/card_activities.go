@@ -84,7 +84,7 @@ func (m *App) UploadCardActivities(w ResponseWriter, r *Request) WriterResponse 
 				Amount:          cardActivity.Amount.ToFloat64(),
 			}
 			newCardActivities = append(newCardActivities, newCardActivity)
-			err = tx.Save(newCardActivity).Error
+			err = tx.Create(newCardActivity).Error
 			if err != nil {
 				w.SendUnexpectedError(err)
 				return helpers.TransactionActionRollback
