@@ -9,7 +9,7 @@ import (
 
 // GetAllCards get all the Cards
 func (m *App) GetAllCards(w ResponseWriter, r *Request) WriterResponse {
-	return m.genericGetAll(w, r, entities.Card{}, nil)
+	return m.genericGetAll(w, r, m.db, entities.Card{}, nil)
 }
 
 type newCardParams struct {

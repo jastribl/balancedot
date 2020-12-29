@@ -30,17 +30,29 @@ func (m *GenericRepo) GetAllOf(typeRef interface{}, options *GetAllOfOptions) (i
 
 	db := m.DB
 
-	if options != nil && options.Where != "" {
-		db = db.Where(options.Where)
-	}
-
-	if options != nil && options.Order != "" {
-		db = db.Order(options.Order)
+	if options != nil {
+		if options.Where != "" {
+			db = db.Where(options.Where)
+		}
+		if options.Order != "" {
+			db = db.Order(options.Order)
+		}
 	}
 
 	db = db.Find(out)
 
 	err := db.Error
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// GetAllOfRaw fetches all of whatever type is passed in using the raw query
+func (m *GenericRepo) GetAllOfRaw(typeRef interface{}, query string, params ...interface{}) (interface{}, error) {
+	out := reflect.New(reflect.SliceOf(reflect.TypeOf(typeRef))).Interface()
+
+	err := m.DB.Raw(query, params...).Find(out).Error
 	if err != nil {
 		return nil, err
 	}

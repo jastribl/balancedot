@@ -41,12 +41,22 @@ func main() {
 	// Splitwise
 	mainRouter.Handle("/api/splitwise_login_check", api.Handler(apiApp.SplitwiseLoginCheck))
 	mainRouter.Handle("/api/splitwise_oauth_callback", api.Handler(apiApp.SplitwiseOauthCallback))
+	mainRouter.Handle("/api/splitwise_expenses/unlinked", api.Handler(apiApp.GetAllUnlinkedSplitwiseExpenses)).Methods("GET")
+	mainRouter.Handle("/api/splitwise_expenses/{splitwiseExpenseUUID}", api.Handler(apiApp.GetSplitwiseExpenseByUUID)).Methods("GET")
 	mainRouter.Handle("/api/splitwise_expenses", api.Handler(apiApp.GetAllSplitwiseExpenses)).Methods("GET")
 	mainRouter.Handle("/api/refresh_splitwise", api.Handler(apiApp.RefreshSplitwise)).Methods("POST")
 
 	// Card Activities
 	mainRouter.Handle("/api/cards/{cardUUID}/activities", api.Handler(apiApp.GetAllCardActivitiesForCard)).Methods("GET")
 	mainRouter.Handle("/api/cards/{cardUUID}/activities", api.Handler(apiApp.UploadCardActivities)).Methods("POST")
+	mainRouter.Handle(
+		"/api/card_activities/for_link/{splitwiseExpenseUUID}",
+		api.Handler(apiApp.GetAllCardActivitiesForSplitwiseExpenseUUID),
+	).Methods("GET")
+	mainRouter.Handle(
+		"/api/card_activities/{cardActivityUUID}/link/{splitwiseExpenseUUID}",
+		api.Handler(apiApp.LinkCardActivityToSplitwiseExpense),
+	).Methods("POST")
 
 	// Cards
 	mainRouter.Handle("/api/cards/{cardUUID}", api.Handler(apiApp.GetCardByUUID)).Methods("GET")

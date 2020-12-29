@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS splitwise_expenses (
   splitwise_updated_at TIMESTAMP,
   splitwise_deleted_at TIMESTAMP,
   category             TEXT,
+  creation_method      TEXT,
 
   CONSTRAINT splitwise_expenses_splitwise_id_unique UNIQUE (splitwise_id)
 );

@@ -57,7 +57,7 @@ func main() {
 				break Input
 			}
 			expense.CardActivities = append(expense.CardActivities, cardActivities[activityIndex])
-			err = db.Create(&expense).Error
+			err = db.Save(&expense).Error
 			if err != nil {
 				log.Fatal(err)
 			}

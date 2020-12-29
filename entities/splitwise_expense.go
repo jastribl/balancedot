@@ -20,5 +20,6 @@ type SplitwiseExpense struct {
 	SplitwiseUpdatedAt *time.Time      `json:"splitwise_updated_at"`
 	SplitwiseDeletedAt *time.Time      `json:"splitwise_deleted_at"`
 	Category           string          `json:"category"`
+	CreationMethod     *string         `json:"creation_method"`
 	CardActivities     []*CardActivity `json:"card_activities" gorm:"many2many:expense_links;"`
 }
