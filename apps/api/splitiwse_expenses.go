@@ -143,8 +143,7 @@ func (m *App) RefreshSplitwise(w ResponseWriter, r *Request) WriterResponse {
 				err = m.db.Create(newSplitwiseExpense).Error
 			}
 			if err != nil {
-				// todo: redo migration to name the constraint explicitly
-				if helpers.IsUniqueConstraintError(err, "splitwise_expenses_splitwise_id_key") {
+				if helpers.IsUniqueConstraintError(err, "splitwise_expenses_splitwise_id_unique") {
 					return w.SendError(
 						"got duplicate even though this shouldn't be possible",
 						http.StatusInternalServerError,
