@@ -5,7 +5,6 @@ import (
 
 	"gihub.com/jastribl/balancedot/entities"
 	"gihub.com/jastribl/balancedot/helpers"
-	"gihub.com/jastribl/balancedot/repos"
 )
 
 // GetAllAccounts get all the Accounts
@@ -14,7 +13,6 @@ func (m *App) GetAllAccounts(w ResponseWriter, r *Request) WriterResponse {
 }
 
 type newAccountParams struct {
-	// todo: these
 	LastFour    string `json:"last_four"`
 	Description string `json:"description"`
 }
@@ -32,7 +30,6 @@ func (m *App) CreateNewAccount(w ResponseWriter, r *Request) WriterResponse {
 	}
 	err = m.db.Create(&account).Error
 	if err != nil {
-		// todo: this
 		if helpers.IsUniqueConstraintError(err, "accounts_last_four_unique") {
 			return w.SendError("Account already exists", http.StatusConflict, err)
 		}
@@ -44,11 +41,5 @@ func (m *App) CreateNewAccount(w ResponseWriter, r *Request) WriterResponse {
 
 // GetAccountByUUID gets a single Account by UUID
 func (m *App) GetAccountByUUID(w ResponseWriter, r *Request) WriterResponse {
-	var account entities.Account
-	err := repos.NewGenericRepo(m.db).GetByUUID(&account, r.GetParams()["accountUUID"])
-	if err != nil {
-		return w.SendUnexpectedError(err)
-	}
-
-	return w.SendResponse(account)
+	return m.genericGetByUUID(w, r, m.db, &entities.Account{}, r.GetParams()["accountUUID"])
 }

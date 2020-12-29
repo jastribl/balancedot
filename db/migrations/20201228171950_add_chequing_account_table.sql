@@ -6,6 +6,9 @@ CREATE TABLE IF NOT EXISTS accounts (
   description TEXT       NOT NULL
 );
 
+ALTER TABLE accounts
+ADD CONSTRAINT accounts_last_four_unique UNIQUE (last_four);
+
 CREATE TABLE IF NOT EXISTS account_activities (
   uuid             UUID             PRIMARY KEY DEFAULT uuid_generate_v4(),
   account_uuid     UUID             NOT NULL,
@@ -22,4 +25,7 @@ CREATE TABLE IF NOT EXISTS account_activities (
 
 -- +goose Down
 -- SQL in this section is executed when the migration is rolled back.
+ALTER TABLE accounts
+DROP CONSTRAINT IF EXISTS accounts_last_four_unique;
 DROP TABLE IF EXISTS account_activities, accounts;
+

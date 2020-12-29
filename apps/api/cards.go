@@ -5,7 +5,6 @@ import (
 
 	"gihub.com/jastribl/balancedot/entities"
 	"gihub.com/jastribl/balancedot/helpers"
-	"gihub.com/jastribl/balancedot/repos"
 )
 
 // GetAllCards get all the Cards
@@ -42,11 +41,5 @@ func (m *App) CreateNewCard(w ResponseWriter, r *Request) WriterResponse {
 
 // GetCardByUUID gets a single Card by UUID
 func (m *App) GetCardByUUID(w ResponseWriter, r *Request) WriterResponse {
-	var card entities.Card
-	err := repos.NewGenericRepo(m.db).GetByUUID(&card, r.GetParams()["cardUUID"])
-	if err != nil {
-		return w.SendUnexpectedError(err)
-	}
-
-	return w.SendResponse(card)
+	return m.genericGetByUUID(w, r, m.db, &entities.Card{}, r.GetParams()["cardUUID"])
 }
