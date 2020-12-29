@@ -66,6 +66,14 @@ func main() {
 	// Account Activities
 	mainRouter.Handle("/api/accounts/{accountUUID}/activities", api.Handler(apiApp.GetAllAccountActivitiesForAccount)).Methods("GET")
 	mainRouter.Handle("/api/accounts/{accountUUID}/activities", api.Handler(apiApp.UploadAccountActivities)).Methods("POST")
+	mainRouter.Handle(
+		"/api/account_activities/for_link/{splitwiseExpenseUUID}",
+		api.Handler(apiApp.GetAllAccountActivitiesForSplitwiseExpenseUUID),
+	).Methods("GET")
+	mainRouter.Handle(
+		"/api/account_activities/{accountActivityUUID}/link/{splitwiseExpenseUUID}",
+		api.Handler(apiApp.LinkAccountActivityToSplitwiseExpense),
+	).Methods("POST")
 
 	// Chequing Accounts
 	mainRouter.Handle("/api/accounts/{accountUUID}", api.Handler(apiApp.GetAccountByUUID)).Methods("GET")

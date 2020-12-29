@@ -11,9 +11,11 @@ const LinkerFlowPage = ({ match }) => {
     const splitwiseExpenseUUID = match.params.splitwiseExpenseUUID;
 
     const [splitwiseExpense, setSplitwiseExpense] = useState(null)
-    const [cardsLinks, setCardLinks] = useState(null)
+    const [cardLinks, setCardLinks] = useState(null)
+    const [accountLinks, setAccountLinks] = useState(null)
     const [expenseLoading, setExpenseLoading] = useState(false)
     const [cardLinksLoading, setCardLinksLoading] = useState(false)
+    const [accountLinksLoading, setAccountLinksLoading] = useState(false)
     const [linkLoading, setLinkLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState(null)
 
@@ -41,7 +43,27 @@ const LinkerFlowPage = ({ match }) => {
             .finally(() => {
                 setCardLinksLoading(false)
             })
-    }, [setExpenseLoading, setSplitwiseExpense, setCardLinks, setErrorMessage])
+
+        setAccountLinksLoading(true)
+        get(`/api/account_activities/for_link/${splitwiseExpenseUUID}`)
+            .then(accountLinksResponse => {
+                setAccountLinks(accountLinksResponse)
+            })
+            .catch(e => {
+                setErrorMessage(e.message)
+            })
+            .finally(() => {
+                setAccountLinksLoading(false)
+            })
+    }, [
+        setExpenseLoading,
+        setCardLinksLoading,
+        setAccountLinksLoading,
+        setSplitwiseExpense,
+        setCardLinks,
+        setAccountLinks,
+        setErrorMessage,
+    ])
 
     const linkCardActivityToExpense = (cardActivityUUID) => {
         setLinkLoading(true)
@@ -59,9 +81,25 @@ const LinkerFlowPage = ({ match }) => {
             })
     }
 
+    const linkAccountActivityToExpense = (accountActivityUUID) => {
+        setLinkLoading(true)
+        postJSON(`/api/account_activities/${accountActivityUUID}/link/${splitwiseExpenseUUID}`)
+            .then(data => {
+                if (data.message === 'success') {
+                    window.history.back()
+                }
+            })
+            .catch(e => {
+                setErrorMessage(e.message)
+            })
+            .finally(() => {
+                setLinkLoading(false)
+            })
+    }
+
     return (
         <div>
-            <Spinner visible={expenseLoading || cardLinksLoading || linkLoading} />
+            <Spinner visible={expenseLoading || cardLinksLoading || accountLinksLoading || linkLoading} />
             <h1>Splitwise Expense Linking Flow</h1>
             <ErrorRow message={errorMessage} />
             <div>
@@ -84,6 +122,7 @@ const LinkerFlowPage = ({ match }) => {
                 }} />
             </div>
             <h2>Possible Links</h2>
+
             <h3>Card Links</h3>
             <div>
                 <Table rowKey='uuid' columns={{
@@ -94,7 +133,7 @@ const LinkerFlowPage = ({ match }) => {
                     'type': 'Type',
                     'amount': 'Amount',
                     'link': 'Link',
-                }} rows={cardsLinks} customRenders={{
+                }} rows={cardLinks} customRenders={{
                     'transaction_date': (data) => <div style={{
                         color: formatAsDate(data['transaction_date']) === formatAsDate(splitwiseExpense['date']) ? 'green' : null
                     }}>{formatAsDate(data['transaction_date'])}</div>,
@@ -110,6 +149,31 @@ const LinkerFlowPage = ({ match }) => {
                         value='Link'
                     />
                 }} />
+
+                <h3>Account Links</h3>
+                <div>
+                    <Table rowKey='uuid' columns={{
+                        'uuid': 'Activity UUID',
+                        'details': 'Details',
+                        'posting_date': 'Post Date',
+                        'description': 'Description',
+                        'amount': 'Amount',
+                        'type': 'Type',
+                        'link': 'Link',
+                    }} rows={accountLinks} customRenders={{
+                        'posting_date': (data) => <div style={{
+                            color: formatAsDate(data['posting_date']) === formatAsDate(splitwiseExpense['date']) ? 'green' : null
+                        }}>{formatAsDate(data['posting_date'])}</div>,
+                        'amount': (data) => <div style={{
+                            color: Math.abs(data['amount']) === Math.abs(splitwiseExpense['amount_paid']) ? 'green' : null
+                        }}>{formatAsMoney(data['amount'])}</div>,
+                        'link': (data) => <input
+                            type='button'
+                            onClick={() => linkAccountActivityToExpense(data['uuid'])}
+                            value='Link'
+                        />
+                    }} />
+                </div>
             </div>
         </div>
     )
