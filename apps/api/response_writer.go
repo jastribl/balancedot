@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"runtime/debug"
 )
 
 // WriterResponse is the response of the writer to be used mostly for internal return types and tracking
@@ -72,7 +73,11 @@ func (w *writer) SendError(message string, code int, extras ...interface{}) Writ
 
 // SendUnexpectedError sends a response when an unexpected error is found along with extras
 func (w *writer) SendUnexpectedError(err interface{}, extras ...interface{}) WriterResponse {
-	return w.SendError("Unexpected Error", http.StatusInternalServerError, append([]interface{}{err}, extras)...)
+	return w.SendError(
+		"Unexpected Error",
+		http.StatusInternalServerError,
+		append([]interface{}{err, string(debug.Stack())}, extras...)...,
+	)
 }
 
 func (w *writer) printExtras(extras ...interface{}) {

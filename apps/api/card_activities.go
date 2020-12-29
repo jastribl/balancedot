@@ -1,54 +1,36 @@
 package api
 
 import (
-	"bufio"
-	"fmt"
 	"net/http"
 
+	"gihub.com/jastribl/balancedot/chase/models"
 	"gihub.com/jastribl/balancedot/entities"
 	"gihub.com/jastribl/balancedot/helpers"
-
-	"github.com/gocarina/gocsv"
-	"github.com/jinzhu/gorm"
-
-	"gihub.com/jastribl/balancedot/chase/models"
 	"gihub.com/jastribl/balancedot/repos"
+	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 )
 
-// GetAllCardActivitiesForCard get all the Cards
+// GetAllCardActivitiesForCard gets all the Card Activities
 func (m *App) GetAllCardActivitiesForCard(w ResponseWriter, r *Request) WriterResponse {
-	params := r.GetParams()
-	cardActivityRepo := repos.NewCardActivityRepo(m.db)
-	cardActivities, err := cardActivityRepo.GetAllCardActivitiesForCard(params["cardUUID"])
+	var card entities.Card
+	err := repos.NewGenericRepo(m.db.Preload("Activities")).
+		GetByUUID(&card, r.GetParams()["cardUUID"])
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}
-
-	return w.SendResponse(cardActivities)
+	return w.SendResponse(card.Activities)
 }
 
 // UploadCardActivities uploads new CardActivities
 func (m *App) UploadCardActivities(w ResponseWriter, r *Request) WriterResponse {
-	params := r.GetParams()
-	cardUUID, err := uuid.FromString(params["cardUUID"])
+	cardUUID, err := uuid.FromString(r.GetParams()["cardUUID"])
 	if err != nil {
-		return w.SendUnexpectedError(err)
+		return w.SendError("Invalid cardUUID provided", http.StatusUnprocessableEntity, err)
 	}
-
-	r.ParseMultipartForm(10 << 20) // 10MB file size limit
-	file, handler, err := r.FormFile("file")
-	if err != nil {
-		return w.SendUnexpectedError(err)
-	}
-	defer file.Close()
-	fmt.Printf("Uploaded File: %+v\n", handler.Filename)
-	fmt.Printf("File Size: %+v\n", handler.Size)
-
-	bufferedReader := bufio.NewReader(file)
 
 	cardActivities := []*models.CardActivity{}
-	err = gocsv.Unmarshal(bufferedReader, &cardActivities)
+	err = r.ReadMultipartCSV("file", &cardActivities)
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}

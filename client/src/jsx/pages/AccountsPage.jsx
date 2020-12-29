@@ -6,23 +6,23 @@ import Form from '../common/Form'
 import Modal from '../common/Modal'
 import Table from '../common/Table'
 
-const CardsPage = () => {
-    const [cards, setCards] = useState(null)
+const AccountsPage = () => {
+    const [accounts, setAccounts] = useState(null)
     const [modalVisible, setShowModal] = useState(false)
 
     const showModal = () => { setShowModal(true) }
     const hideModal = () => { setShowModal(false) }
 
-    const refreshCards = () => {
-        get('/api/cards')
-            .then(cardsResponse => setCards(cardsResponse))
+    const refreshAccounts = () => {
+        get('/api/accounts')
+            .then(accountsResponse => setAccounts(accountsResponse))
     }
 
-    const handleNewCardSubmit = (newCardData) => {
-        return postJSON('/api/card', newCardData)
+    const handleNewAccountSubmit = (newAccountData) => {
+        return postJSON('/api/account', newAccountData)
             .then(() => {
                 hideModal()
-                refreshCards()
+                refreshAccounts()
             })
             .catch(e => {
                 throw e.message
@@ -30,25 +30,25 @@ const CardsPage = () => {
     }
 
     useEffect(() => {
-        refreshCards()
-    }, [setCards])
+        refreshAccounts()
+    }, [setAccounts])
 
     return (
         <div>
-            <h1>Cards</h1>
-            <input type='button' onClick={showModal} value='New Card' style={{ marginBottom: 25 + 'px' }} />
+            <h1>Accounts</h1>
+            <input type='button' onClick={showModal} value='New Account' style={{ marginBottom: 25 + 'px' }} />
             <div>
                 <Table rowKey='uuid' columns={{
                     'last_four': 'Last Four',
                     'description': 'Description'
-                }} rows={cards} customRenders={{
+                }} rows={accounts} customRenders={{
                     'last_four': (data) =>
-                        <Link to={'/cards/' + data['uuid'] + '/activities'}>{data['last_four']}</Link>
+                        <Link to={'/accounts/' + data['uuid'] + '/activities'}>{data['last_four']}</Link>
                 }} />
             </div>
-            <Modal headerText='New Card' visible={modalVisible} handleClose={hideModal}>
+            <Modal headerText='New Account' visible={modalVisible} handleClose={hideModal}>
                 <Form
-                    onSubmit={handleNewCardSubmit}
+                    onSubmit={handleNewAccountSubmit}
                     fieldInfos={{
                         last_four: {
                             fieldName: 'last_four',
@@ -77,4 +77,4 @@ const CardsPage = () => {
     )
 }
 
-export default CardsPage
+export default AccountsPage

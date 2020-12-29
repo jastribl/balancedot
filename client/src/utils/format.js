@@ -1,3 +1,5 @@
+import Moment from 'moment'
+
 export function formatAsMoney(amount, currencyCode = 'USD') {
     let currencySymbol = '?'
     switch (currencyCode) {
@@ -8,4 +10,11 @@ export function formatAsMoney(amount, currencyCode = 'USD') {
             currencySymbol = `${currencyCode}?`
     }
     return (amount < 0 ? '-' : '') + currencySymbol + Math.abs(amount).toFixed(2)
+}
+
+export function formatAsDate(date) {
+    if (date) {
+        return Moment(date).format('YYYY-MM-DD')
+    }
+    return "????-??-??"
 }

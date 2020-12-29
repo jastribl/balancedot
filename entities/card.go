@@ -7,5 +7,5 @@ type Card struct {
 	UUID        uuid.UUID      `json:"uuid" gorm:"primary_key;"`
 	LastFour    string         `json:"last_four"`
 	Description string         `json:"description"`
-	Activity    []CardActivity `json:"activities"`
+	Activities  []CardActivity `json:"activities"`
 }

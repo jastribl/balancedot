@@ -1,9 +1,14 @@
 package api
 
 import (
+	"bufio"
+	"encoding/csv"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 
+	"github.com/gocarina/gocsv"
 	"github.com/gorilla/mux"
 )
 
@@ -28,4 +33,26 @@ func (m *Request) GetParams() map[string]string {
 func (m *Request) DecodeParams(params interface{}) error {
 	decoder := json.NewDecoder(m.Request.Body)
 	return decoder.Decode(&params)
+}
+
+// ReadMultipartCSV reads a multipart csv file to a given output variable
+func (m *Request) ReadMultipartCSV(fileName string, out interface{}) error {
+	m.ParseMultipartForm(10 << 20) // 10MB file size limit
+	file, handler, err := m.FormFile(fileName)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	fmt.Printf("Uploaded File: %+v\n", handler.Filename)
+	fmt.Printf("File Size: %+v\n", handler.Size)
+
+	bufferedReader := bufio.NewReader(file)
+
+	gocsv.SetCSVReader(func(in io.Reader) gocsv.CSVReader {
+		r := csv.NewReader(in)
+		// Ignore wrong number of items in a line
+		r.FieldsPerRecord = -1
+		return r
+	})
+	return gocsv.Unmarshal(bufferedReader, out)
 }

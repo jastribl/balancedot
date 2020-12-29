@@ -58,13 +58,9 @@ func (m *App) SplitwiseOauthCallback(w ResponseWriter, r *Request) WriterRespons
 
 // GetAllSplitwiseExpenses get all the SplitwiseExpenses
 func (m *App) GetAllSplitwiseExpenses(w ResponseWriter, r *Request) WriterResponse {
-	splitwiseExpenseRepo := repos.NewSplitwiseExpenseRepo(m.db)
-	splitwiseExpenses, err := splitwiseExpenseRepo.GetAllExpensesOrdered()
-	if err != nil {
-		return w.SendUnexpectedError(err)
-	}
-
-	return w.SendResponse(splitwiseExpenses)
+	return m.genericGetAll(w, r, entities.SplitwiseExpense{}, &repos.GetAllOfOptions{
+		Order: "date DESC",
+	})
 }
 
 // RefreshSplitwise refreshes the data from the Splitwise API
@@ -147,8 +143,7 @@ func (m *App) RefreshSplitwise(w ResponseWriter, r *Request) WriterResponse {
 				err = m.db.Create(newSplitwiseExpense).Error
 			}
 			if err != nil {
-				// todo: redo migration to name the constraint explicitly
-				if helpers.IsUniqueConstraintError(err, "splitwise_expenses_splitwise_id_key") {
+				if helpers.IsUniqueConstraintError(err, "splitwise_expenses_splitwise_id_unique") {
 					return w.SendError(
 						"got duplicate even though this shouldn't be possible",
 						http.StatusInternalServerError,

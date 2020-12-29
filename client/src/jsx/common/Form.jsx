@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 
+import { snakeToSentenceCase } from '../../utils/strings'
 import ErrorRow from './ErrorRow'
 import Spinner from './Spinner'
 
@@ -10,6 +11,12 @@ const Form = ({ onSubmit, fieldInfos }) => {
     let initialValues = {}
     Object.entries(fieldInfos).map(([fieldName, fieldInfo]) => {
         initialValues[fieldName] = fieldInfo.initialValue ?? ''
+
+        // Default labels
+        fieldInfo.fieldLabel ??= snakeToSentenceCase(fieldName)
+
+        // Default placeholders
+        fieldInfo.placeholder ??= snakeToSentenceCase(fieldName) + "..."
     })
     const [formState, setFormState] = useState(initialValues)
     const [formValues, setFormValues] = useState(initialValues)
