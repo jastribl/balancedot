@@ -1,17 +1,12 @@
 package api
 
 import (
-	"bufio"
-	"encoding/csv"
-	"fmt"
-	"io"
 	"net/http"
 
 	"gihub.com/jastribl/balancedot/chase/models"
 	"gihub.com/jastribl/balancedot/entities"
 	"gihub.com/jastribl/balancedot/helpers"
 	"gihub.com/jastribl/balancedot/repos"
-	"github.com/gocarina/gocsv"
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 )
@@ -35,26 +30,8 @@ func (m *App) UploadAccountActivities(w ResponseWriter, r *Request) WriterRespon
 		return w.SendError("Invalid accountUUID provided", http.StatusUnprocessableEntity, err)
 	}
 
-	r.ParseMultipartForm(10 << 20) // 10MB file size limit
-	file, handler, err := r.FormFile("file")
-	if err != nil {
-		return w.SendUnexpectedError(err)
-	}
-	defer file.Close()
-	fmt.Printf("Uploaded File: %+v\n", handler.Filename)
-	fmt.Printf("File Size: %+v\n", handler.Size)
-
-	bufferedReader := bufio.NewReader(file)
-
 	accountActivities := []*models.AccountActivity{}
-
-	gocsv.SetCSVReader(func(in io.Reader) gocsv.CSVReader {
-		r := csv.NewReader(in)
-		// Ignore wrong number of items in a line (chase account output seems wrong)
-		r.FieldsPerRecord = -1
-		return r
-	})
-	err = gocsv.Unmarshal(bufferedReader, &accountActivities)
+	err = r.ReadMultipartCSV("file", &accountActivities)
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}
