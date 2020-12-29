@@ -24,11 +24,10 @@ func (m *App) CreateNewCard(w ResponseWriter, r *Request) WriterResponse {
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}
-	card := entities.Card{
+	err = m.db.Create(&entities.Card{
 		LastFour:    p.LastFour,
 		Description: p.Description,
-	}
-	err = m.db.Create(&card).Error
+	}).Error
 	if err != nil {
 		if helpers.IsUniqueConstraintError(err, "cards_last_four_unique") {
 			return w.SendError("Card already exists", http.StatusConflict, err)
@@ -36,7 +35,7 @@ func (m *App) CreateNewCard(w ResponseWriter, r *Request) WriterResponse {
 		return w.SendUnexpectedError(err)
 	}
 
-	return w.SendResponse(card)
+	return w.SendSimpleMessageWithCode("success", http.StatusCreated)
 }
 
 // GetCardByUUID gets a single Card by UUID
