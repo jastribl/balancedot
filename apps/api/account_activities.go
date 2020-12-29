@@ -18,22 +18,21 @@ import (
 
 // GetAllAccountActivitiesForAccount gets all the Account Activities
 func (m *App) GetAllAccountActivitiesForAccount(w ResponseWriter, r *Request) WriterResponse {
-	params := r.GetParams()
-	accountActivityRepo := repos.NewAccountActivityRepo(m.db)
-	accountActivities, err := accountActivityRepo.GetAllAccountActivitiesForAccount(params["accountUUID"])
+	var account entities.Account
+	err := repos.NewGenericRepo(m.db.Preload("Activities")).
+		GetByUUID(&account, r.GetParams()["accountUUID"])
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}
 
-	return w.SendResponse(accountActivities)
+	return w.SendResponse(account.Activities)
 }
 
 // UploadAccountActivities uploads new AccountActivities
 func (m *App) UploadAccountActivities(w ResponseWriter, r *Request) WriterResponse {
-	params := r.GetParams()
-	accountUUID, err := uuid.FromString(params["accountUUID"])
+	accountUUID, err := uuid.FromString(r.GetParams()["accountUUID"])
 	if err != nil {
-		return w.SendUnexpectedError(err)
+		return w.SendError("Invalid accountUUID provided", http.StatusUnprocessableEntity, err)
 	}
 
 	r.ParseMultipartForm(10 << 20) // 10MB file size limit

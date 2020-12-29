@@ -10,13 +10,7 @@ import (
 
 // GetAllAccounts get all the Accounts
 func (m *App) GetAllAccounts(w ResponseWriter, r *Request) WriterResponse {
-	accountRepo := repos.NewAccountRepo(m.db)
-	accounts, err := accountRepo.GetAllAccounts()
-	if err != nil {
-		return w.SendUnexpectedError(err)
-	}
-
-	return w.SendResponse(accounts)
+	return m.genericGetAll(w, r, entities.Account{}, nil)
 }
 
 type newAccountParams struct {
@@ -50,9 +44,8 @@ func (m *App) CreateNewAccount(w ResponseWriter, r *Request) WriterResponse {
 
 // GetAccountByUUID gets a single Account by UUID
 func (m *App) GetAccountByUUID(w ResponseWriter, r *Request) WriterResponse {
-	params := r.GetParams()
-	accountRepo := repos.NewAccountRepo(m.db)
-	account, err := accountRepo.GetAccountByUUID(params["accountUUID"])
+	var account entities.Account
+	err := repos.NewGenericRepo(m.db).GetByUUID(&account, r.GetParams()["accountUUID"])
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}

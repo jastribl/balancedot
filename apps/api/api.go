@@ -2,6 +2,7 @@ package api
 
 import (
 	"gihub.com/jastribl/balancedot/config"
+	"gihub.com/jastribl/balancedot/repos"
 	"github.com/jinzhu/gorm"
 )
 
@@ -17,4 +18,13 @@ func NewApp(db *gorm.DB, config *config.Config) (*App, error) {
 		db:     db,
 		config: config,
 	}, nil
+}
+
+func (m *App) genericGetAll(w ResponseWriter, r *Request, typeRef interface{}, options *repos.GetAllOfOptions) WriterResponse {
+	items, err := repos.NewGenericRepo(m.db).GetAllOf(typeRef, options)
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	return w.SendResponse(items)
 }

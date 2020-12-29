@@ -10,13 +10,7 @@ import (
 
 // GetAllCards get all the Cards
 func (m *App) GetAllCards(w ResponseWriter, r *Request) WriterResponse {
-	cardRepo := repos.NewCardRepo(m.db)
-	cards, err := cardRepo.GetAllCards()
-	if err != nil {
-		return w.SendUnexpectedError(err)
-	}
-
-	return w.SendResponse(cards)
+	return m.genericGetAll(w, r, entities.Card{}, nil)
 }
 
 type newCardParams struct {
@@ -48,9 +42,8 @@ func (m *App) CreateNewCard(w ResponseWriter, r *Request) WriterResponse {
 
 // GetCardByUUID gets a single Card by UUID
 func (m *App) GetCardByUUID(w ResponseWriter, r *Request) WriterResponse {
-	params := r.GetParams()
-	cardRepo := repos.NewCardRepo(m.db)
-	card, err := cardRepo.GetCardByUUID(params["cardUUID"])
+	var card entities.Card
+	err := repos.NewGenericRepo(m.db).GetByUUID(&card, r.GetParams()["cardUUID"])
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}

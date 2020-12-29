@@ -13,12 +13,11 @@ func main() {
 	db, err := helpers.DbConnect()
 	if err != nil {
 		log.Panic(err)
-
 	}
 	// db.LogMode(true)
 
 	var expenses []*entities.SplitwiseExpense
-	err = db.Preload("CardActivities").Where("deleted_at is NULL AND amount_paid > 0").Find(&expenses).Error
+	err = db.Preload("CardActivities").Where("splitwise_deleted_at is NULL AND amount_paid > 0").Find(&expenses).Error
 	if err != nil {
 		log.Fatal(err)
 	}

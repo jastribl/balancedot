@@ -58,13 +58,9 @@ func (m *App) SplitwiseOauthCallback(w ResponseWriter, r *Request) WriterRespons
 
 // GetAllSplitwiseExpenses get all the SplitwiseExpenses
 func (m *App) GetAllSplitwiseExpenses(w ResponseWriter, r *Request) WriterResponse {
-	splitwiseExpenseRepo := repos.NewSplitwiseExpenseRepo(m.db)
-	splitwiseExpenses, err := splitwiseExpenseRepo.GetAllExpensesOrdered()
-	if err != nil {
-		return w.SendUnexpectedError(err)
-	}
-
-	return w.SendResponse(splitwiseExpenses)
+	return m.genericGetAll(w, r, entities.SplitwiseExpense{}, &repos.GetAllOfOptions{
+		Order: "date DESC",
+	})
 }
 
 // RefreshSplitwise refreshes the data from the Splitwise API

@@ -16,20 +16,18 @@ import (
 
 // GetAllCardActivitiesForCard gets all the Card Activities
 func (m *App) GetAllCardActivitiesForCard(w ResponseWriter, r *Request) WriterResponse {
-	params := r.GetParams()
-	cardActivityRepo := repos.NewCardActivityRepo(m.db)
-	cardActivities, err := cardActivityRepo.GetAllCardActivitiesForCard(params["cardUUID"])
+	var card entities.Card
+	err := repos.NewGenericRepo(m.db.Preload("Activities")).
+		GetByUUID(&card, r.GetParams()["cardUUID"])
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}
-
-	return w.SendResponse(cardActivities)
+	return w.SendResponse(card.Activities)
 }
 
 // UploadCardActivities uploads new CardActivities
 func (m *App) UploadCardActivities(w ResponseWriter, r *Request) WriterResponse {
-	params := r.GetParams()
-	cardUUID, err := uuid.FromString(params["cardUUID"])
+	cardUUID, err := uuid.FromString(r.GetParams()["cardUUID"])
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}
