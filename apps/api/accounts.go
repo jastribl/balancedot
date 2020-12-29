@@ -24,11 +24,10 @@ func (m *App) CreateNewAccount(w ResponseWriter, r *Request) WriterResponse {
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}
-	account := entities.Account{
+	err = m.db.Create(&entities.Account{
 		LastFour:    p.LastFour,
 		Description: p.Description,
-	}
-	err = m.db.Create(&account).Error
+	}).Error
 	if err != nil {
 		if helpers.IsUniqueConstraintError(err, "accounts_last_four_unique") {
 			return w.SendError("Account already exists", http.StatusConflict, err)
@@ -36,7 +35,7 @@ func (m *App) CreateNewAccount(w ResponseWriter, r *Request) WriterResponse {
 		return w.SendUnexpectedError(err)
 	}
 
-	return w.SendResponse(account)
+	return w.SendSimpleMessageWithCode("success", http.StatusCreated)
 }
 
 // GetAccountByUUID gets a single Account by UUID
