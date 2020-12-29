@@ -51,9 +51,7 @@ const AccountsPage = () => {
                     onSubmit={handleNewAccountSubmit}
                     fieldInfos={{
                         last_four: {
-                            fieldLabel: 'Last Four',
                             fieldName: 'last_four',
-                            placeholder: 'Last Four...',
                             inputType: 'text',
                             validate: (fieldLabel, fieldValue) => {
                                 if (!/^[0-9][0-9][0-9][0-9]$/.test(fieldValue)) {
@@ -63,9 +61,7 @@ const AccountsPage = () => {
                             }
                         },
                         description: {
-                            fieldLabel: 'Description',
                             fieldName: 'description',
-                            placeholder: 'Description...',
                             inputType: 'text',
                             validate: (fieldLabel, fieldValue) => {
                                 if (!/.....*/.test(fieldValue)) {
