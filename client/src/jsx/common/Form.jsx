@@ -11,6 +11,12 @@ const Form = ({ onSubmit, fieldInfos }) => {
     let initialValues = {}
     Object.entries(fieldInfos).map(([fieldName, fieldInfo]) => {
         initialValues[fieldName] = fieldInfo.initialValue ?? ''
+        if (
+            fieldInfo.inputType === 'select' &&
+            initialValues[fieldName] === '' &&
+            fieldInfo.selectOptions.length > 0) {
+            initialValues[fieldName] = fieldInfo.selectOptions[0]
+        }
 
         // Default labels
         fieldInfo.fieldLabel ??= snakeToSentenceCase(fieldName)
@@ -86,6 +92,36 @@ const Form = ({ onSubmit, fieldInfos }) => {
         }
     }
 
+    const getInputSection = (fieldName, fieldInfo) => {
+        if (fieldInfo.inputType === 'select') {
+            return (
+                <select
+                    name={fieldName}
+                    value={formValues[fieldName]}
+                    onChange={handleFormFieldChange}
+                    disabled={isSubmitting}
+                >
+                    {fieldInfo.selectOptions.map(option => {
+                        return (
+                            <option
+                                key={option}
+                                value={option}
+                            >{snakeToSentenceCase(option)}</option>
+                        )
+                    })}
+                </select>)
+        } else {
+            return <input
+                type={fieldInfo.inputType}
+                name={fieldName}
+                value={formValues[fieldName]}
+                onChange={handleFormFieldChange}
+                placeholder={fieldInfo.placeholder}
+                disabled={isSubmitting}
+            />
+        }
+    }
+
     return (
         <form onSubmit={onSubmitInternal} autoComplete='off' style={{ position: 'relative' }}>
             <Spinner visible={isSubmitting} />
@@ -97,14 +133,7 @@ const Form = ({ onSubmit, fieldInfos }) => {
                             <label>{fieldInfo.fieldLabel}</label>
                         </div>
                         <div className='col-75'>
-                            <input
-                                type={fieldInfo.inputType}
-                                name={fieldName}
-                                value={formValues[fieldName]}
-                                onChange={handleFormFieldChange}
-                                placeholder={fieldInfo.placeholder}
-                                disabled={isSubmitting}
-                            />
+                            {getInputSection(fieldName, fieldInfo)}
                             <span style={{ float: 'right', color: 'red' }}>{validationErrors[fieldName]}</span>
                         </div>
                     </div>
