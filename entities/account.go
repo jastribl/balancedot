@@ -8,4 +8,5 @@ type Account struct {
 	LastFour    string            `json:"last_four"`
 	Description string            `json:"description"`
 	Activities  []AccountActivity `json:"activities"`
+	BankName    BankNames         `json:"bank_name"`
 }

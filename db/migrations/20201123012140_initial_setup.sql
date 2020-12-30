@@ -3,10 +3,13 @@
 -- Transaction Date,Post Date,Description,Category,Type,Amount,Memo
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+CREATE TYPE bank_names AS ENUM ('chase', 'bofa');
+
 CREATE TABLE IF NOT EXISTS accounts (
   uuid        UUID       PRIMARY KEY DEFAULT uuid_generate_v4(),
   last_four   VARCHAR(4) NOT NULL,
   description TEXT       NOT NULL,
+  bank_name   bank_names NOT NULL,
 
   CONSTRAINT accounts_last_four_unique UNIQUE (last_four)
 );
@@ -29,6 +32,7 @@ CREATE TABLE IF NOT EXISTS cards (
   uuid        UUID       PRIMARY KEY DEFAULT uuid_generate_v4(),
   last_four   VARCHAR(4) NOT NULL,
   description TEXT       NOT NULL,
+  bank_name   bank_names NOT NULL,
 
   CONSTRAINT cards_last_four_unique UNIQUE (last_four)
 );

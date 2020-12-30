@@ -13,8 +13,9 @@ func (m *App) GetAllAccounts(w ResponseWriter, r *Request) WriterResponse {
 }
 
 type newAccountParams struct {
-	LastFour    string `json:"last_four"`
-	Description string `json:"description"`
+	LastFour    string             `json:"last_four"`
+	Description string             `json:"description"`
+	BankName    entities.BankNames `json:"bank_name"`
 }
 
 // CreateNewAccount adds a new Card
@@ -27,6 +28,7 @@ func (m *App) CreateNewAccount(w ResponseWriter, r *Request) WriterResponse {
 	err = m.db.Create(&entities.Account{
 		LastFour:    p.LastFour,
 		Description: p.Description,
+		BankName:    p.BankName,
 	}).Error
 	if err != nil {
 		if helpers.IsUniqueConstraintError(err, "accounts_last_four_unique") {

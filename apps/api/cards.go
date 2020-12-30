@@ -13,8 +13,9 @@ func (m *App) GetAllCards(w ResponseWriter, r *Request) WriterResponse {
 }
 
 type newCardParams struct {
-	LastFour    string `json:"last_four"`
-	Description string `json:"description"`
+	LastFour    string             `json:"last_four"`
+	Description string             `json:"description"`
+	BankName    entities.BankNames `json:"bank_name"`
 }
 
 // CreateNewCard adds a new Card
@@ -27,6 +28,7 @@ func (m *App) CreateNewCard(w ResponseWriter, r *Request) WriterResponse {
 	err = m.db.Create(&entities.Card{
 		LastFour:    p.LastFour,
 		Description: p.Description,
+		BankName:    p.BankName,
 	}).Error
 	if err != nil {
 		if helpers.IsUniqueConstraintError(err, "cards_last_four_unique") {

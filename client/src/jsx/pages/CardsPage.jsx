@@ -40,7 +40,8 @@ const CardsPage = () => {
             <div>
                 <Table rowKey='uuid' columns={{
                     'last_four': 'Last Four',
-                    'description': 'Description'
+                    'description': 'Description',
+                    'bank_name': 'Bank Name',
                 }} rows={cards} customRenders={{
                     'last_four': (data) =>
                         <Link to={'/cards/' + data['uuid'] + '/activities'}>{data['last_four']}</Link>
@@ -69,6 +70,14 @@ const CardsPage = () => {
                                 }
                                 return null
                             }
+                        },
+                        bank_name: {
+                            fieldName: 'bank_name',
+                            inputType: 'select',
+                            selectOptions: ['chase', 'bofa'],
+                            validate: (fieldLabel, fieldValue) => {
+                                return null
+                            },
                         }
                     }}
                 />
