@@ -3,7 +3,7 @@ package api
 import (
 	"gihub.com/jastribl/balancedot/config"
 	"gihub.com/jastribl/balancedot/repos"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 // App contains API handler methods
