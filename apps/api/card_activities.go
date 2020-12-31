@@ -7,7 +7,6 @@ import (
 	"gihub.com/jastribl/balancedot/entities"
 	"gihub.com/jastribl/balancedot/helpers"
 	"gihub.com/jastribl/balancedot/repos"
-	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 )
 
@@ -22,32 +21,59 @@ func (m *App) GetAllCardActivitiesForCard(w ResponseWriter, r *Request) WriterRe
 	return w.SendResponse(card.Activities)
 }
 
-// UploadCardActivities uploads new CardActivities
-func (m *App) UploadCardActivities(w ResponseWriter, r *Request) WriterResponse {
-	cardUUID, err := uuid.FromString(r.GetParams()["cardUUID"])
-	if err != nil {
-		return w.SendError("Invalid cardUUID provided", http.StatusUnprocessableEntity, err)
+func readChaseCardActivities(w ResponseWriter, r *Request) ([]models.CardActivity, error) {
+	parsed := []*models.ChaseCardActivity{}
+	if err := r.ReadMultipartCSV("file", &parsed); err != nil {
+		return nil, err
+	}
+	cardActivities := make([]models.CardActivity, len(parsed))
+	for i := range parsed {
+		cardActivities[i] = parsed[i]
+	}
+	return cardActivities, nil
+}
+
+func readBofACardActivities(w ResponseWriter, r *Request) ([]models.CardActivity, error) {
+	parsed := []*models.BofACardActivity{}
+	if err := r.ReadMultipartCSV("file", &parsed); err != nil {
+		return nil, err
 	}
 
-	cardActivities := []*models.CardActivity{}
-	err = r.ReadMultipartCSV("file", &cardActivities)
+	cardActivities := make([]models.CardActivity, len(parsed))
+	for i := range parsed {
+		cardActivities[i] = parsed[i]
+	}
+	return cardActivities, nil
+}
+
+// UploadCardActivities uploads new CardActivities
+func (m *App) UploadCardActivities(w ResponseWriter, r *Request) WriterResponse {
+	var card entities.Card
+	err := repos.NewGenericRepo(m.db).GetByUUID(&card, r.GetParams()["cardUUID"])
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}
 
-	var newCardActivities []*entities.CardActivity
+	var readFunction func(w ResponseWriter, r *Request) ([]models.CardActivity, error)
+	switch card.BankName {
+	case entities.Chase:
+		readFunction = readChaseCardActivities
+	case entities.BofA:
+		readFunction = readBofACardActivities
+	default:
+		return w.SendError("Hit unexpected bank name", http.StatusInternalServerError)
+	}
+
+	cardActivities, err := readFunction(w, r)
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	newCardActivities := make([]*entities.CardActivity, len(cardActivities))
 	success := helpers.NewTransaction(m.db, func(tx *gorm.DB) helpers.TransactionAction {
-		for _, cardActivity := range cardActivities {
-			search := entities.CardActivity{
-				CardUUID:        cardUUID,
-				TransactionDate: cardActivity.TransactionDate.Time,
-				PostDate:        cardActivity.PostDate.Time,
-				Description:     cardActivity.Description,
-				Type:            cardActivity.Type,
-				Amount:          cardActivity.Amount.ToFloat64(),
-			}
-			// note: use tx instead to check for duplicate inside the same transaction
-			exists, err := helpers.RowExists(m.db, &entities.CardActivity{}, search)
+		for i, cardActivity := range cardActivities {
+			search := cardActivity.ToCardActivitiyUniqueMatcher(&card)
+			exists, err := helpers.RowExists(tx, &entities.CardActivity{}, search)
 			if err != nil {
 				w.SendUnexpectedError(err)
 				return helpers.TransactionActionRollback
@@ -56,27 +82,17 @@ func (m *App) UploadCardActivities(w ResponseWriter, r *Request) WriterResponse 
 				w.SendError("Duplicate activity found", http.StatusConflict)
 				return helpers.TransactionActionRollback
 			}
-			newCardActivity := &entities.CardActivity{
-				CardUUID:        cardUUID,
-				TransactionDate: cardActivity.TransactionDate.Time,
-				PostDate:        cardActivity.PostDate.Time,
-				Description:     cardActivity.Description,
-				Category:        cardActivity.Category,
-				Type:            cardActivity.Type,
-				Amount:          cardActivity.Amount.ToFloat64(),
-			}
-			newCardActivities = append(newCardActivities, newCardActivity)
-			err = tx.Create(newCardActivity).Error
-			if err != nil {
-				w.SendUnexpectedError(err)
-				return helpers.TransactionActionRollback
-			}
+			newCardActivities[i] = cardActivity.ToCardActivitiyEntity(&card)
 		}
 		return helpers.TransactionActionCommit
 	})
 
 	// todo: make the return type into the number of records inserted or something
 	if success {
+		err = m.db.Create(&newCardActivities).Error
+		if err != nil {
+			return w.SendUnexpectedError(err)
+		}
 		return w.SendResponse(newCardActivities)
 	}
 
