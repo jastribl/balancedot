@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres" // imported to allow postgres connections
 	"github.com/lib/pq"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 // DbConnect opens a connection to the database and returns the db object
@@ -18,7 +18,7 @@ func DbConnect() (*gorm.DB, error) {
 		os.Getenv("POSTGRES_DB"),
 		os.Getenv("POSTGRES_PASSWORD"),
 	)
-	return gorm.Open("postgres", t)
+	return gorm.Open(postgres.Open(t), &gorm.Config{})
 }
 
 // IsUniqueConstraintError returns whether an error is a unique constraint error

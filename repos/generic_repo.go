@@ -3,7 +3,7 @@ package repos
 import (
 	"reflect"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 // GenericRepo is a Generic repo for performing certain scopped yet generic operations
