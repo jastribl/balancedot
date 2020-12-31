@@ -70,7 +70,7 @@ func (m *App) UploadAccountActivities(w ResponseWriter, r *Request) WriterRespon
 		return w.SendUnexpectedError(err)
 	}
 
-	newAccountActivities := make([]entities.AccountActivity, len(accountActivities))
+	newAccountActivities := make([]*entities.AccountActivity, len(accountActivities))
 	success := helpers.NewTransaction(m.db, func(tx *gorm.DB) helpers.TransactionAction {
 		for i, accountActivity := range accountActivities {
 			newAccountActivity := accountActivity.ToAccountActivitiyEntity(&account)
@@ -83,7 +83,7 @@ func (m *App) UploadAccountActivities(w ResponseWriter, r *Request) WriterRespon
 				w.SendError("Duplicate activity found", http.StatusConflict)
 				return helpers.TransactionActionRollback
 			}
-			newAccountActivities[i] = *newAccountActivity
+			newAccountActivities[i] = newAccountActivity
 		}
 		return helpers.TransactionActionCommit
 	})
