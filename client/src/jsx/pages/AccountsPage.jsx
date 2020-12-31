@@ -41,11 +41,7 @@ const AccountsPage = () => {
                 <Table
                     rowKey='uuid'
                     rows={accounts}
-                    columns={{
-                        'last_four': 'Last Four',
-                        'description': 'Description',
-                        'bank_name': 'Bank Name',
-                    }}
+                    columns={['last_four', 'description', 'bank_name']}
                     customRenders={{
                         'last_four': (data) =>
                             <Link to={'/accounts/' + data['uuid'] + '/activities'}>{data['last_four']}</Link>

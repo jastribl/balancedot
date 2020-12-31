@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 
+import { snakeToSentenceCase } from '../../utils/strings'
+
 const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, customSortComparators }) => {
     customRenders ??= {}
     customSortComparators ??= {}
@@ -38,23 +40,24 @@ const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, custom
     if (sortInverse) {
         toRender.reverse()
     }
+
     return (
         <div>
             <table className='styled-table'>
                 <thead>
                     <tr>
-                        {Object.keys(columns).map((key) =>
+                        {columns.map(key =>
                             <th
                                 key={key}
                                 onClick={() => onHeaderClick(key)}
-                            >{columns[key]}{(key === sortColumn ? (sortInverse ? " ↑" : " ↓") : "")}</th>
+                            >{snakeToSentenceCase(key)}{(key === sortColumn ? (sortInverse ? " ↑" : " ↓") : "")}</th>
                         )}
                     </tr>
                 </thead>
                 <tbody>
                     {toRender.map((row, i) =>
                         <tr key={row[rowKey]}>{
-                            Object.keys(columns).map((key) =>
+                            columns.map(key =>
                                 <td key={key}>{
                                     key in customRenders ? customRenders[key](row) : row[key]
                                 }</td>

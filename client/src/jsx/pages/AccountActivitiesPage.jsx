@@ -53,14 +53,7 @@ const AccountActivitiesPage = ({ match }) => {
                 <Table
                     rowKey='uuid'
                     rows={accountActivities}
-                    columns={{
-                        'uuid': 'Activity UUID',
-                        'details': 'Details',
-                        'posting_date': 'Posting Date',
-                        'description': 'Description',
-                        'amount': 'Amount',
-                        'type': 'Type',
-                    }}
+                    columns={['uuid', 'details', 'posting_date', 'description', 'amount', 'type']}
                     customRenders={{
                         'posting_date': (data) => formatAsDate(data['posting_date']),
                         'amount': (data) => formatAsMoney(data['amount']),

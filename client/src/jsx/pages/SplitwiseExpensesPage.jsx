@@ -71,16 +71,7 @@ const SplitwiseExpensesPage = () => {
                     <Table
                         rowKey='uuid'
                         rows={splitwiseExpenses}
-                        columns={{
-                            'uuid': 'UUID',
-                            'splitwise_id': 'splitwise_id',
-                            'description': 'Description',
-                            'details': 'Details',
-                            'amount': 'Amount',
-                            'amount_paid': 'Amount Paid',
-                            'date': 'Date',
-                            'category': 'Category',
-                        }}
+                        columns={['uuid', 'splitwise_id', 'description', 'details', 'amount', 'amount_paid', 'date', 'category',]}
                         customRenders={{
                             'details': (data) => data['details'].trim(),
                             'date': (data) => formatAsDate(data['date']),
