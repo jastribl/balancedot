@@ -23,15 +23,15 @@ const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, custom
         }
     }
 
-    let toRender = rows.slice();
+    let toRender = rows.slice()
     if (sortColumn) {
         toRender.sort(customSortComparators[sortColumn] ?? ((a, b) => {
             if (a[sortColumn] < b[sortColumn]) {
-                return -1;
+                return -1
             } else if (a[sortColumn] > b[sortColumn]) {
-                return 1;
+                return 1
             } else {
-                return 0;
+                return 0
             }
         }))
     }
