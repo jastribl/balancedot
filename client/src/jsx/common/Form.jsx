@@ -38,7 +38,7 @@ const Form = ({ onSubmit, fieldInfos }) => {
             ...formValues,
             [fieldName]: fieldValue
         })
-        let formValue = fieldValue;
+        let formValue = fieldValue
         if (fieldInfo.inputType === 'file') {
             formValue = event.target.files[0]
         }

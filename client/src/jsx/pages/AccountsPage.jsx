@@ -38,14 +38,19 @@ const AccountsPage = () => {
             <h1>Accounts</h1>
             <input type='button' onClick={showModal} value='New Account' style={{ marginBottom: 25 + 'px' }} />
             <div>
-                <Table rowKey='uuid' columns={{
-                    'last_four': 'Last Four',
-                    'description': 'Description',
-                    'bank_name': 'Bank Name',
-                }} rows={accounts} customRenders={{
-                    'last_four': (data) =>
-                        <Link to={'/accounts/' + data['uuid'] + '/activities'}>{data['last_four']}</Link>
-                }} />
+                <Table
+                    rowKey='uuid'
+                    rows={accounts}
+                    columns={{
+                        'last_four': 'Last Four',
+                        'description': 'Description',
+                        'bank_name': 'Bank Name',
+                    }}
+                    customRenders={{
+                        'last_four': (data) =>
+                            <Link to={'/accounts/' + data['uuid'] + '/activities'}>{data['last_four']}</Link>
+                    }}
+                />
             </div>
             <Modal headerText='New Account' visible={modalVisible} handleClose={hideModal}>
                 <Form

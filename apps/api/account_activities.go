@@ -7,7 +7,6 @@ import (
 	"gihub.com/jastribl/balancedot/entities"
 	"gihub.com/jastribl/balancedot/helpers"
 	"gihub.com/jastribl/balancedot/repos"
-	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 )
 
@@ -23,32 +22,59 @@ func (m *App) GetAllAccountActivitiesForAccount(w ResponseWriter, r *Request) Wr
 	return w.SendResponse(account.Activities)
 }
 
-// UploadAccountActivities uploads new AccountActivities
-func (m *App) UploadAccountActivities(w ResponseWriter, r *Request) WriterResponse {
-	accountUUID, err := uuid.FromString(r.GetParams()["accountUUID"])
-	if err != nil {
-		return w.SendError("Invalid accountUUID provided", http.StatusUnprocessableEntity, err)
+func readChaseAccountActivities(w ResponseWriter, r *Request) ([]models.AccountActivity, error) {
+	parsed := []*models.ChaseAccountActivity{}
+	if err := r.ReadMultipartCSV("file", &parsed); err != nil {
+		return nil, err
+	}
+	accountActivities := make([]models.AccountActivity, len(parsed))
+	for i := range parsed {
+		accountActivities[i] = parsed[i]
+	}
+	return accountActivities, nil
+}
+
+func readBofAAccountActivities(w ResponseWriter, r *Request) ([]models.AccountActivity, error) {
+	parsed := []*models.BofAAccountActivity{}
+	if err := r.ReadMultipartCSV("file", &parsed); err != nil {
+		return nil, err
 	}
 
-	accountActivities := []*models.AccountActivity{}
-	err = r.ReadMultipartCSV("file", &accountActivities)
+	accountActivities := make([]models.AccountActivity, len(parsed))
+	for i := range parsed {
+		accountActivities[i] = parsed[i]
+	}
+	return accountActivities, nil
+}
+
+// UploadAccountActivities uploads new AccountActivities
+func (m *App) UploadAccountActivities(w ResponseWriter, r *Request) WriterResponse {
+	var account entities.Account
+	err := repos.NewGenericRepo(m.db).GetByUUID(&account, r.GetParams()["accountUUID"])
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}
 
-	var newAccountActivities []*entities.AccountActivity
+	var readFunction func(w ResponseWriter, r *Request) ([]models.AccountActivity, error)
+	switch account.BankName {
+	case entities.Chase:
+		readFunction = readChaseAccountActivities
+	case entities.BofA:
+		readFunction = readBofAAccountActivities
+	default:
+		return w.SendError("Hit unexpected bank name", http.StatusInternalServerError)
+	}
+
+	accountActivities, err := readFunction(w, r)
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	newAccountActivities := make([]entities.AccountActivity, len(accountActivities))
 	success := helpers.NewTransaction(m.db, func(tx *gorm.DB) helpers.TransactionAction {
-		for _, accountActivity := range accountActivities {
-			newAccountActivity := &entities.AccountActivity{
-				AccountUUID: accountUUID,
-				Details:     accountActivity.Details,
-				PostingDate: accountActivity.PostingDate.Time,
-				Description: accountActivity.Description,
-				Amount:      accountActivity.Amount.ToFloat64(),
-				Type:        accountActivity.Type,
-			}
-			// note: use tx instead to check for duplicate inside the same transaction
-			exists, err := helpers.RowExists(m.db, &entities.AccountActivity{}, newAccountActivity)
+		for i, accountActivity := range accountActivities {
+			newAccountActivity := accountActivity.ToAccountActivitiyEntity(&account)
+			exists, err := helpers.RowExists(tx, &entities.AccountActivity{}, newAccountActivity)
 			if err != nil {
 				w.SendUnexpectedError(err)
 				return helpers.TransactionActionRollback
@@ -57,18 +83,17 @@ func (m *App) UploadAccountActivities(w ResponseWriter, r *Request) WriterRespon
 				w.SendError("Duplicate activity found", http.StatusConflict)
 				return helpers.TransactionActionRollback
 			}
-			newAccountActivities = append(newAccountActivities, newAccountActivity)
-			err = tx.Create(newAccountActivity).Error
-			if err != nil {
-				w.SendUnexpectedError(err)
-				return helpers.TransactionActionRollback
-			}
+			newAccountActivities[i] = *newAccountActivity
 		}
 		return helpers.TransactionActionCommit
 	})
 
 	// todo: make the return type into the number of records inserted or something
 	if success {
+		err = m.db.Create(&newAccountActivities).Error
+		if err != nil {
+			return w.SendUnexpectedError(err)
+		}
 		return w.SendResponse(newAccountActivities)
 	}
 

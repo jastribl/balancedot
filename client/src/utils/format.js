@@ -4,8 +4,8 @@ export function formatAsMoney(amount, currencyCode = 'USD') {
     let currencySymbol = '?'
     switch (currencyCode) {
         case 'USD':
-            currencySymbol = '$';
-            break;
+            currencySymbol = '$'
+            break
         default:
             currencySymbol = `${currencyCode}?`
     }

@@ -23,6 +23,10 @@ func (m *MoneyAmount) MarshalCSV() (string, error) {
 
 // UnmarshalCSV converts the string to the representation
 func (m *MoneyAmount) UnmarshalCSV(csv string) (err error) {
+	if csv == "" {
+		m.float64 = 0
+		return nil
+	}
 	m.float64, err = strconv.ParseFloat(csv, 64)
 	return err
 }
