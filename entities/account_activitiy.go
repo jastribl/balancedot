@@ -8,7 +8,7 @@ import (
 
 // AccountActivity represents a singel account activity record from the user
 type AccountActivity struct {
-	UUID        uuid.UUID `json:"uuid" gorm:"primary_key;"`
+	UUID        uuid.UUID `json:"uuid" gorm:"primary_key; default:uuid_generate_v4();"`
 	AccountUUID uuid.UUID `json:"account_uuid"`
 	Account     *Account  `json:"account" gorm:"foreignKey:AccountUUID"`
 	Details     string    `json:"details"`

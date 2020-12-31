@@ -8,7 +8,7 @@ import (
 
 // SplitwiseExpense represents a singel splitwise expense
 type SplitwiseExpense struct {
-	UUID               uuid.UUID       `json:"uuid" gorm:"primary_key;"`
+	UUID               uuid.UUID       `json:"uuid" gorm:"primary_key; default:uuid_generate_v4();"`
 	SplitwiseID        int             `json:"splitwise_id"`
 	Description        string          `json:"description"`
 	Details            string          `json:"details"`
