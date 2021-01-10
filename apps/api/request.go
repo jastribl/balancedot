@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"reflect"
 	"strings"
 
@@ -82,4 +84,33 @@ func (m *Request) ReadMultipartCSV(fileName string, out interface{}) error {
 		return r
 	})
 	return gocsv.Unmarshal(bufferedReader, out)
+}
+
+// ReceiveFileToTemp receives a file to a temp file location
+func (m *Request) ReceiveFileToTemp(fileName string) (*os.File, error) {
+	m.ParseMultipartForm(10 << 20) // 10MB file size limit
+	inputFile, header, err := m.FormFile(fileName)
+	if err != nil {
+		return nil, err
+	}
+	defer inputFile.Close()
+
+	tmpFolder := "tmp"
+	if _, err = os.Stat(tmpFolder); err != nil {
+		if os.IsNotExist(err) {
+			os.Mkdir(tmpFolder, 0700)
+		} else {
+			return nil, err
+		}
+	}
+	outputFile, err := ioutil.TempFile(tmpFolder, header.Filename)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err = io.Copy(outputFile, inputFile); err != nil {
+		return nil, err
+	}
+
+	return outputFile, nil
 }

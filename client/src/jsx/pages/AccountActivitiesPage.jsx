@@ -69,7 +69,6 @@ const AccountActivitiesPage = ({ match }) => {
                     onSubmit={handleActivityUpload}
                     fieldInfos={{
                         file: {
-                            fieldName: 'file',
                             inputType: 'file',
                         },
                     }}

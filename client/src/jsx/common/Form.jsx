@@ -40,7 +40,7 @@ const Form = ({ onSubmit, fieldInfos }) => {
         })
         let formValue = fieldValue
         if (fieldInfo.inputType === 'file') {
-            formValue = event.target.files[0]
+            formValue = event.target.files // check this (used to be files[0])
         }
 
         if (fieldName in validationErrors) {
@@ -110,6 +110,15 @@ const Form = ({ onSubmit, fieldInfos }) => {
                         )
                     })}
                 </select>)
+        } else if (fieldInfo.inputType === 'textarea') { // todo: look into this (is this used)
+            return <textarea
+                name={fieldName}
+                value={formValues[fieldName]}
+                onChange={handleFormFieldChange}
+                placeholder={fieldInfo.placeholder}
+                disabled={isSubmitting}
+                rows="10"
+            />
         } else {
             return <input
                 type={fieldInfo.inputType}
@@ -118,6 +127,7 @@ const Form = ({ onSubmit, fieldInfos }) => {
                 onChange={handleFormFieldChange}
                 placeholder={fieldInfo.placeholder}
                 disabled={isSubmitting}
+                multiple={fieldInfo.multiple ? "multiple" : null}
             />
         }
     }

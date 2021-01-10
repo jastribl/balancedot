@@ -60,6 +60,7 @@ func (m *App) SplitwiseOauthCallback(w ResponseWriter, r *Request) WriterRespons
 func (m *App) GetAllSplitwiseExpenses(w ResponseWriter, r *Request) WriterResponse {
 	return m.genericGetAll(w, r, entities.SplitwiseExpense{}, &repos.GetAllOfOptions{
 		Order: "date DESC",
+		Where: "splitwise_deleted_at IS NULL", // Don't load deleted expense
 	})
 }
 

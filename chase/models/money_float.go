@@ -11,6 +11,11 @@ type MoneyAmount struct {
 	float64
 }
 
+// MoneyAmountFromFloat64 returns a MoneyAmount from a float
+func MoneyAmountFromFloat64(f float64) MoneyAmount {
+	return MoneyAmount{float64: f}
+}
+
 // ToFloat64 returns the raw float value from the MoneyAmount
 func (m *MoneyAmount) ToFloat64() float64 {
 	return m.float64

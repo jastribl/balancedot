@@ -53,7 +53,6 @@ const CardsPage = () => {
                     onSubmit={handleNewCardSubmit}
                     fieldInfos={{
                         last_four: {
-                            fieldName: 'last_four',
                             inputType: 'text',
                             validate: (fieldLabel, fieldValue) => {
                                 if (!/^[0-9][0-9][0-9][0-9]$/.test(fieldValue)) {
@@ -63,7 +62,6 @@ const CardsPage = () => {
                             }
                         },
                         description: {
-                            fieldName: 'description',
                             inputType: 'text',
                             validate: (fieldLabel, fieldValue) => {
                                 if (!/.....*/.test(fieldValue)) {
@@ -73,12 +71,8 @@ const CardsPage = () => {
                             }
                         },
                         bank_name: {
-                            fieldName: 'bank_name',
                             inputType: 'select',
                             selectOptions: ['chase', 'bofa'],
-                            validate: (fieldLabel, fieldValue) => {
-                                return null
-                            },
                         }
                     }}
                 />

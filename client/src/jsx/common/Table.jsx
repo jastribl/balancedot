@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 
 import { snakeToSentenceCase } from '../../utils/strings'
 
-const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, customSortComparators }) => {
+const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, initialSortInverse, customSortComparators }) => {
     customRenders ??= {}
     customSortComparators ??= {}
 
@@ -11,7 +11,7 @@ const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, custom
     }
 
     const [sortColumn, setSortColumn] = useState(initialSortColumn)
-    const [sortInverse, setSortInverse] = useState(false)
+    const [sortInverse, setSortInverse] = useState(initialSortInverse ?? false)
 
     const onHeaderClick = (header_name) => {
         if (sortInverse) {
@@ -27,15 +27,16 @@ const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, custom
 
     let toRender = rows.slice()
     if (sortColumn) {
-        toRender.sort(customSortComparators[sortColumn] ?? ((a, b) => {
-            if (a[sortColumn] < b[sortColumn]) {
-                return -1
-            } else if (a[sortColumn] > b[sortColumn]) {
-                return 1
-            } else {
-                return 0
-            }
-        }))
+        toRender.sort(((a, b) => customSortComparators[sortColumn](a[sortColumn], b[sortColumn])) ??
+            ((a, b) => {
+                if (a[sortColumn] < b[sortColumn]) {
+                    return -1
+                } else if (a[sortColumn] > b[sortColumn]) {
+                    return 1
+                } else {
+                    return 0
+                }
+            }))
     }
     if (sortInverse) {
         toRender.reverse()

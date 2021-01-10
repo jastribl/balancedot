@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
-import { get, postForm } from '../../utils/api'
+import { get, postForm, postJSON } from '../../utils/api'
 import { formatAsDate, formatAsMoney } from '../../utils/format'
 import { dateComparator } from '../../utils/sorting'
 import Form from '../common/Form'
@@ -29,7 +29,9 @@ const CardActivitiesPage = ({ match }) => {
 
     const handleActivityUpload = (activityData) => {
         let formData = new FormData()
-        formData.append('file', activityData['file'])
+        for (let i = 0; i < activityData['files'].length; i++) { // todo: look into this
+            formData.append(`file${i}`, activityData['files'][i])
+        }
         return postForm(`/api/cards/${cardUUID}/activities`, formData)
             .then(() => {
                 hideModal()
@@ -53,7 +55,7 @@ const CardActivitiesPage = ({ match }) => {
                 <Table
                     rowKey='uuid'
                     rows={cardActivities}
-                    columns={['uuid', 'transaction_date', 'post_date', 'description', 'category', 'type', 'amount',]}
+                    columns={['uuid', 'transaction_date', 'post_date', 'description', 'category', 'type', 'amount']}
                     customRenders={{
                         'transaction_date': (data) => formatAsDate(data['transaction_date']),
                         'post_date': (data) => formatAsDate(data['post_date']),
@@ -70,10 +72,9 @@ const CardActivitiesPage = ({ match }) => {
                 <Form
                     onSubmit={handleActivityUpload}
                     fieldInfos={{
-                        file: {
-                            fieldName: 'file',
-                            placeholder: 'File...',
+                        files: {
                             inputType: 'file',
+                            multiple: true,
                         },
                     }}
                 />

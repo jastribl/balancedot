@@ -71,7 +71,7 @@ const SplitwiseExpensesPage = () => {
                     <Table
                         rowKey='uuid'
                         rows={splitwiseExpenses}
-                        columns={['uuid', 'splitwise_id', 'description', 'details', 'amount', 'amount_paid', 'date', 'category',]}
+                        columns={['uuid', 'splitwise_id', 'description', 'details', 'amount', 'amount_paid', 'date', 'category']}
                         customRenders={{
                             'details': (data) => data['details'].trim(),
                             'date': (data) => formatAsDate(data['date']),
@@ -79,6 +79,7 @@ const SplitwiseExpensesPage = () => {
                             'amount_paid': (data) => formatAsMoney(data['amount_paid'], data['currency_code'])
                         }}
                         initialSortColumn='date'
+                        initialSortInverse={true}
                         customSortComparators={{
                             'date': dateComparator
                         }}

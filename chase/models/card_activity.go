@@ -1,6 +1,10 @@
 package models
 
-import "gihub.com/jastribl/balancedot/entities"
+import (
+	"fmt"
+
+	"gihub.com/jastribl/balancedot/entities"
+)
 
 // CardActivity is the interface for card activities
 type CardActivity interface {
@@ -46,13 +50,12 @@ func (m *ChaseCardActivity) ToCardActivitiyUniqueMatcher(card *entities.Card) *e
 
 // BofACardActivity holds line items from the BofA Card Activity Report file
 type BofACardActivity struct {
-	TransactionDate BofADate    `csv:"Transaction Date"`
-	PostDate        BofADate    `csv:"Post Date"`
-	Description     string      `csv:"Description"`
-	Category        string      `csv:"Category"`
-	Type            string      `csv:"Type"`
-	Amount          MoneyAmount `csv:"Amount"`
-	Memo            string      `csv:"Memo"`
+	TransactionDate BofADate
+	PostingDate     BofADate
+	Description     string
+	ReferenceNumber string
+	AccountNumber   string
+	Amount          MoneyAmount
 }
 
 // ToCardActivitiyEntity converts to an CardActivity entity
@@ -60,23 +63,14 @@ func (m *BofACardActivity) ToCardActivitiyEntity(card *entities.Card) *entities.
 	return &entities.CardActivity{
 		CardUUID:        card.UUID,
 		TransactionDate: m.TransactionDate.Time,
-		PostDate:        m.PostDate.Time,
+		PostDate:        m.PostingDate.Time,
 		Description:     m.Description,
-		Category:        m.Category,
-		Type:            m.Type,
+		Type:            fmt.Sprintf("Ref: %s, Account: %s", m.ReferenceNumber, m.AccountNumber),
 		Amount:          m.Amount.ToFloat64(),
 	}
 }
 
 // ToCardActivitiyUniqueMatcher  converts to an CardActivity entity macher
 func (m *BofACardActivity) ToCardActivitiyUniqueMatcher(card *entities.Card) *entities.CardActivity {
-	return &entities.CardActivity{
-		CardUUID:        card.UUID,
-		TransactionDate: m.TransactionDate.Time,
-		PostDate:        m.PostDate.Time,
-		Description:     m.Description,
-		Category:        m.Category,
-		Type:            m.Type,
-		Amount:          m.Amount.ToFloat64(),
-	}
+	return m.ToCardActivitiyEntity(card)
 }
