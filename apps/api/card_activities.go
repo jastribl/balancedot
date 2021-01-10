@@ -1,10 +1,8 @@
 package api
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -16,6 +14,7 @@ import (
 	"gihub.com/jastribl/balancedot/chase/models"
 	"gihub.com/jastribl/balancedot/entities"
 	"gihub.com/jastribl/balancedot/helpers"
+	"gihub.com/jastribl/balancedot/lib/textscanner"
 	"gihub.com/jastribl/balancedot/repos"
 	"gorm.io/gorm"
 )
@@ -43,74 +42,6 @@ func readChaseCardActivities(w ResponseWriter, r *Request) ([]models.CardActivit
 	return cardActivities, nil
 }
 
-type badFileScanner struct {
-	reader    *strings.Reader
-	scanner   *bufio.Scanner
-	bytesRead int64
-}
-
-func newBadFileScanner(s []byte) *badFileScanner {
-	reader := strings.NewReader(string(s))
-	return &badFileScanner{
-		reader:    reader,
-		scanner:   bufio.NewScanner(reader),
-		bytesRead: 0,
-	}
-}
-
-func (m *badFileScanner) rollbackTo(bytesToRollbackTo int64) {
-	m.reader.Seek(bytesToRollbackTo, io.SeekStart)
-	m.scanner = bufio.NewScanner(m.reader)
-
-	m.bytesRead = bytesToRollbackTo
-}
-
-func (m *badFileScanner) EatToLine(s string, rollbackIfNotFound bool) bool {
-	bytesToRollbackTo := m.bytesRead
-
-	for m.scanner.Scan() {
-		line := m.scanner.Text()
-		m.bytesRead += int64(len(line) + 2)
-		if line == s {
-			return true
-		}
-	}
-
-	if rollbackIfNotFound {
-		m.rollbackTo(bytesToRollbackTo)
-	}
-
-	return false
-}
-
-func (m *badFileScanner) EatToLineContainsWithCallback(sub string, fn func(string) error) (bool, error) {
-	for m.scanner.Scan() {
-		line := m.scanner.Text()
-		m.bytesRead += int64(len(line) + 2)
-		if strings.Contains(line, sub) {
-			return true, fn(line)
-		}
-
-	}
-	return false, nil
-}
-
-func (m *badFileScanner) ProcessToAndEatLine(sub string, fn func(string) error, fn2 func(string) error) error {
-	for m.scanner.Scan() {
-		line := m.scanner.Text()
-		m.bytesRead += int64(len(line) + 2)
-		if strings.Contains(line, sub) {
-			return fn2(line)
-		}
-
-		if err := fn(line); err != nil {
-			return err
-		}
-	}
-
-	return fmt.Errorf("Unable to find substring string '%s'", sub)
-}
-
 func getBofAActivitiesForFilename(r *Request, fileName string) ([]*models.BofACardActivity, error) {
 	parsed := []*models.BofACardActivity{}
 	tempFile, err := r.ReceiveFileToTemp(fileName)
@@ -133,7 +64,7 @@ func getBofAActivitiesForFilename(r *Request, fileName string) ([]*models.BofACa
 		tempFile.Name(),
 		"-", // output to stdout
 	).Output()
-	scanner := newBadFileScanner(body)
+	scanner := textscanner.NewScanner(body)
 	var startingYear int
 	foundYear, err := scanner.EatToLineContainsWithCallback("JUSTIN A STRIBLING ! Account #", func(s string) error {
 		matchers := []string{
@@ -193,7 +124,7 @@ func getBofAActivitiesForFilename(r *Request, fileName string) ([]*models.BofACa
 		return nil, errors.New("Unable to find year in file")
 	}
 
-	if scanner.EatToLine("Payments and Other Credits", true) {
+	if scanner.EatToLine("Payments and Other Credits") {
 		var lastDate *time.Time
 		amounts := 0
 		err = scanner.ProcessToAndEatLine("TOTAL PAYMENTS AND OTHER CREDITS FOR THIS PERIOD", func(s string) error {
@@ -287,7 +218,7 @@ func getBofAActivitiesForFilename(r *Request, fileName string) ([]*models.BofACa
 		}
 	}
 
-	if scanner.EatToLine("Purchases and Adjustments", true) {
+	if scanner.EatToLine("Purchases and Adjustments") {
 		var lastDate *time.Time
 		prevLine := ""
 		amounts := 0
