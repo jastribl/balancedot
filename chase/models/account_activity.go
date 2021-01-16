@@ -32,6 +32,17 @@ func (m *ChaseAccountActivity) ToAccountActivitiyEntity(account *entities.Accoun
 	}
 }
 
+// todo: re-arrange this folder structure to reflect that it contains both bofa and chase things
+// something like:
+// banks
+//     models.go
+//     bofa
+//         cards.go
+//         accounts.go
+//     chase
+//         cards.go
+//         accounts.go
+
 // BofAAccountActivity holds line items from the BofA Chequing Account Activity Report file
 type BofAAccountActivity struct {
 	Date           BofADate    `csv:"Date"`

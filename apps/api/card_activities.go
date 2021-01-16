@@ -31,10 +31,16 @@ func (m *App) GetAllCardActivitiesForCard(w ResponseWriter, r *Request) WriterRe
 }
 
 func readChaseCardActivities(w ResponseWriter, r *Request) ([]models.CardActivity, error) {
+	r.ParseMultipartForm(10 << 20) // 10MB file size limit
 	parsed := []*models.ChaseCardActivity{}
-	if err := r.ReadMultipartCSV("file", &parsed); err != nil {
-		return nil, err
+	for fileName := range r.MultipartForm.File {
+		batch := []*models.ChaseCardActivity{}
+		if err := r.ReadMultipartCSV(fileName, &batch); err != nil {
+			return nil, err
+		}
+		parsed = append(parsed, batch...)
 	}
+
 	cardActivities := make([]models.CardActivity, len(parsed))
 	for i := range parsed {
 		cardActivities[i] = parsed[i]
@@ -42,6 +48,7 @@ func readChaseCardActivities(w ResponseWriter, r *Request) ([]models.CardActivit
 	return cardActivities, nil
 }
 
+// todo: move this into the banking folder once created
 func getBofAActivitiesForFilename(r *Request, fileName string) ([]*models.BofACardActivity, error) {
 	parsed := []*models.BofACardActivity{}
 	tempFile, err := r.ReceiveFileToTemp(fileName)
