@@ -36,7 +36,7 @@ const LinkerPage = () => {
                 <Table
                     rowKey='uuid'
                     rows={splitwiseExpenses}
-                    columns={['uuid', 'splitwise_id', 'description', 'details', 'amount', 'amount_paid', 'date', 'category', 'link']}
+                    columns={['uuid', 'splitwise_id', 'description', 'details', 'creation_method', 'amount', 'amount_paid', 'date', 'category', 'link']}
                     customRenders={{
                         'details': (data) => data['details'].trim(),
                         'date': (data) =>

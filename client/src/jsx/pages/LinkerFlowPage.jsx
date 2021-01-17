@@ -107,7 +107,7 @@ const LinkerFlowPage = ({ match }) => {
                 <Table
                     rowKey='uuid'
                     rows={splitwiseExpense ? [splitwiseExpense] : []}
-                    columns={['uuid', 'splitwise_id', 'description', 'details', 'amount', 'amount_paid', 'date', 'category']}
+                    columns={['uuid', 'splitwise_id', 'description', 'details', 'creation_method', 'amount', 'amount_paid', 'date', 'category']}
                     customRenders={{
                         'details': (data) => data['details'].trim(),
                         'date': (data) =>

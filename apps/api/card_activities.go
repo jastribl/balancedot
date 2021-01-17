@@ -390,7 +390,6 @@ func (m *App) UploadCardActivities(w ResponseWriter, r *Request) WriterResponse 
 	}
 
 	return WriterResponseSuccess
-
 }
 
 // GetAllCardActivitiesForSplitwiseExpenseUUID gets all card activities that might be related to a given splitwise expense
