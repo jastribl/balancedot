@@ -57,9 +57,9 @@ func (m *App) UploadAccountActivities(w ResponseWriter, r *Request) WriterRespon
 
 	var readFunction func(w ResponseWriter, r *Request) ([]models.AccountActivity, error)
 	switch account.BankName {
-	case entities.Chase:
+	case entities.ChaseBankName:
 		readFunction = readChaseAccountActivities
-	case entities.BofA:
+	case entities.BofABankName:
 		readFunction = readBofAAccountActivities
 	default:
 		return w.SendError("Hit unexpected bank name", http.StatusInternalServerError)

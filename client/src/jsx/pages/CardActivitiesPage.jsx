@@ -29,7 +29,7 @@ const CardActivitiesPage = ({ match }) => {
 
     const handleActivityUpload = (activityData) => {
         let formData = new FormData()
-        for (let i = 0; i < activityData['files'].length; i++) { // todo: look into this
+        for (let i = 0; i < activityData['files'].length; i++) {
             formData.append(`file${i}`, activityData['files'][i])
         }
         return postForm(`/api/cards/${cardUUID}/activities`, formData)

@@ -29,6 +29,7 @@ const AccountActivitiesPage = ({ match }) => {
 
     const handleActivityUpload = (activityData) => {
         let formData = new FormData()
+        // todo: consider adding support for multiple files
         formData.append('file', activityData['file'])
         return postForm(`/api/accounts/${accountUUID}/activities`, formData)
             .then(() => {

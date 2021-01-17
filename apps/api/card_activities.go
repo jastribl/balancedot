@@ -349,9 +349,9 @@ func (m *App) UploadCardActivities(w ResponseWriter, r *Request) WriterResponse 
 
 	var readFunction func(w ResponseWriter, r *Request) ([]models.CardActivity, error)
 	switch card.BankName {
-	case entities.Chase:
+	case entities.ChaseBankName:
 		readFunction = readChaseCardActivities
-	case entities.BofA:
+	case entities.BofABankName:
 		readFunction = readBofACardActivities
 	default:
 		return w.SendError("Hit unexpected bank name", http.StatusInternalServerError)
