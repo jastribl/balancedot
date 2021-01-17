@@ -114,15 +114,6 @@ const Form = ({ onSubmit, fieldInfos }) => {
                         )
                     })}
                 </select>)
-        } else if (fieldInfo.inputType === 'textarea') { // todo: look into this (is this used)
-            return <textarea
-                name={fieldName}
-                value={formValues[fieldName]}
-                onChange={handleFormFieldChange}
-                placeholder={fieldInfo.placeholder}
-                disabled={isSubmitting}
-                rows="10"
-            />
         } else {
             return <input
                 type={fieldInfo.inputType}
