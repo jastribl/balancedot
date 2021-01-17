@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 
+import { defaultSort } from '../../utils/sorting'
 import { snakeToSentenceCase } from '../../utils/strings'
 
 const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, initialSortInverse, customSortComparators }) => {
@@ -27,16 +28,10 @@ const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, initia
 
     let toRender = rows.slice()
     if (sortColumn) {
-        toRender.sort(((a, b) => customSortComparators[sortColumn](a[sortColumn], b[sortColumn])) ??
-            ((a, b) => {
-                if (a[sortColumn] < b[sortColumn]) {
-                    return -1
-                } else if (a[sortColumn] > b[sortColumn]) {
-                    return 1
-                } else {
-                    return 0
-                }
-            }))
+        toRender.sort((a, b) => (customSortComparators[sortColumn] ?? defaultSort)(
+            a[sortColumn],
+            b[sortColumn],
+        ))
     }
     if (sortInverse) {
         toRender.reverse()
@@ -56,7 +51,7 @@ const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, initia
                     </tr>
                 </thead>
                 <tbody>
-                    {toRender.map((row, i) =>
+                    {toRender.map((row, _i) =>
                         <tr key={row[rowKey]}>{
                             columns.map(key =>
                                 <td key={key}>{
