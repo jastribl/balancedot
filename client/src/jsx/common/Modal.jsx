@@ -1,7 +1,7 @@
-import React from 'react';
+import React from 'react'
 
 const Modal = ({ headerText, handleClose, visible, children }) => {
-    const showHideClassName = visible ? 'modal display-block' : 'modal display-none';
+    const showHideClassName = visible ? 'modal display-block' : 'modal display-none'
 
     return (
         <div className={showHideClassName}>

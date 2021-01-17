@@ -38,21 +38,21 @@ const CardsPage = () => {
             <h1>Cards</h1>
             <input type='button' onClick={showModal} value='New Card' style={{ marginBottom: 25 + 'px' }} />
             <div>
-                <Table rowKey='uuid' columns={{
-                    'last_four': 'Last Four',
-                    'description': 'Description',
-                    'bank_name': 'Bank Name',
-                }} rows={cards} customRenders={{
-                    'last_four': (data) =>
-                        <Link to={'/cards/' + data['uuid'] + '/activities'}>{data['last_four']}</Link>
-                }} />
+                <Table
+                    rowKey='uuid'
+                    rows={cards}
+                    columns={['last_four', 'description', 'bank_name']}
+                    customRenders={{
+                        'last_four': (data) =>
+                            <Link to={'/cards/' + data['uuid'] + '/activities'}>{data['last_four']}</Link>
+                    }}
+                />
             </div>
             <Modal headerText='New Card' visible={modalVisible} handleClose={hideModal}>
                 <Form
                     onSubmit={handleNewCardSubmit}
                     fieldInfos={{
                         last_four: {
-                            fieldName: 'last_four',
                             inputType: 'text',
                             validate: (fieldLabel, fieldValue) => {
                                 if (!/^[0-9][0-9][0-9][0-9]$/.test(fieldValue)) {
@@ -62,7 +62,6 @@ const CardsPage = () => {
                             }
                         },
                         description: {
-                            fieldName: 'description',
                             inputType: 'text',
                             validate: (fieldLabel, fieldValue) => {
                                 if (!/.....*/.test(fieldValue)) {
@@ -72,12 +71,8 @@ const CardsPage = () => {
                             }
                         },
                         bank_name: {
-                            fieldName: 'bank_name',
                             inputType: 'select',
                             selectOptions: ['chase', 'bofa'],
-                            validate: (fieldLabel, fieldValue) => {
-                                return null
-                            },
                         }
                     }}
                 />

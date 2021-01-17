@@ -1,8 +1,8 @@
-import Moment from 'moment'
 import React, { useEffect, useState } from 'react'
 
 import { get, postJSON } from '../../utils/api'
-import { formatAsMoney } from '../../utils/format'
+import { formatAsDate, formatAsMoney } from '../../utils/format'
+import { dateComparator } from '../../utils/sorting'
 import ErrorRow from '../common/ErrorRow'
 import Spinner from '../common/Spinner'
 import Table from '../common/Table'
@@ -68,22 +68,22 @@ const SplitwiseExpensesPage = () => {
                 <input type='button' onClick={handleRefreshExpenses} value='Refresh Splitwise' style={{ marginBottom: 25 + 'px' }} />
                 {refreshResponseRender}
                 <div>
-                    <Table rowKey='uuid' columns={{
-                        'uuid': 'UUID',
-                        'splitwise_id': 'splitwise_id',
-                        'description': 'Description',
-                        'details': 'Details',
-                        'amount': 'Amount',
-                        'amount_paid': 'Amount Paid',
-                        'date': 'Date',
-                        'category': 'Category',
-                    }} rows={splitwiseExpenses} customRenders={{
-                        'details': (data) => data['details'].trim(),
-                        'date': (data) =>
-                            Moment(data['date']).format('YYYY-MM-DD'),
-                        'amount': (data) => formatAsMoney(data['amount'], data['currency_code']),
-                        'amount_paid': (data) => formatAsMoney(data['amount_paid'], data['currency_code'])
-                    }} />
+                    <Table
+                        rowKey='uuid'
+                        rows={splitwiseExpenses}
+                        columns={['uuid', 'splitwise_id', 'description', 'details', 'amount', 'amount_paid', 'date', 'category']}
+                        customRenders={{
+                            'details': (data) => data['details'].trim(),
+                            'date': (data) => formatAsDate(data['date']),
+                            'amount': (data) => formatAsMoney(data['amount'], data['currency_code']),
+                            'amount_paid': (data) => formatAsMoney(data['amount_paid'], data['currency_code'])
+                        }}
+                        initialSortColumn='date'
+                        initialSortInverse={true}
+                        customSortComparators={{
+                            'date': dateComparator
+                        }}
+                    />
                 </div>
             </SplitwiseLoginCheck>
         </div>

@@ -2,6 +2,13 @@
 
 Application for managing expenses with Chase and Splitwise
 
+# Setup
+
+Run:
+```
+brew install pdftotext
+```
+
 # Run
 
 Front end

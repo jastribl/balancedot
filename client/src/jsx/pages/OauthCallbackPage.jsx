@@ -9,12 +9,12 @@ const OauthCallbackPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [errorMessage, setErrorMessage] = useState(null)
 
-    const history = useHistory();
+    const history = useHistory()
 
     useEffect(() => {
         setIsSubmitting(true)
         const urlParams = new URLSearchParams(window.location.search)
-        const code = urlParams.get('code');
+        const code = urlParams.get('code')
         const state = urlParams.get('state')
         postJSON('/api/splitwise_oauth_callback', {
             'code': code,

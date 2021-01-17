@@ -8,7 +8,7 @@ import (
 
 // CardActivity represents a singel card activity record from the user
 type CardActivity struct {
-	UUID              uuid.UUID           `json:"uuid" gorm:"primary_key;"`
+	UUID              uuid.UUID           `json:"uuid" gorm:"primary_key; default:uuid_generate_v4();"`
 	CardUUID          uuid.UUID           `json:"card_uuid"`
 	Card              *Card               `json:"card" gorm:"foreignKey:CardUUID"`
 	TransactionDate   time.Time           `json:"transaction_date"`

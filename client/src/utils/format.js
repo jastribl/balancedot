@@ -4,8 +4,8 @@ export function formatAsMoney(amount, currencyCode = 'USD') {
     let currencySymbol = '?'
     switch (currencyCode) {
         case 'USD':
-            currencySymbol = '$';
-            break;
+            currencySymbol = '$'
+            break
         default:
             currencySymbol = `${currencyCode}?`
     }
@@ -14,7 +14,7 @@ export function formatAsMoney(amount, currencyCode = 'USD') {
 
 export function formatAsDate(date) {
     if (date) {
-        return Moment(date).format('YYYY-MM-DD')
+        return Moment.utc(date).format('YYYY-MM-DD')
     }
     return "????-??-??"
 }

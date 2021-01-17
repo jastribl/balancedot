@@ -4,9 +4,9 @@ package entities
 type BankNames string
 
 const (
-	// Chase is chase
-	Chase BankNames = "chase"
+	// ChaseBankName is chase
+	ChaseBankName BankNames = "chase"
 
-	// BofA if BofA
-	BofA BankNames = "bofa"
+	// BofABankName if BofA
+	BofABankName BankNames = "bofa"
 )

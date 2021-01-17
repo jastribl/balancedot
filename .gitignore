@@ -3,3 +3,4 @@
 main
 db.env
 build
+tmp/*

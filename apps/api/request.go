@@ -4,9 +4,13 @@ import (
 	"bufio"
 	"encoding/csv"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"reflect"
+	"strings"
 
 	"github.com/gocarina/gocsv"
 	"github.com/gorilla/mux"
@@ -35,18 +39,43 @@ func (m *Request) DecodeParams(params interface{}) error {
 	return decoder.Decode(&params)
 }
 
+func getCSVHeaderString(out interface{}) string {
+	parts := []string{}
+	t := reflect.TypeOf(out).Elem().Elem().Elem()
+	for i := 0; i < t.NumField(); i++ {
+		parts = append(parts, t.Field(i).Tag.Get("csv"))
+	}
+	return strings.Join(parts, ",")
+}
+
 // ReadMultipartCSV reads a multipart csv file to a given output variable
 func (m *Request) ReadMultipartCSV(fileName string, out interface{}) error {
+	headerString := getCSVHeaderString(out)
 	m.ParseMultipartForm(10 << 20) // 10MB file size limit
-	file, handler, err := m.FormFile(fileName)
+	file, _, err := m.FormFile(fileName)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	fmt.Printf("Uploaded File: %+v\n", handler.Filename)
-	fmt.Printf("File Size: %+v\n", handler.Size)
 
+	// Move to the start of the header
 	bufferedReader := bufio.NewReader(file)
+	bytesRead := int64(0)
+	for {
+		line, _, err := bufferedReader.ReadLine()
+		if err != nil {
+			if err == io.EOF {
+				return errors.New("Found EOF before header")
+			}
+			return err
+		}
+		if string(line) == headerString {
+			file.Seek(bytesRead, io.SeekStart)
+			bufferedReader = bufio.NewReader(file)
+			break
+		}
+		bytesRead += int64(len(line)) + 2 // 2 for new line chars
+	}
 
 	gocsv.SetCSVReader(func(in io.Reader) gocsv.CSVReader {
 		r := csv.NewReader(in)
@@ -55,4 +84,33 @@ func (m *Request) ReadMultipartCSV(fileName string, out interface{}) error {
 		return r
 	})
 	return gocsv.Unmarshal(bufferedReader, out)
+}
+
+// ReceiveFileToTemp receives a file to a temp file location
+func (m *Request) ReceiveFileToTemp(fileName string) (*os.File, error) {
+	m.ParseMultipartForm(10 << 20) // 10MB file size limit
+	inputFile, header, err := m.FormFile(fileName)
+	if err != nil {
+		return nil, err
+	}
+	defer inputFile.Close()
+
+	tmpFolder := "tmp"
+	if _, err = os.Stat(tmpFolder); err != nil {
+		if os.IsNotExist(err) {
+			os.Mkdir(tmpFolder, 0700)
+		} else {
+			return nil, err
+		}
+	}
+	outputFile, err := ioutil.TempFile(tmpFolder, header.Filename)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err = io.Copy(outputFile, inputFile); err != nil {
+		return nil, err
+	}
+
+	return outputFile, nil
 }

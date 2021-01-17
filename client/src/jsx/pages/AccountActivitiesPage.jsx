@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 
 import { get, postForm } from '../../utils/api'
 import { formatAsDate, formatAsMoney } from '../../utils/format'
+import { dateComparator } from '../../utils/sorting'
 import Form from '../common/Form'
 import Modal from '../common/Modal'
 import Table from '../common/Table'
@@ -23,11 +24,12 @@ const AccountActivitiesPage = ({ match }) => {
 
     const refreshAccountActivities = () => {
         get(`/api/accounts/${accountUUID}/activities`)
-            .then(accountActivities => setAccountActivities(accountActivities))
+            .then(accountActivitiesResponse => setAccountActivities(accountActivitiesResponse))
     }
 
     const handleActivityUpload = (activityData) => {
-        let formData = new FormData();
+        let formData = new FormData()
+        // todo: consider adding support for multiple files
         formData.append('file', activityData['file'])
         return postForm(`/api/accounts/${accountUUID}/activities`, formData)
             .then(() => {
@@ -46,27 +48,28 @@ const AccountActivitiesPage = ({ match }) => {
 
     return (
         <div>
-            <h1>Account Activities for {account?.last_four}</h1>
+            <h1>Account Activities for {account ? (account.last_four + " (" + account.description + ")") : null}</h1>
             <input type='button' onClick={showModal} value='Upload Activities' style={{ marginBottom: 25 + 'px' }} />
             <div>
-                <Table rowKey='uuid' columns={{
-                    'uuid': 'Activity UUID',
-                    'details': 'Details',
-                    'posting_date': 'Post Date',
-                    'description': 'Description',
-                    'amount': 'Amount',
-                    'type': 'Type',
-                }} rows={accountActivities} customRenders={{
-                    'posting_date': (data) => formatAsDate(data['posting_date']),
-                    'amount': (data) => formatAsMoney(data['amount']),
-                }} />
+                <Table
+                    rowKey='uuid'
+                    rows={accountActivities}
+                    columns={['uuid', 'details', 'posting_date', 'description', 'amount', 'type']}
+                    customRenders={{
+                        'posting_date': (data) => formatAsDate(data['posting_date']),
+                        'amount': (data) => formatAsMoney(data['amount']),
+                    }}
+                    initialSortColumn='posting_date'
+                    customSortComparators={{
+                        'posting_date': dateComparator
+                    }}
+                />
             </div>
             <Modal headerText='Activity Upload' visible={modalVisible} handleClose={hideModal}>
                 <Form
                     onSubmit={handleActivityUpload}
                     fieldInfos={{
                         file: {
-                            fieldName: 'file',
                             inputType: 'file',
                         },
                     }}

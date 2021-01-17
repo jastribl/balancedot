@@ -38,9 +38,13 @@ const Form = ({ onSubmit, fieldInfos }) => {
             ...formValues,
             [fieldName]: fieldValue
         })
-        let formValue = fieldValue;
+        let formValue = fieldValue
         if (fieldInfo.inputType === 'file') {
-            formValue = event.target.files[0]
+            if (fieldInfo.multiple) {
+                formValue = event.target.files
+            } else {
+                formValue = event.target.files[0]
+            }
         }
 
         if (fieldName in validationErrors) {
@@ -118,6 +122,7 @@ const Form = ({ onSubmit, fieldInfos }) => {
                 onChange={handleFormFieldChange}
                 placeholder={fieldInfo.placeholder}
                 disabled={isSubmitting}
+                multiple={fieldInfo.multiple ? "multiple" : null}
             />
         }
     }
