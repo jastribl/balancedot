@@ -6,14 +6,13 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
 	"gihub.com/jastribl/balancedot/chase/models"
 	"gihub.com/jastribl/balancedot/entities"
 	"gihub.com/jastribl/balancedot/helpers"
+	"gihub.com/jastribl/balancedot/lib/regex"
 	"gihub.com/jastribl/balancedot/lib/textscanner"
 	"gihub.com/jastribl/balancedot/repos"
 	"gorm.io/gorm"
@@ -74,35 +73,27 @@ func getBofAActivitiesForFilename(r *Request, fileName string) ([]*models.BofACa
 	scanner := textscanner.NewScanner(body)
 	var startingYear int
 	foundYear, err := scanner.EatToLineContainsWithCallback("JUSTIN A STRIBLING ! Account #", func(s string) error {
-		matchers := []string{
-			`(?P<pre>JUSTIN A STRIBLING ! Account # \d{4} \d{4} \d{4} \d{4} ! )`,
-			`(?P<start_month>\w+)`, // 2
-			`(?P<trash1> )`,
-			`(?P<start_day>\d{1,2})`,
-			`(?P<trash2> - )`,
-			`(?P<end_month>\w+)`,
-			`(?P<trash3> )`,
-			`(?P<end_day>\d{1,2})`,
-			`(?P<trash4>, )`,
-			`(?P<year>\d{4})`,
-		}
-		r := regexp.MustCompile(strings.Join(matchers, ""))
-		results := r.FindStringSubmatch(s)
-		if len(results) != len(matchers)+1 || len(r.SubexpNames()) != len(matchers)+1 {
-			return fmt.Errorf("Wrong number of entries when looking for year on the line: '%s'. Expected (%d, %d), but got (%d, %d)",
-				s,
-				len(results),
-				len(matchers)+1,
-				len(r.SubexpNames()),
-				len(matchers)+1,
-			)
+		regexResult, err := regex.NewResult(s, "", []regex.ResultInput{
+			{Pattern: `JUSTIN A STRIBLING ! Account # \d{4} \d{4} \d{4} \d{4} ! `},
+			{Pattern: `\w+`, Key: "start_month"},
+			{Pattern: ` `},
+			{Pattern: `\d{1,2}`, Key: "start_day"},
+			{Pattern: ` - `},
+			{Pattern: `\w+`, Key: "end_month"},
+			{Pattern: ` `},
+			{Pattern: `\d{1,2}`, Key: "end_day"},
+			{Pattern: `, `},
+			{Pattern: `\d{4}`, Key: "year"},
+		})
+		if err != nil {
+			return err
 		}
 
-		startMonth := results[2]
-		startDay := results[4]
-		endMonth := results[6]
-		endDay := results[8]
-		year, err := strconv.Atoi(results[10])
+		startMonth := regexResult.GetString("start_month")
+		startDay := regexResult.GetString("start_day")
+		endMonth := regexResult.GetString("end_month")
+		endDay := regexResult.GetString("end_day")
+		year, err := regexResult.GetInt("year")
 		if err != nil {
 			return err
 		}
@@ -135,30 +126,29 @@ func getBofAActivitiesForFilename(r *Request, fileName string) ([]*models.BofACa
 		var lastDate *time.Time
 		amounts := 0
 		err = scanner.ProcessToAndEatLine("TOTAL PAYMENTS AND OTHER CREDITS FOR THIS PERIOD", func(s string) error {
-			matchers := []string{
-				`(?P<transaction_date>\d{2}/\d{2})`,
-				`(?P<posting_date>\d{2}/\d{2})`,
-				`(?P<description>(?s).*)`,
-				`(?P<reference_number>\d{4})`,
-				`(?P<account_number>\d{4})`,
-				`(?P<amount>\d+,?\d*?\.\d{2})`,
-			}
-			r := regexp.MustCompile(strings.Join(matchers, " "))
-			results := r.FindStringSubmatch(s)
-			if len(results) != len(matchers)+1 || len(r.SubexpNames()) != len(matchers)+1 {
-				return fmt.Errorf("Wrong number of entries when looking for payments on the line: '%s'. Expected (%d, %d), but got (%d, %d)",
-					s,
-					len(results),
-					len(matchers)+1,
-					len(r.SubexpNames()),
-					len(matchers)+1,
-				)
-			}
-			transactionDateTime, err := time.Parse("2006/01/02", fmt.Sprintf("%d/%s", startingYear, results[1]))
+			regexResult, err := regex.NewResult(s, " ", []regex.ResultInput{
+				{Pattern: `\d{2}/\d{2}`, Key: "transaction_date"},
+				{Pattern: `\d{2}/\d{2}`, Key: "posting_date"},
+				{Pattern: `(?s).*`, Key: "description"},
+				{Pattern: `\d{4}`, Key: "reference_number"},
+				{Pattern: `\d{4}`, Key: "account_number"},
+				{Pattern: `\d+,?\d*?\.\d{2}`, Key: "amount"},
+			})
 			if err != nil {
 				return err
 			}
-			postingDateTime, err := time.Parse("2006/01/02", fmt.Sprintf("%d/%s", startingYear, results[2]))
+
+			transactionDateTime, err := time.Parse(
+				"2006/01/02",
+				fmt.Sprintf("%d/%s", startingYear, regexResult.GetString("transaction_date")),
+			)
+			if err != nil {
+				return err
+			}
+			postingDateTime, err := time.Parse(
+				"2006/01/02",
+				fmt.Sprintf("%d/%s", startingYear, regexResult.GetString("posting_date")),
+			)
 			if err != nil {
 				return err
 			}
@@ -171,10 +161,7 @@ func getBofAActivitiesForFilename(r *Request, fileName string) ([]*models.BofACa
 			}
 			lastDate = &postingDateTime
 
-			// 1: to remove first '6' since it's there instead of negative
-			// ",", "" to remove commas for thousands
-			// ".", "" to remove decimal to parse and store as int
-			moneyAmountInt, err := strconv.Atoi(strings.ReplaceAll(strings.ReplaceAll(results[6][1:], ",", ""), ".", ""))
+			moneyAmountInt, err := regexResult.GetMoneyAmountAsInt("amount", true)
 			if err != nil {
 				return err
 			}
@@ -182,32 +169,23 @@ func getBofAActivitiesForFilename(r *Request, fileName string) ([]*models.BofACa
 			newEntry := models.BofACardActivity{
 				TransactionDate: models.BofADate{Time: transactionDateTime},
 				PostingDate:     models.BofADate{Time: postingDateTime},
-				Description:     results[3],
-				ReferenceNumber: results[4],
-				AccountNumber:   results[5],
+				Description:     regexResult.GetString("description"),
+				ReferenceNumber: regexResult.GetString("reference_number"),
+				AccountNumber:   regexResult.GetString("account_number"),
 				Amount:          models.MoneyAmountFromFloat64(float64(moneyAmountInt) / 100.0),
 			}
 			parsed = append(parsed, &newEntry)
 			return nil
 		}, func(s string) error {
-			matchers := []string{
-				`(?P<description>TOTAL PAYMENTS AND OTHER CREDITS FOR THIS PERIOD 6\$)`,
-				`(?P<amount>\d+,?\d*?\.\d{2})`,
+			regexResult, err := regex.NewResult(s, "", []regex.ResultInput{
+				{Pattern: `TOTAL PAYMENTS AND OTHER CREDITS FOR THIS PERIOD 6\$`},
+				{Pattern: `\d+,?\d*?\.\d{2}`, Key: "amount"},
+			})
+			if err != nil {
+				return err
 			}
-			r := regexp.MustCompile(strings.Join(matchers, ""))
-			results := r.FindStringSubmatch(s)
-			if len(results) != len(matchers)+1 || len(r.SubexpNames()) != len(matchers)+1 {
-				return fmt.Errorf("Wrong number of entries when looking for payments on the line: '%s'. Expected (%d, %d), but got (%d, %d)",
-					s,
-					len(results),
-					len(matchers)+1,
-					len(r.SubexpNames()),
-					len(matchers)+1,
-				)
-			}
-			// ",", "" to remove commas for thousands
-			// ".", "" to remove decimal to parse and store as int
-			totalAmountInt, err := strconv.Atoi(strings.ReplaceAll(strings.ReplaceAll(results[2], ",", ""), ".", ""))
+
+			totalAmountInt, err := regexResult.GetMoneyAmountAsInt("amount", false)
 			if err != nil {
 				return err
 			}
@@ -231,19 +209,17 @@ func getBofAActivitiesForFilename(r *Request, fileName string) ([]*models.BofACa
 		amounts := 0
 		err = scanner.ProcessToAndEatLine("TOTAL PURCHASES AND ADJUSTMENTS FOR THIS PERIOD", func(s string) error {
 			triedWithPrevLine := false
-			matchers := []string{
-				`(?P<transaction_date>\d{2}/\d{2})`,
-				`(?P<posting_date>\d{2}/\d{2})`,
-				`(?P<description>(?s).*)`,
-				`(?P<reference_number>\d{4})`,
-				`(?P<account_number>\d{4})`,
-				`(?P<amount>\d+,?\d*?\.\d{2})`,
-			}
-			r := regexp.MustCompile(strings.Join(matchers, " "))
 
 		start:
-			results := r.FindStringSubmatch(s)
-			if len(results) != len(matchers)+1 || len(r.SubexpNames()) != len(matchers)+1 {
+			regexResult, err := regex.NewResult(s, " ", []regex.ResultInput{
+				{Pattern: `\d{2}/\d{2}`, Key: "transaction_date"},
+				{Pattern: `\d{2}/\d{2}`, Key: "posting_date"},
+				{Pattern: `(?s).*`, Key: "description"},
+				{Pattern: `\d{4}`, Key: "reference_number"},
+				{Pattern: `\d{4}`, Key: "account_number"},
+				{Pattern: `\d+,?\d*?\.\d{2}`, Key: "amount"},
+			})
+			if err != nil { // Line doesn't match (wrong number of matches)
 				if prevLine == "" {
 					// Line doesn't work, maybe try using it with the next line
 					prevLine = s
@@ -276,11 +252,17 @@ func getBofAActivitiesForFilename(r *Request, fileName string) ([]*models.BofACa
 			if prevLine != "" {
 				panic("prevLine wasn't empty. Shouldn't be continuing")
 			}
-			transactionDateTime, err := time.Parse("2006/01/02", fmt.Sprintf("%d/%s", startingYear, results[1]))
+			transactionDateTime, err := time.Parse(
+				"2006/01/02",
+				fmt.Sprintf("%d/%s", startingYear, regexResult.GetString("transaction_date")),
+			)
 			if err != nil {
 				return err
 			}
-			postingDateTime, err := time.Parse("2006/01/02", fmt.Sprintf("%d/%s", startingYear, results[2]))
+			postingDateTime, err := time.Parse(
+				"2006/01/02",
+				fmt.Sprintf("%d/%s", startingYear, regexResult.GetString("posting_date")),
+			)
 			if err != nil {
 				return err
 			}
@@ -292,9 +274,8 @@ func getBofAActivitiesForFilename(r *Request, fileName string) ([]*models.BofACa
 				return errors.New("This situation isn't handled")
 			}
 			lastDate = &postingDateTime
-			// ",", "" to remove commas for thousands
-			// ".", "" to remove decimal to parse and store as int
-			moneyAmountInt, err := strconv.Atoi(strings.ReplaceAll(strings.ReplaceAll(results[6], ",", ""), ".", ""))
+
+			moneyAmountInt, err := regexResult.GetMoneyAmountAsInt("amount", false)
 			if err != nil {
 				return err
 			}
@@ -302,33 +283,24 @@ func getBofAActivitiesForFilename(r *Request, fileName string) ([]*models.BofACa
 			newEntry := models.BofACardActivity{
 				TransactionDate: models.BofADate{Time: transactionDateTime},
 				PostingDate:     models.BofADate{Time: postingDateTime},
-				Description:     strings.ReplaceAll(results[3], "\n ", "\n"),
-				ReferenceNumber: results[4],
-				AccountNumber:   results[5],
+				Description:     strings.ReplaceAll(regexResult.GetString("description"), "\n ", "\n"),
+				ReferenceNumber: regexResult.GetString("reference_number"),
+				AccountNumber:   regexResult.GetString("account_number"),
 				Amount:          models.MoneyAmountFromFloat64(-float64(moneyAmountInt) / 100.0), // negative since these are payments
 			}
 
 			parsed = append(parsed, &newEntry)
 			return nil
 		}, func(s string) error {
-			matchers := []string{
-				`(?P<description>TOTAL PURCHASES AND ADJUSTMENTS FOR THIS PERIOD \$)`,
-				`(?P<amount>\d+,?\d*?\.\d{2})`,
+			regexResult, err := regex.NewResult(s, "", []regex.ResultInput{
+				{Pattern: `TOTAL PURCHASES AND ADJUSTMENTS FOR THIS PERIOD \$`, Key: "description"},
+				{Pattern: `\d+,?\d*?\.\d{2}`, Key: "amount"},
+			})
+			if err != nil {
+				return err
 			}
-			r := regexp.MustCompile(strings.Join(matchers, ""))
-			results := r.FindStringSubmatch(s)
-			if len(results) != len(matchers)+1 || len(r.SubexpNames()) != len(matchers)+1 {
-				return fmt.Errorf("Wrong number of entries when looking for payments on the line: '%s'. Expected (%d, %d), but got (%d, %d)",
-					s,
-					len(results),
-					len(matchers)+1,
-					len(r.SubexpNames()),
-					len(matchers)+1,
-				)
-			}
-			// ",", "" to remove commas for thousands
-			// ".", "" to remove decimal to parse and store as int
-			totalAmountInt, err := strconv.Atoi(strings.ReplaceAll(strings.ReplaceAll(results[2], ",", ""), ".", ""))
+
+			totalAmountInt, err := regexResult.GetMoneyAmountAsInt("amount", false)
 			if err != nil {
 				return err
 			}
