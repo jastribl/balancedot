@@ -33,26 +33,21 @@ const LinkerPage = () => {
             <h1>Splitwise Expense Linking</h1>
             <ErrorRow message={errorMessage} />
             <div>
-                <Table rowKey='uuid' columns={{
-                    'uuid': 'UUID',
-                    'splitwise_id': 'Splitwise ID',
-                    'description': 'Description',
-                    'details': 'Details',
-                    'amount': 'Amount',
-                    'amount_paid': 'Amount Paid',
-                    'date': 'Date',
-                    'category': 'Category',
-                    'link': 'Link',
-                }} rows={splitwiseExpenses} customRenders={{
-                    'details': (data) => data['details'].trim(),
-                    'date': (data) =>
-                        Moment(data['date']).format('YYYY-MM-DD'),
-                    'amount': (data) => formatAsMoney(data['amount'], data['currency_code']),
-                    'amount_paid': (data) => formatAsMoney(data['amount_paid'], data['currency_code']),
-                    // todo: try moving linking links to the main splitwise page
-                    // todo: style link the rest of the buttons (along with other links)
-                    'link': (data) => <Link to={'/linker/' + data['uuid']}>Link</Link>,
-                }} />
+                <Table
+                    rowKey='uuid'
+                    rows={splitwiseExpenses}
+                    columns={['uuid', 'splitwise_id', 'description', 'details', 'amount', 'amount_paid', 'date', 'category', 'link']}
+                    customRenders={{
+                        'details': (data) => data['details'].trim(),
+                        'date': (data) =>
+                            Moment(data['date']).format('YYYY-MM-DD'),
+                        'amount': (data) => formatAsMoney(data['amount'], data['currency_code']),
+                        'amount_paid': (data) => formatAsMoney(data['amount_paid'], data['currency_code']),
+                        // todo: try moving linking links to the main splitwise page
+                        // todo: style link the rest of the buttons (along with other links)
+                        'link': (data) => <Link to={'/linker/' + data['uuid']}>Link</Link>,
+                    }}
+                />
             </div>
         </div>
     )

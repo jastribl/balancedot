@@ -104,75 +104,65 @@ const LinkerFlowPage = ({ match }) => {
             <ErrorRow message={errorMessage} />
             <div>
                 {/* TODO: don't use table for sinle thing */}
-                <Table rowKey='uuid' columns={{
-                    'uuid': 'UUID',
-                    'splitwise_id': 'Splitwise ID',
-                    'description': 'Description',
-                    'details': 'Details',
-                    'amount': 'Amount',
-                    'amount_paid': 'Amount Paid',
-                    'date': 'Date',
-                    'category': 'Category',
-                }} rows={splitwiseExpense ? [splitwiseExpense] : []} customRenders={{
-                    'details': (data) => data['details'].trim(),
-                    'date': (data) =>
-                        Moment(data['date']).format('YYYY-MM-DD'),
-                    'amount': (data) => formatAsMoney(data['amount'], data['currency_code']),
-                    'amount_paid': (data) => formatAsMoney(data['amount_paid'], data['currency_code']),
-                }} />
+                <Table
+                    rowKey='uuid'
+                    rows={splitwiseExpense ? [splitwiseExpense] : []}
+                    columns={['uuid', 'splitwise_id', 'description', 'details', 'amount', 'amount_paid', 'date', 'category']}
+                    customRenders={{
+                        'details': (data) => data['details'].trim(),
+                        'date': (data) =>
+                            Moment(data['date']).format('YYYY-MM-DD'),
+                        'amount': (data) => formatAsMoney(data['amount'], data['currency_code']),
+                        'amount_paid': (data) => formatAsMoney(data['amount_paid'], data['currency_code']),
+                    }}
+                />
             </div>
             <h2>Possible Links</h2>
 
             <h3>Card Links</h3>
             <div>
-                <Table rowKey='uuid' columns={{
-                    'transaction_date': 'Transaction Date',
-                    'post_date': 'Post Date',
-                    'description': 'Description',
-                    'category': 'Category',
-                    'type': 'Type',
-                    'amount': 'Amount',
-                    'link': 'Link',
-                }} rows={cardLinks} customRenders={{
-                    'transaction_date': (data) => <div style={{
-                        color: formatAsDate(data['transaction_date']) === formatAsDate(splitwiseExpense['date']) ? 'green' : null
-                    }}>{formatAsDate(data['transaction_date'])}</div>,
-                    'post_date': (data) => <div style={{
-                        color: formatAsDate(data['post_date']) === formatAsDate(splitwiseExpense['date']) ? 'green' : null
-                    }}>{formatAsDate(data['post_date'])}</div>,
-                    'amount': (data) => <div style={{
-                        color: Math.abs(data['amount']) === Math.abs(splitwiseExpense['amount_paid']) ? 'green' : null
-                    }}>{formatAsMoney(data['amount'])}</div>,
-                    'link': (data) => <input
-                        type='button'
-                        onClick={() => linkCardActivityToExpense(data['uuid'])}
-                        value='Link'
-                    />
-                }} />
-
-                <h3>Account Links</h3>
-                <div>
-                    <Table rowKey='uuid' columns={{
-                        'uuid': 'Activity UUID',
-                        'details': 'Details',
-                        'posting_date': 'Post Date',
-                        'description': 'Description',
-                        'amount': 'Amount',
-                        'type': 'Type',
-                        'link': 'Link',
-                    }} rows={accountLinks} customRenders={{
-                        'posting_date': (data) => <div style={{
-                            color: formatAsDate(data['posting_date']) === formatAsDate(splitwiseExpense['date']) ? 'green' : null
-                        }}>{formatAsDate(data['posting_date'])}</div>,
+                <Table
+                    rowKey='uuid'
+                    rows={cardLinks}
+                    columns={['transaction_date', 'post_date', 'description', 'category', 'type', 'amount', 'link']}
+                    customRenders={{
+                        'transaction_date': (data) => <div style={{
+                            color: formatAsDate(data['transaction_date']) === formatAsDate(splitwiseExpense['date']) ? 'green' : null
+                        }}>{formatAsDate(data['transaction_date'])}</div>,
+                        'post_date': (data) => <div style={{
+                            color: formatAsDate(data['post_date']) === formatAsDate(splitwiseExpense['date']) ? 'green' : null
+                        }}>{formatAsDate(data['post_date'])}</div>,
                         'amount': (data) => <div style={{
                             color: Math.abs(data['amount']) === Math.abs(splitwiseExpense['amount_paid']) ? 'green' : null
                         }}>{formatAsMoney(data['amount'])}</div>,
                         'link': (data) => <input
                             type='button'
-                            onClick={() => linkAccountActivityToExpense(data['uuid'])}
+                            onClick={() => linkCardActivityToExpense(data['uuid'])}
                             value='Link'
                         />
-                    }} />
+                    }}
+                />
+
+                <h3>Account Links</h3>
+                <div>
+                    <Table
+                        rowKey='uuid'
+                        rows={accountLinks}
+                        columns={['uuid', 'details', 'posting_date', 'description', 'amount', 'type', 'link']}
+                        customRenders={{
+                            'posting_date': (data) => <div style={{
+                                color: formatAsDate(data['posting_date']) === formatAsDate(splitwiseExpense['date']) ? 'green' : null
+                            }}>{formatAsDate(data['posting_date'])}</div>,
+                            'amount': (data) => <div style={{
+                                color: Math.abs(data['amount']) === Math.abs(splitwiseExpense['amount_paid']) ? 'green' : null
+                            }}>{formatAsMoney(data['amount'])}</div>,
+                            'link': (data) => <input
+                                type='button'
+                                onClick={() => linkAccountActivityToExpense(data['uuid'])}
+                                value='Link'
+                            />
+                        }}
+                    />
                 </div>
             </div>
         </div>
