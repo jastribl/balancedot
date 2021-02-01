@@ -1,30 +1,13 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 
-import { get } from '../../utils/api'
+import LoaderComponent from '../common/LoaderComponent'
 import AccountActivitiesTable from '../tables/AccountActivitiesTable'
 import SplitwiseExpenseTable from '../tables/SplitwiseExpenseTable'
 
 const AccountActivityPage = ({ match }) => {
-    const accountUUID = match.params.accountUUID
     const accountActivityUUID = match.params.accountActivityUUID
 
-    const [account, setAccount] = useState(null)
     const [accountActivity, setAccountActivity] = useState(null)
-
-    const refreshAccount = () => {
-        get(`/api/accounts/${accountUUID}`)
-            .then(accountResponse => setAccount(accountResponse))
-    }
-
-    const refreshAccountActivity = () => {
-        get(`/api/account_activities/${accountActivityUUID}`)
-            .then(accountActivityResponse => setAccountActivity(accountActivityResponse))
-    }
-
-    useEffect(() => {
-        refreshAccount()
-        refreshAccountActivity()
-    }, [setAccount, setAccountActivity])
 
     let splitwiseExpenseTable = null
     if (accountActivity?.splitwise_expenses !== null && accountActivity?.splitwise_expenses.length > 0) {
@@ -34,10 +17,17 @@ const AccountActivityPage = ({ match }) => {
         </div>
     }
 
+    const account = accountActivity?.account
+
     return (
         <div>
             <h1>Account Activity {accountActivityUUID} ({accountActivity?.description}) </h1>
             <h2>For account {account ? (account.last_four + " (" + account.description + ")") : null}</h2>
+            <LoaderComponent
+                path={`/api/account_activities/${accountActivityUUID}`}
+                parentLoading={false}
+                setData={setAccountActivity}
+            />
             <AccountActivitiesTable
                 data={accountActivity ? [accountActivity] : []}
                 hideFilters={true}

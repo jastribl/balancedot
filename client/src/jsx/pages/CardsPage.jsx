@@ -1,42 +1,39 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { get, postJSON } from '../../utils/api'
+import { postJSON } from '../../utils/api'
 import Form from '../common/Form'
+import LoaderComponent from '../common/LoaderComponent'
 import Modal from '../common/Modal'
 import Table from '../common/Table'
 
 const CardsPage = () => {
     const [cards, setCards] = useState(null)
     const [modalVisible, setShowModal] = useState(false)
+    const [addingNewCard, setAddingNewCard] = useState(false)
 
     const showModal = () => { setShowModal(true) }
     const hideModal = () => { setShowModal(false) }
 
-    const refreshCards = () => {
-        get('/api/cards')
-            .then(cardsResponse => setCards(cardsResponse))
-    }
-
     const handleNewCardSubmit = (newCardData) => {
+        setAddingNewCard(true)
         return postJSON('/api/card', newCardData)
             .then(() => {
                 hideModal()
-                refreshCards()
             })
-            .catch(e => {
-                throw e.message
-            })
+            .catch(e => { throw e.message })
+            .finally(() => setAddingNewCard(false))
     }
-
-    useEffect(() => {
-        refreshCards()
-    }, [setCards])
 
     return (
         <div>
             <h1>Cards</h1>
             <input type='button' onClick={showModal} value='New Card' style={{ marginBottom: 25 + 'px' }} />
+            <LoaderComponent
+                path={'/api/cards'}
+                parentLoading={addingNewCard}
+                setData={setCards}
+            />
             <Table
                 rowKey='uuid'
                 rows={cards}

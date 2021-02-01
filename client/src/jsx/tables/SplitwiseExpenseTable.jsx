@@ -17,6 +17,8 @@ const SplitwiseExpenseTable = (props) => {
             'amount_paid',
             'date',
             'category',
+            'card_activity_count',
+            'account_activity_count',
         ]}
         customRenders={{
             'uuid': (data) => <Link to={'/splitwise_expenses/' + data['uuid']}>{data['uuid']}</Link>,
@@ -24,6 +26,28 @@ const SplitwiseExpenseTable = (props) => {
             'date': (data) => formatAsDate(data['date']),
             'amount': (data) => formatAsMoney(data['amount'], data['currency_code']),
             'amount_paid': (data) => formatAsMoney(data['amount_paid'], data['currency_code']),
+            'card_activity_count': (data) => {
+                const cardActivities = data['card_activities']
+                const num = cardActivities.length
+                if (num > 0) {
+                    const sum = cardActivities
+                        .map(d => -d.amount)
+                        .reduce((a, b) => a + b, 0)
+                    return `${num} (${sum})`
+                }
+                return ''
+            },
+            'account_activity_count': (data) => {
+                const accountActivities = data['account_activities']
+                const num = accountActivities.length
+                if (num > 0) {
+                    const sum = accountActivities
+                        .map(d => -d.amount)
+                        .reduce((a, b) => a + b, 0)
+                    return `${num} (${sum})`
+                }
+                return ''
+            },
         }}
         initialSortColumn='date'
         initialSortInverse={true}

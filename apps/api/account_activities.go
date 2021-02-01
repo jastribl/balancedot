@@ -11,23 +11,14 @@ import (
 	"gorm.io/gorm"
 )
 
-// GetAllAccountActivitiesForAccount gets all the Account Activities
-func (m *App) GetAllAccountActivitiesForAccount(w ResponseWriter, r *Request) WriterResponse {
-	var account entities.Account
-	err := repos.NewGenericRepo(m.db.Preload("Activities")).
-		GetByUUID(&account, r.GetParams()["accountUUID"])
-	if err != nil {
-		return w.SendUnexpectedError(err)
-	}
-
-	return w.SendResponse(account.Activities)
-}
-
 // GetAccountActivityByUUID gets a single Account Activity by UUID
 func (m *App) GetAccountActivityByUUID(w ResponseWriter, r *Request) WriterResponse {
 	return m.genericGetByUUID(
 		w, r,
-		m.db.Preload("SplitwiseExpenses"),
+		m.db.
+			Preload("Account").
+			Preload("SplitwiseExpenses.CardActivities").
+			Preload("SplitwiseExpenses.AccountActivities"),
 		&entities.AccountActivity{},
 		r.GetParams()["accountActivityUUID"],
 	)
@@ -111,12 +102,13 @@ func (m *App) UploadAccountActivities(w ResponseWriter, r *Request) WriterRespon
 	return WriterResponseSuccess
 }
 
-// GetAllAccountActivitiesForSplitwiseExpenseUUID gets all account activities that might be related to a given splitwise expense
-func (m *App) GetAllAccountActivitiesForSplitwiseExpenseUUID(w ResponseWriter, r *Request) WriterResponse {
+func (m *App) getAllAccountActivitiesForSplitwiseExpenseUUID(
+	splitwiseExpenseUUID string,
+) ([]*entities.AccountActivity, error) {
 	var splitwiseExpense entities.SplitwiseExpense
-	err := repos.NewGenericRepo(m.db).GetByUUID(&splitwiseExpense, r.GetParams()["splitwiseExpenseUUID"])
+	err := repos.NewGenericRepo(m.db).GetByUUID(&splitwiseExpense, splitwiseExpenseUUID)
 	if err != nil {
-		return w.SendUnexpectedError(err)
+		return nil, err
 	}
 
 	var allAccountActivities []*entities.AccountActivity
@@ -132,12 +124,15 @@ func (m *App) GetAllAccountActivitiesForSplitwiseExpenseUUID(w ResponseWriter, r
 		splitwiseExpense.AmountPaid-1,
 		splitwiseExpense.Date.Add(-time.Hour*72),
 		splitwiseExpense.Date.Add(time.Hour*72),
-	).Find(&allAccountActivities).Error
+	).
+		Preload("SplitwiseExpenses.CardActivities").
+		Preload("SplitwiseExpenses.AccountActivities").
+		Find(&allAccountActivities).Error
 	if err != nil {
-		return w.SendUnexpectedError(err)
+		return nil, err
 	}
 
-	return w.SendResponse(allAccountActivities)
+	return allAccountActivities, nil
 }
 
 // LinkAccountActivityToSplitwiseExpense links a account activitiy to a splitwise expense

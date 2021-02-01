@@ -24,7 +24,12 @@ const Table = ({
     const [sortColumn, setSortColumn] = useState(initialSortColumn)
     const [sortInverse, setSortInverse] = useState(initialSortInverse ?? false)
 
-    const [filters, setFilters] = useState({})
+    let initialFilters = {}
+    columns.map(key => {
+        initialFilters[key] = ''
+    })
+    const [filters, setFilters] = useState(initialFilters)
+
 
     const onHeaderClick = (header_name) => {
         if (sortInverse) {
@@ -51,9 +56,18 @@ const Table = ({
 
     toRender = toRender.filter(row => {
         return !Object.keys(filters).some(filterKey => {
-            const cellValue = ("" + row[filterKey]).toLowerCase()
-            const searchTerm = filters[filterKey].toLowerCase()
-            return !cellValue.includes(searchTerm)
+            const rawValue = filterKey in customRenders ? customRenders[filterKey](row) : row[filterKey]
+            const displayValue = ("" + rawValue).toLowerCase()
+            let searchTerm = filters[filterKey].toLowerCase()
+            if (searchTerm.length === 0) {
+                return
+            }
+            let isInverse = searchTerm.length > 1 && searchTerm.startsWith("!")
+            if (isInverse) {
+                searchTerm = searchTerm.substring(1)
+            }
+            const contains = displayValue.includes(searchTerm)
+            return isInverse ? contains : !contains
         })
     })
 

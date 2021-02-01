@@ -31,7 +31,7 @@ const SplitwiseLoginCheck = (props) => {
                     setErrorMessage(e.message)
                 }
             })
-    }, [setHasSplitwiseSetup, setAuthURL])
+    }, [])
 
     if (hasSplitwiseSetup) {
         return props.children

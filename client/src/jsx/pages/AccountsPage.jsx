@@ -1,42 +1,40 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { get, postJSON } from '../../utils/api'
+import { postJSON } from '../../utils/api'
 import Form from '../common/Form'
+import LoaderComponent from '../common/LoaderComponent'
 import Modal from '../common/Modal'
 import Table from '../common/Table'
 
 const AccountsPage = () => {
     const [accounts, setAccounts] = useState(null)
     const [modalVisible, setShowModal] = useState(false)
+    const [addingNewAccount, setAddingNewAccount] = useState(false)
 
     const showModal = () => { setShowModal(true) }
     const hideModal = () => { setShowModal(false) }
 
-    const refreshAccounts = () => {
-        get('/api/accounts')
-            .then(accountsResponse => setAccounts(accountsResponse))
-    }
-
     const handleNewAccountSubmit = (newAccountData) => {
+        setAddingNewAccount(true)
         return postJSON('/api/account', newAccountData)
             .then(() => {
                 hideModal()
                 refreshAccounts()
             })
-            .catch(e => {
-                throw e.message
-            })
+            .catch(e => { throw e.message })
+            .finally(() => setAddingNewAccount(false))
     }
-
-    useEffect(() => {
-        refreshAccounts()
-    }, [setAccounts])
 
     return (
         <div>
             <h1>Accounts</h1>
             <input type='button' onClick={showModal} value='New Account' style={{ marginBottom: 25 + 'px' }} />
+            <LoaderComponent
+                path={'/api/accounts'}
+                parentLoading={addingNewAccount}
+                setData={setAccounts}
+            />
             <Table
                 rowKey='uuid'
                 rows={accounts}

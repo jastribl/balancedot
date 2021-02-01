@@ -42,5 +42,10 @@ func (m *App) CreateNewAccount(w ResponseWriter, r *Request) WriterResponse {
 
 // GetAccountByUUID gets a single Account by UUID
 func (m *App) GetAccountByUUID(w ResponseWriter, r *Request) WriterResponse {
-	return m.genericGetByUUID(w, r, m.db, &entities.Account{}, r.GetParams()["accountUUID"])
+	return m.genericGetByUUID(
+		w, r,
+		m.db.Preload("Activities.SplitwiseExpenses"),
+		&entities.Account{},
+		r.GetParams()["accountUUID"],
+	)
 }

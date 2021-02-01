@@ -59,9 +59,8 @@ func (m *App) SplitwiseOauthCallback(w ResponseWriter, r *Request) WriterRespons
 // GetAllUnlinkedSplitwiseExpenses gets all the SplitwiseExpenses that aren't already linked
 func (m *App) GetAllUnlinkedSplitwiseExpenses(w ResponseWriter, r *Request) WriterResponse {
 	return m.genricRawFindAll(
-		w,
-		r,
-		m.db,
+		w, r,
+		m.db.Preload("CardActivities").Preload("AccountActivities"),
 		entities.SplitwiseExpense{},
 		`
 			SELECT e.* 
@@ -84,17 +83,55 @@ func (m *App) GetAllUnlinkedSplitwiseExpenses(w ResponseWriter, r *Request) Writ
 func (m *App) GetSplitwiseExpenseByUUID(w ResponseWriter, r *Request) WriterResponse {
 	return m.genericGetByUUID(
 		w, r,
-		m.db.Preload("CardActivities").Preload("AccountActivities"),
+		m.db.
+			Preload("CardActivities.SplitwiseExpenses").
+			Preload("AccountActivities.SplitwiseExpenses"),
 		&entities.SplitwiseExpense{},
 		r.GetParams()["splitwiseExpenseUUID"],
 	)
+}
+
+type splitwiseLinkResponse struct {
+	*entities.SplitwiseExpense
+	CardActivityLinks    []*entities.CardActivity    `json:"card_activity_links"`
+	AccountActivityLinks []*entities.AccountActivity `json:"account_activity_links"`
+}
+
+// GetSplitwiseExpenseByUUIDForLinking gets a single SplitwiseExpense by UUID along with all linking info
+func (m *App) GetSplitwiseExpenseByUUIDForLinking(w ResponseWriter, r *Request) WriterResponse {
+	splitwiseExpenseUUID := r.GetParams()["splitwiseExpenseUUID"]
+
+	splitwiseExpense := &entities.SplitwiseExpense{}
+	err := repos.NewGenericRepo(m.db.
+		Preload("CardActivities.SplitwiseExpenses").
+		Preload("AccountActivities.SplitwiseExpenses"),
+	).GetByUUID(splitwiseExpense, splitwiseExpenseUUID)
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	allCardActivityLinks, err := m.getAllCardActivitiesForSplitwiseExpenseUUID(splitwiseExpenseUUID)
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	allAccountActivityLinks, err := m.getAllAccountActivitiesForSplitwiseExpenseUUID(splitwiseExpenseUUID)
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	return w.SendResponse(&splitwiseLinkResponse{
+		SplitwiseExpense:     splitwiseExpense,
+		CardActivityLinks:    allCardActivityLinks,
+		AccountActivityLinks: allAccountActivityLinks,
+	})
 }
 
 // GetAllSplitwiseExpenses gets all the SplitwiseExpenses
 func (m *App) GetAllSplitwiseExpenses(w ResponseWriter, r *Request) WriterResponse {
 	return m.genericGetAll(
 		w, r,
-		m.db,
+		m.db.Preload("CardActivities").Preload("AccountActivities"),
 		entities.SplitwiseExpense{},
 		&repos.GetAllOfOptions{
 			Where: "splitwise_deleted_at IS NULL", // Don't load deleted expense
