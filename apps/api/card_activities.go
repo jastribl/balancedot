@@ -423,20 +423,16 @@ func (m *App) GetAllCardActivitiesForSplitwiseExpenseUUID(w ResponseWriter, r *R
 
 // LinkCardActivityToSplitwiseExpense links a card activitiy to a splitwise expense
 func (m *App) LinkCardActivityToSplitwiseExpense(w ResponseWriter, r *Request) WriterResponse {
-	var splitwiseExpense entities.SplitwiseExpense
-	err := repos.NewGenericRepo(m.db).GetByUUID(&splitwiseExpense, r.GetParams()["splitwiseExpenseUUID"])
-	if err != nil {
-		return w.SendUnexpectedError(err)
-	}
-
-	var cardActivitiy entities.CardActivity
-	err = repos.NewGenericRepo(m.db).GetByUUID(&cardActivitiy, r.GetParams()["cardActivityUUID"])
-	if err != nil {
-		return w.SendUnexpectedError(err)
-	}
-
-	splitwiseExpense.CardActivities = append(splitwiseExpense.CardActivities, &cardActivitiy)
-	err = m.db.Save(&splitwiseExpense).Error
+	err := m.db.Exec(`
+			INSERT INTO expense_links (
+				card_activity_uuid,
+				splitwise_expense_uuid
+			)
+			VALUES (?, ?)
+		`,
+		r.GetParams()["cardActivityUUID"],
+		r.GetParams()["splitwiseExpenseUUID"],
+	).Error
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}

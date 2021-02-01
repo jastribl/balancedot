@@ -66,12 +66,15 @@ func (m *App) GetAllUnlinkedSplitwiseExpenses(w ResponseWriter, r *Request) Writ
 		`
 			SELECT e.* 
 			FROM splitwise_expenses e 
-				LEFT JOIN expense_links l 
-						ON e.uuid = l.splitwise_expense_uuid 
+				LEFT JOIN expense_links el
+						ON e.uuid = el.splitwise_expense_uuid
+				LEFT JOIN account_activity_links al
+						ON e.uuid = al.splitwise_expense_uuid
 			WHERE e.splitwise_deleted_at IS NULL 
 				AND e.amount_paid > 0 
 				AND e.creation_method NOT IN ('venmo', 'payment', 'debt_consolidation')
-				AND l.splitwise_expense_uuid IS NULL
+				AND el.splitwise_expense_uuid IS NULL
+				AND al.splitwise_expense_uuid IS NULL
 				AND e.date > '2019-08-25'::date -- todo: remove this
 			ORDER BY e.date DESC
 		`,

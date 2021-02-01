@@ -132,20 +132,16 @@ func (m *App) GetAllAccountActivitiesForSplitwiseExpenseUUID(w ResponseWriter, r
 
 // LinkAccountActivityToSplitwiseExpense links a account activitiy to a splitwise expense
 func (m *App) LinkAccountActivityToSplitwiseExpense(w ResponseWriter, r *Request) WriterResponse {
-	var splitwiseExpense entities.SplitwiseExpense
-	err := repos.NewGenericRepo(m.db).GetByUUID(&splitwiseExpense, r.GetParams()["splitwiseExpenseUUID"])
-	if err != nil {
-		return w.SendUnexpectedError(err)
-	}
-
-	var accountActivitiy entities.AccountActivity
-	err = repos.NewGenericRepo(m.db).GetByUUID(&accountActivitiy, r.GetParams()["accountActivityUUID"])
-	if err != nil {
-		return w.SendUnexpectedError(err)
-	}
-
-	splitwiseExpense.AccountActivities = append(splitwiseExpense.AccountActivities, &accountActivitiy)
-	err = m.db.Save(&splitwiseExpense).Error
+	err := m.db.Exec(`
+			INSERT INTO account_activity_links (
+				account_activity_uuid,
+				splitwise_expense_uuid
+			)
+			VALUES (?, ?)
+		`,
+		r.GetParams()["accountActivityUUID"],
+		r.GetParams()["splitwiseExpenseUUID"],
+	).Error
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}

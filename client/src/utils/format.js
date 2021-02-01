@@ -13,7 +13,7 @@ export function formatAsMoney(amount, currencyCode = 'USD') {
 }
 
 export function formatAsDate(date) {
-    if (date) {
+    if (date !== null) {
         return Moment.utc(date).format('YYYY-MM-DD')
     }
     return "????-??-??"
