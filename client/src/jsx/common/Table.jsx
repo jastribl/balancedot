@@ -3,9 +3,19 @@ import React, { useState } from 'react'
 import { defaultSort } from '../../utils/sorting'
 import { snakeToSentenceCase } from '../../utils/strings'
 
-const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, initialSortInverse, customSortComparators }) => {
+const Table = ({
+    rowKey,
+    columns,
+    rows,
+    customRenders,
+    initialSortColumn,
+    initialSortInverse,
+    customSortComparators,
+    hideFilters
+}) => {
     customRenders ??= {}
     customSortComparators ??= {}
+    hideFilters ??= false
 
     if (!rows) {
         return <div />
@@ -58,23 +68,28 @@ const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, initia
         toRender.reverse()
     }
 
+    let filterDiv = null
+    if (!hideFilters) {
+        filterDiv = <tr>
+            {columns.map(key =>
+                <td key={key} >
+                    <input
+                        type={"text"}
+                        name={key}
+                        value={filters[key]}
+                        onChange={handleFilterChange}
+                        placeholder={"Filter for " + snakeToSentenceCase(key)}
+                    />
+                </td>
+            )}
+        </tr>
+    }
+
     return (
         <div>
             <table className='styled-table'>
                 <thead>
-                    <tr>
-                        {columns.map(key =>
-                            <td key={key} >
-                                <input
-                                    type={"text"}
-                                    name={key}
-                                    value={filters[key]}
-                                    onChange={handleFilterChange}
-                                    placeholder={"Filter for " + snakeToSentenceCase(key)}
-                                />
-                            </td>
-                        )}
-                    </tr>
+                    {filterDiv}
                     <tr>
                         {columns.map(key =>
                             <th

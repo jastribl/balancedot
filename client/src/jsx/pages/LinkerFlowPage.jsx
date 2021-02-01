@@ -115,6 +115,7 @@ const LinkerFlowPage = ({ match }) => {
                         'amount': (data) => formatAsMoney(data['amount'], data['currency_code']),
                         'amount_paid': (data) => formatAsMoney(data['amount_paid'], data['currency_code']),
                     }}
+                    hideFilters={true}
                 />
             </div>
             <h2>Possible Links</h2>
@@ -141,6 +142,7 @@ const LinkerFlowPage = ({ match }) => {
                             value='Link'
                         />
                     }}
+                    hideFilters={true}
                 />
 
                 <h3>Account Links</h3>
@@ -162,6 +164,7 @@ const LinkerFlowPage = ({ match }) => {
                                 value='Link'
                             />
                         }}
+                        hideFilters={true}
                     />
                 </div>
             </div>
