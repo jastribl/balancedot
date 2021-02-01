@@ -1,30 +1,29 @@
 import React, { useEffect, useState } from 'react'
 
 import { get } from '../../utils/api'
+import ErrorRow from '../common/ErrorRow'
+import Spinner from '../common/Spinner'
 import CardActivitiesTable from '../tables/CardActivitiesTable'
 import SplitwiseExpenseTable from '../tables/SplitwiseExpenseTable'
 
 const CardActivityPage = ({ match }) => {
-    const cardUUID = match.params.cardUUID
     const cardActivityUUID = match.params.cardActivityUUID
 
-    const [card, setCard] = useState(null)
     const [cardActivity, setCardActivity] = useState(null)
-
-    const refreshCard = () => {
-        get(`/api/cards/${cardUUID}`)
-            .then(cardResponse => setCard(cardResponse))
-    }
+    const [cardActivityLoading, setCardActivityLoading] = useState(false)
+    const [errorMessage, setErrorMessage] = useState(null)
 
     const refreshCardActivity = () => {
+        setCardActivityLoading(true)
         get(`/api/card_activities/${cardActivityUUID}`)
             .then(cardActivityResponse => setCardActivity(cardActivityResponse))
+            .catch(e => setErrorMessage(e.message))
+            .finally(() => setCardActivityLoading(false))
     }
 
     useEffect(() => {
-        refreshCard()
         refreshCardActivity()
-    }, [setCard, setCardActivity])
+    }, [setCardActivity])
 
     let splitwiseExpenseTable = null
     if (cardActivity?.splitwise_expenses !== null && cardActivity?.splitwise_expenses.length > 0) {
@@ -34,10 +33,14 @@ const CardActivityPage = ({ match }) => {
         </div>
     }
 
+    const card = cardActivity?.card
+
     return (
         <div>
+            <Spinner visible={cardActivityLoading} />
             <h1>Card Activity {cardActivityUUID} ({cardActivity?.description}) </h1>
             <h2>For card {card ? (card.last_four + " (" + card.description + ")") : null}</h2>
+            <ErrorRow message={errorMessage} />
             <CardActivitiesTable
                 data={cardActivity ? [cardActivity] : []}
                 hideFilters={true}

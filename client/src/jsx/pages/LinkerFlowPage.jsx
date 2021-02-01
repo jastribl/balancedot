@@ -23,39 +23,21 @@ const LinkerFlowPage = ({ match }) => {
     useEffect(() => {
         setExpenseLoading(true)
         get(`/api/splitwise_expenses/${splitwiseExpenseUUID}`)
-            .then(splitwiseExpenseResponse => {
-                setSplitwiseExpense(splitwiseExpenseResponse)
-            })
-            .catch(e => {
-                setErrorMessage(e.message)
-            })
-            .finally(() => {
-                setExpenseLoading(false)
-            })
+            .then(splitwiseExpenseResponse => setSplitwiseExpense(splitwiseExpenseResponse))
+            .catch(e => setErrorMessage(e.message))
+            .finally(() => setExpenseLoading(false))
 
         setCardLinksLoading(true)
         get(`/api/card_activities/for_link/${splitwiseExpenseUUID}`)
-            .then(cardLinksResponse => {
-                setCardLinks(cardLinksResponse)
-            })
-            .catch(e => {
-                setErrorMessage(e.message)
-            })
-            .finally(() => {
-                setCardLinksLoading(false)
-            })
+            .then(cardLinksResponse => setCardLinks(cardLinksResponse))
+            .catch(e => setErrorMessage(e.message))
+            .finally(() => setCardLinksLoading(false))
 
         setAccountLinksLoading(true)
         get(`/api/account_activities/for_link/${splitwiseExpenseUUID}`)
-            .then(accountLinksResponse => {
-                setAccountLinks(accountLinksResponse)
-            })
-            .catch(e => {
-                setErrorMessage(e.message)
-            })
-            .finally(() => {
-                setAccountLinksLoading(false)
-            })
+            .then(accountLinksResponse => setAccountLinks(accountLinksResponse))
+            .catch(e => setErrorMessage(e.message))
+            .finally(() => setAccountLinksLoading(false))
     }, [
         setExpenseLoading,
         setCardLinksLoading,
