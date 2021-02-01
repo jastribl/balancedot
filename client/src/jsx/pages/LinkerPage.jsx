@@ -47,6 +47,8 @@ const LinkerPage = () => {
                         // todo: style link the rest of the buttons (along with other links)
                         'link': (data) => <Link to={'/linker/' + data['uuid']}>Link</Link>,
                     }}
+                    initialSortColumn='date'
+                    initialSortInverse={true}
                 />
             </div>
         </div>

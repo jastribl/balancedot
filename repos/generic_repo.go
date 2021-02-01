@@ -20,7 +20,6 @@ func NewGenericRepo(db *gorm.DB) *GenericRepo {
 
 // GetAllOfOptions contains all options for the GetAllOf function
 type GetAllOfOptions struct {
-	Order string
 	Where string
 }
 
@@ -33,9 +32,6 @@ func (m *GenericRepo) GetAllOf(typeRef interface{}, options *GetAllOfOptions) (i
 	if options != nil {
 		if options.Where != "" {
 			db = db.Where(options.Where)
-		}
-		if options.Order != "" {
-			db = db.Order(options.Order)
 		}
 	}
 
