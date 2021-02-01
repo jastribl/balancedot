@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
-import { get, postJSON } from '../../utils/api'
+import { getWithHandling, postJSON } from '../../utils/api'
 import ErrorRow from '../common/ErrorRow'
 import Spinner from '../common/Spinner'
 import SplitwiseLoginCheck from '../SplitwiseLoginCheck'
@@ -9,46 +9,41 @@ import SplitwiseExpenseTable from '../tables/SplitwiseExpenseTable'
 const SplitwiseExpensesPage = () => {
     const [splitwiseExpenses, setSplitwiseExpenses] = useState(null)
     const [pageLoading, setPageLoading] = useState(false)
-    const [isRefreshing, setIsRefreshing] = useState(false)
     const [errorMessage, setErrorMessage] = useState(null)
     const [refreshResponse, setRefreshResponse] = useState(null)
 
-    const refreshSplitwiseExpenses = () => {
-        setPageLoading(true)
-        get('/api/splitwise_expenses')
-            .then(splitwiseExpensesResponse => {
-                setSplitwiseExpenses(splitwiseExpensesResponse)
-            })
-            .catch(e => {
-                setErrorMessage(e.message)
-            })
-            .finally(() => {
-                setPageLoading(false)
-            })
-    }
+    const refreshSplitwiseExpenses = () => getWithHandling(
+        '/api/splitwise_expenses',
+        setSplitwiseExpenses,
+        setErrorMessage,
+        setPageLoading,
+    )
+
 
     const handleRefreshExpenses = () => {
-        setIsRefreshing(true)
+        setPageLoading(true)
         return postJSON('/api/refresh_splitwise')
             .then(data => {
                 setRefreshResponse(data)
                 refreshSplitwiseExpenses()
             })
             .catch(e => {
+                setPageLoading(false)
                 if ('redirect_url' in e) {
                     window.open(e.redirect_url)
                     return
                 }
                 setErrorMessage(e.message)
             })
-            .finally(() => {
-                setIsRefreshing(false)
-            })
     }
 
     useEffect(() => {
         refreshSplitwiseExpenses()
-    }, [setPageLoading, setSplitwiseExpenses, setErrorMessage])
+    }, [
+        setPageLoading,
+        setSplitwiseExpenses,
+        setErrorMessage,
+    ])
 
     // todo: make this nicer looking and more functional
     let refreshResponseRender = null
@@ -60,7 +55,7 @@ const SplitwiseExpensesPage = () => {
 
     return (
         <div>
-            <Spinner visible={pageLoading || isRefreshing} />
+            <Spinner visible={pageLoading} />
             <h1>Splitwise Expenses</h1>
             <ErrorRow message={errorMessage} />
             <SplitwiseLoginCheck>

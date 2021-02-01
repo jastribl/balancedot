@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
-import { get, postJSON } from '../../utils/api'
+import { getWithHandling, postJSON } from '../../utils/api'
 import { formatAsDate, formatAsMoney } from '../../utils/format'
 import ErrorRow from '../common/ErrorRow'
 import Spinner from '../common/Spinner'
@@ -21,23 +21,26 @@ const LinkerFlowPage = ({ match }) => {
     const [errorMessage, setErrorMessage] = useState(null)
 
     useEffect(() => {
-        setExpenseLoading(true)
-        get(`/api/splitwise_expenses/${splitwiseExpenseUUID}`)
-            .then(splitwiseExpenseResponse => setSplitwiseExpense(splitwiseExpenseResponse))
-            .catch(e => setErrorMessage(e.message))
-            .finally(() => setExpenseLoading(false))
+        getWithHandling(
+            `/api/splitwise_expenses/${splitwiseExpenseUUID}`,
+            setSplitwiseExpense,
+            setErrorMessage,
+            setExpenseLoading
+        )
 
-        setCardLinksLoading(true)
-        get(`/api/card_activities/for_link/${splitwiseExpenseUUID}`)
-            .then(cardLinksResponse => setCardLinks(cardLinksResponse))
-            .catch(e => setErrorMessage(e.message))
-            .finally(() => setCardLinksLoading(false))
+        getWithHandling(
+            `/api/card_activities/for_link/${splitwiseExpenseUUID}`,
+            setCardLinks,
+            setErrorMessage,
+            setCardLinksLoading
+        )
 
-        setAccountLinksLoading(true)
-        get(`/api/account_activities/for_link/${splitwiseExpenseUUID}`)
-            .then(accountLinksResponse => setAccountLinks(accountLinksResponse))
-            .catch(e => setErrorMessage(e.message))
-            .finally(() => setAccountLinksLoading(false))
+        getWithHandling(
+            `/api/account_activities/for_link/${splitwiseExpenseUUID}`,
+            setAccountLinks,
+            setErrorMessage,
+            setAccountLinksLoading
+        )
     }, [
         setExpenseLoading,
         setCardLinksLoading,
@@ -56,12 +59,8 @@ const LinkerFlowPage = ({ match }) => {
                     window.history.back()
                 }
             })
-            .catch(e => {
-                setErrorMessage(e.message)
-            })
-            .finally(() => {
-                setLinkLoading(false)
-            })
+            .catch(e => setErrorMessage(e.message))
+            .finally(() => setLinkLoading(false))
     }
 
     const linkAccountActivityToExpense = (accountActivityUUID) => {
@@ -72,12 +71,8 @@ const LinkerFlowPage = ({ match }) => {
                     window.history.back()
                 }
             })
-            .catch(e => {
-                setErrorMessage(e.message)
-            })
-            .finally(() => {
-                setLinkLoading(false)
-            })
+            .catch(e => setErrorMessage(e.message))
+            .finally(() => setLinkLoading(false))
     }
 
     let linksDiv = null

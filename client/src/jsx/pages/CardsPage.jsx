@@ -1,22 +1,28 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { get, postJSON } from '../../utils/api'
+import { getWithHandling, postJSON } from '../../utils/api'
+import ErrorRow from '../common/ErrorRow'
 import Form from '../common/Form'
 import Modal from '../common/Modal'
+import Spinner from '../common/Spinner'
 import Table from '../common/Table'
 
 const CardsPage = () => {
     const [cards, setCards] = useState(null)
+    const [cardsLoading, setCardsLoading] = useState(false)
     const [modalVisible, setShowModal] = useState(false)
+    const [errorMessage, setErrorMessage] = useState(null)
 
     const showModal = () => { setShowModal(true) }
     const hideModal = () => { setShowModal(false) }
 
-    const refreshCards = () => {
-        get('/api/cards')
-            .then(cardsResponse => setCards(cardsResponse))
-    }
+    const refreshCards = () => getWithHandling(
+        '/api/cards',
+        setCards,
+        setErrorMessage,
+        setCardsLoading
+    )
 
     const handleNewCardSubmit = (newCardData) => {
         return postJSON('/api/card', newCardData)
@@ -31,12 +37,18 @@ const CardsPage = () => {
 
     useEffect(() => {
         refreshCards()
-    }, [setCards])
+    }, [
+        setCards,
+        setErrorMessage,
+        setCardsLoading,
+    ])
 
     return (
         <div>
+            <Spinner visible={cardsLoading} />
             <h1>Cards</h1>
             <input type='button' onClick={showModal} value='New Card' style={{ marginBottom: 25 + 'px' }} />
+            <ErrorRow message={errorMessage} />
             <Table
                 rowKey='uuid'
                 rows={cards}

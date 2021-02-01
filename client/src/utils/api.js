@@ -34,3 +34,11 @@ export function get(path) {
         fetch(path)
     )
 }
+
+export function getWithHandling(path, setResponse, setErrorMessage, setLoading) {
+    setLoading(true)
+    return get(path)
+        .then(response => setResponse(response))
+        .catch(e => setErrorMessage(e.message))
+        .finally(() => setLoading(false))
+}

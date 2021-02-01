@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
-import { get, postForm } from '../../utils/api'
+import { getWithHandling, postForm } from '../../utils/api'
 import ErrorRow from '../common/ErrorRow'
 import Form from '../common/Form'
 import Modal from '../common/Modal'
@@ -11,30 +11,19 @@ const AccountActivitiesPage = ({ match }) => {
     const accountUUID = match.params.accountUUID
 
     const [account, setAccount] = useState(null)
-    const [accountActivities, setAccountActivities] = useState([])
-    const [accountsLoading, setAccountsLoading] = useState(false)
-    const [accountActivitiesLoading, setAccountActivitiesLoading] = useState(false)
+    const [accountLoading, setAccountLoading] = useState(false)
     const [modalVisible, setShowModal] = useState(false)
     const [errorMessage, setErrorMessage] = useState(null)
 
     const showModal = () => { setShowModal(true) }
     const hideModal = () => { setShowModal(false) }
 
-    const refreshAccount = () => {
-        setAccountsLoading(true)
-        get(`/api/accounts/${accountUUID}`)
-            .then(accountResponse => setAccount(accountResponse))
-            .catch(e => setErrorMessage(e.message))
-            .finally(() => setAccountsLoading(false))
-    }
-
-    const refreshAccountActivities = () => {
-        setAccountActivitiesLoading(true)
-        get(`/api/accounts/${accountUUID}/activities`)
-            .then(accountActivitiesResponse => setAccountActivities(accountActivitiesResponse))
-            .catch(e => setErrorMessage(e.message))
-            .finally(() => setAccountActivitiesLoading(false))
-    }
+    const refreshAccount = () => getWithHandling(
+        `/api/accounts/${accountUUID}`,
+        setAccount,
+        setErrorMessage,
+        setAccountLoading
+    )
 
     const handleActivityUpload = (activityData) => {
         let formData = new FormData()
@@ -43,7 +32,7 @@ const AccountActivitiesPage = ({ match }) => {
         return postForm(`/api/accounts/${accountUUID}/activities`, formData)
             .then(() => {
                 hideModal()
-                refreshAccountActivities()
+                refreshAccount()
             })
             .catch(e => {
                 throw e.message
@@ -52,16 +41,19 @@ const AccountActivitiesPage = ({ match }) => {
 
     useEffect(() => {
         refreshAccount()
-        refreshAccountActivities()
-    }, [setAccount, setAccountActivities])
+    }, [
+        setAccount,
+        setErrorMessage,
+        setAccountLoading,
+    ])
 
     return (
         <div>
-            <Spinner visible={accountsLoading || accountActivitiesLoading} />
+            <Spinner visible={accountLoading} />
             <h1>Account Activities for {account ? (account.last_four + " (" + account.description + ")") : null}</h1>
             <input type='button' onClick={showModal} value='Upload Activities' style={{ marginBottom: 25 + 'px' }} />
             <ErrorRow message={errorMessage} />
-            <AccountActivitiesTable data={accountActivities} />
+            <AccountActivitiesTable data={account?.activities ?? []} />
             <Modal headerText='Activity Upload' visible={modalVisible} handleClose={hideModal}>
                 <Form
                     onSubmit={handleActivityUpload}

@@ -1,22 +1,28 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { get, postJSON } from '../../utils/api'
+import { getWithHandling, postJSON } from '../../utils/api'
+import ErrorRow from '../common/ErrorRow'
 import Form from '../common/Form'
 import Modal from '../common/Modal'
+import Spinner from '../common/Spinner'
 import Table from '../common/Table'
 
 const AccountsPage = () => {
     const [accounts, setAccounts] = useState(null)
+    const [accountLoading, setAccountLoading] = useState(false)
     const [modalVisible, setShowModal] = useState(false)
+    const [errorMessage, setErrorMessage] = useState(null)
 
     const showModal = () => { setShowModal(true) }
     const hideModal = () => { setShowModal(false) }
 
-    const refreshAccounts = () => {
-        get('/api/accounts')
-            .then(accountsResponse => setAccounts(accountsResponse))
-    }
+    const refreshAccounts = () => getWithHandling(
+        '/api/accounts',
+        setAccounts,
+        setErrorMessage,
+        setAccountLoading
+    )
 
     const handleNewAccountSubmit = (newAccountData) => {
         return postJSON('/api/account', newAccountData)
@@ -31,12 +37,18 @@ const AccountsPage = () => {
 
     useEffect(() => {
         refreshAccounts()
-    }, [setAccounts])
+    }, [
+        setAccounts,
+        setErrorMessage,
+        setAccountLoading,
+    ])
 
     return (
         <div>
+            <Spinner visible={accountLoading} />
             <h1>Accounts</h1>
             <input type='button' onClick={showModal} value='New Account' style={{ marginBottom: 25 + 'px' }} />
+            <ErrorRow message={errorMessage} />
             <Table
                 rowKey='uuid'
                 rows={accounts}

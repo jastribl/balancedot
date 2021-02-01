@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
-import { get } from '../../utils/api'
+import { getWithHandling } from '../../utils/api'
 import ErrorRow from '../common/ErrorRow'
 import Spinner from '../common/Spinner'
 import AccountActivitiesTable from '../tables/AccountActivitiesTable'
@@ -13,17 +13,20 @@ const AccountActivityPage = ({ match }) => {
     const [accountActivityLoading, setAccountActivityLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState(null)
 
-    const refreshAccountActivity = () => {
-        setAccountActivityLoading(true)
-        get(`/api/account_activities/${accountActivityUUID}`)
-            .then(accountActivityResponse => setAccountActivity(accountActivityResponse))
-            .catch(e => setErrorMessage(e.message))
-            .finally(() => setAccountActivityLoading(false))
-    }
+    const refreshAccountActivity = () => getWithHandling(
+        `/api/account_activities/${accountActivityUUID}`,
+        setAccountActivity,
+        setErrorMessage,
+        setAccountActivityLoading
+    )
 
     useEffect(() => {
         refreshAccountActivity()
-    }, [setAccountActivity])
+    }, [
+        setAccountActivity,
+        setErrorMessage,
+        setAccountActivityLoading,
+    ])
 
     let splitwiseExpenseTable = null
     if (accountActivity?.splitwise_expenses !== null && accountActivity?.splitwise_expenses.length > 0) {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
-import { get } from '../../utils/api'
+import { getWithHandling } from '../../utils/api'
 import ErrorRow from '../common/ErrorRow'
 import Spinner from '../common/Spinner'
 import CardActivitiesTable from '../tables/CardActivitiesTable'
@@ -13,17 +13,19 @@ const CardActivityPage = ({ match }) => {
     const [cardActivityLoading, setCardActivityLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState(null)
 
-    const refreshCardActivity = () => {
-        setCardActivityLoading(true)
-        get(`/api/card_activities/${cardActivityUUID}`)
-            .then(cardActivityResponse => setCardActivity(cardActivityResponse))
-            .catch(e => setErrorMessage(e.message))
-            .finally(() => setCardActivityLoading(false))
-    }
 
     useEffect(() => {
-        refreshCardActivity()
-    }, [setCardActivity])
+        getWithHandling(
+            `/api/card_activities/${cardActivityUUID}`,
+            setCardActivity,
+            setErrorMessage,
+            setCardActivityLoading
+        )
+    }, [
+        setCardActivity,
+        setErrorMessage,
+        setCardActivityLoading,
+    ])
 
     let splitwiseExpenseTable = null
     if (cardActivity?.splitwise_expenses !== null && cardActivity?.splitwise_expenses.length > 0) {
