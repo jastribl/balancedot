@@ -37,17 +37,15 @@ const CardsPage = () => {
         <div>
             <h1>Cards</h1>
             <input type='button' onClick={showModal} value='New Card' style={{ marginBottom: 25 + 'px' }} />
-            <div>
-                <Table
-                    rowKey='uuid'
-                    rows={cards}
-                    columns={['last_four', 'description', 'bank_name']}
-                    customRenders={{
-                        'last_four': (data) =>
-                            <Link to={'/cards/' + data['uuid'] + '/activities'}>{data['last_four']}</Link>
-                    }}
-                />
-            </div>
+            <Table
+                rowKey='uuid'
+                rows={cards}
+                columns={['last_four', 'description', 'bank_name']}
+                customRenders={{
+                    'last_four': (data) =>
+                        <Link to={'/cards/' + data['uuid'] + '/activities'}>{data['last_four']}</Link>
+                }}
+            />
             <Modal headerText='New Card' visible={modalVisible} handleClose={hideModal}>
                 <Form
                     onSubmit={handleNewCardSubmit}

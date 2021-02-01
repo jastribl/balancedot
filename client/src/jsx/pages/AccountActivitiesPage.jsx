@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react'
 
 import { get, postForm } from '../../utils/api'
-import { formatAsDate, formatAsMoney } from '../../utils/format'
-import { dateComparator } from '../../utils/sorting'
 import Form from '../common/Form'
 import Modal from '../common/Modal'
-import Table from '../common/Table'
+import AccountActivitiesTable from '../tables/AccountActivitiesTable'
 
 const AccountActivitiesPage = ({ match }) => {
     const accountUUID = match.params.accountUUID
@@ -44,27 +42,13 @@ const AccountActivitiesPage = ({ match }) => {
     useEffect(() => {
         refreshAccount()
         refreshAccountActivities()
-    }, [setAccountActivities])
+    }, [setAccount, setAccountActivities])
 
     return (
         <div>
             <h1>Account Activities for {account ? (account.last_four + " (" + account.description + ")") : null}</h1>
             <input type='button' onClick={showModal} value='Upload Activities' style={{ marginBottom: 25 + 'px' }} />
-            <div>
-                <Table
-                    rowKey='uuid'
-                    rows={accountActivities}
-                    columns={['uuid', 'details', 'posting_date', 'description', 'amount', 'type']}
-                    customRenders={{
-                        'posting_date': (data) => formatAsDate(data['posting_date']),
-                        'amount': (data) => formatAsMoney(data['amount']),
-                    }}
-                    initialSortColumn='posting_date'
-                    customSortComparators={{
-                        'posting_date': dateComparator
-                    }}
-                />
-            </div>
+            <AccountActivitiesTable data={accountActivities} />
             <Modal headerText='Activity Upload' visible={modalVisible} handleClose={hideModal}>
                 <Form
                     onSubmit={handleActivityUpload}

@@ -37,17 +37,15 @@ const AccountsPage = () => {
         <div>
             <h1>Accounts</h1>
             <input type='button' onClick={showModal} value='New Account' style={{ marginBottom: 25 + 'px' }} />
-            <div>
-                <Table
-                    rowKey='uuid'
-                    rows={accounts}
-                    columns={['last_four', 'description', 'bank_name']}
-                    customRenders={{
-                        'last_four': (data) =>
-                            <Link to={'/accounts/' + data['uuid'] + '/activities'}>{data['last_four']}</Link>
-                    }}
-                />
-            </div>
+            <Table
+                rowKey='uuid'
+                rows={accounts}
+                columns={['last_four', 'description', 'bank_name']}
+                customRenders={{
+                    'last_four': (data) =>
+                        <Link to={'/accounts/' + data['uuid'] + '/activities'}>{data['last_four']}</Link>
+                }}
+            />
             <Modal headerText='New Account' visible={modalVisible} handleClose={hideModal}>
                 <Form
                     onSubmit={handleNewAccountSubmit}

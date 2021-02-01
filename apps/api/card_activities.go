@@ -29,6 +29,16 @@ func (m *App) GetAllCardActivitiesForCard(w ResponseWriter, r *Request) WriterRe
 	return w.SendResponse(card.Activities)
 }
 
+// GetCardActivityByUUID gets a single Card Activity by UUID
+func (m *App) GetCardActivityByUUID(w ResponseWriter, r *Request) WriterResponse {
+	return m.genericGetByUUID(
+		w, r,
+		m.db.Preload("SplitwiseExpenses"),
+		&entities.CardActivity{},
+		r.GetParams()["cardActivityUUID"],
+	)
+}
+
 func readChaseCardActivities(w ResponseWriter, r *Request) ([]models.CardActivity, error) {
 	r.ParseMultipartForm(10 << 20) // 10MB file size limit
 	parsed := []*models.ChaseCardActivity{}

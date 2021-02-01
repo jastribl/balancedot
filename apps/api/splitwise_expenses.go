@@ -83,9 +83,8 @@ func (m *App) GetAllUnlinkedSplitwiseExpenses(w ResponseWriter, r *Request) Writ
 // GetSplitwiseExpenseByUUID gets a single SplitwiseExpense by UUID
 func (m *App) GetSplitwiseExpenseByUUID(w ResponseWriter, r *Request) WriterResponse {
 	return m.genericGetByUUID(
-		w,
-		r,
-		m.db,
+		w, r,
+		m.db.Preload("CardActivities").Preload("AccountActivities"),
 		&entities.SplitwiseExpense{},
 		r.GetParams()["splitwiseExpenseUUID"],
 	)
@@ -93,9 +92,14 @@ func (m *App) GetSplitwiseExpenseByUUID(w ResponseWriter, r *Request) WriterResp
 
 // GetAllSplitwiseExpenses gets all the SplitwiseExpenses
 func (m *App) GetAllSplitwiseExpenses(w ResponseWriter, r *Request) WriterResponse {
-	return m.genericGetAll(w, r, m.db, entities.SplitwiseExpense{}, &repos.GetAllOfOptions{
-		Where: "splitwise_deleted_at IS NULL", // Don't load deleted expense
-	})
+	return m.genericGetAll(
+		w, r,
+		m.db,
+		entities.SplitwiseExpense{},
+		&repos.GetAllOfOptions{
+			Where: "splitwise_deleted_at IS NULL", // Don't load deleted expense
+		},
+	)
 }
 
 // RefreshSplitwise refreshes the data from the Splitwise API

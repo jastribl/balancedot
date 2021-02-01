@@ -23,6 +23,16 @@ func (m *App) GetAllAccountActivitiesForAccount(w ResponseWriter, r *Request) Wr
 	return w.SendResponse(account.Activities)
 }
 
+// GetAccountActivityByUUID gets a single Account Activity by UUID
+func (m *App) GetAccountActivityByUUID(w ResponseWriter, r *Request) WriterResponse {
+	return m.genericGetByUUID(
+		w, r,
+		m.db.Preload("SplitwiseExpenses"),
+		&entities.AccountActivity{},
+		r.GetParams()["accountActivityUUID"],
+	)
+}
+
 func readChaseAccountActivities(w ResponseWriter, r *Request) ([]models.AccountActivity, error) {
 	parsed := []*models.ChaseAccountActivity{}
 	if err := r.ReadMultipartCSV("file", &parsed); err != nil {

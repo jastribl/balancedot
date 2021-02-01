@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react'
 
-import { get, postForm, postJSON } from '../../utils/api'
-import { formatAsDate, formatAsMoney } from '../../utils/format'
-import { dateComparator } from '../../utils/sorting'
+import { get, postForm } from '../../utils/api'
 import Form from '../common/Form'
 import Modal from '../common/Modal'
-import Table from '../common/Table'
+import CardActivitiesTable from '../tables/CardActivitiesTable'
 
 const CardActivitiesPage = ({ match }) => {
     const cardUUID = match.params.cardUUID
@@ -51,23 +49,7 @@ const CardActivitiesPage = ({ match }) => {
         <div>
             <h1>Card Activities for {card ? (card.last_four + " (" + card.description + ")") : null}</h1>
             <input type='button' onClick={showModal} value='Upload Activities' style={{ marginBottom: 25 + 'px' }} />
-            <div>
-                <Table
-                    rowKey='uuid'
-                    rows={cardActivities}
-                    columns={['uuid', 'transaction_date', 'post_date', 'description', 'category', 'type', 'amount']}
-                    customRenders={{
-                        'transaction_date': (data) => formatAsDate(data['transaction_date']),
-                        'post_date': (data) => formatAsDate(data['post_date']),
-                        'amount': (data) => formatAsMoney(data['amount']),
-                    }}
-                    initialSortColumn='transaction_date'
-                    customSortComparators={{
-                        'transaction_date': dateComparator,
-                        'post_date': dateComparator,
-                    }}
-                />
-            </div>
+            <CardActivitiesTable data={cardActivities} />
             <Modal headerText='Activity Upload' visible={modalVisible} handleClose={hideModal}>
                 <Form
                     onSubmit={handleActivityUpload}
