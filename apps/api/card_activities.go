@@ -21,7 +21,7 @@ import (
 // GetAllCardActivitiesForCard gets all the Card Activities
 func (m *App) GetAllCardActivitiesForCard(w ResponseWriter, r *Request) WriterResponse {
 	var card entities.Card
-	err := repos.NewGenericRepo(m.db.Preload("Activities")).
+	err := repos.NewGenericRepo(m.db.Preload("Activities.SplitwiseExpenses")).
 		GetByUUID(&card, r.GetParams()["cardUUID"])
 	if err != nil {
 		return w.SendUnexpectedError(err)
@@ -33,7 +33,9 @@ func (m *App) GetAllCardActivitiesForCard(w ResponseWriter, r *Request) WriterRe
 func (m *App) GetCardActivityByUUID(w ResponseWriter, r *Request) WriterResponse {
 	return m.genericGetByUUID(
 		w, r,
-		m.db.Preload("SplitwiseExpenses"),
+		m.db.
+			Preload("SplitwiseExpenses.CardActivities").
+			Preload("SplitwiseExpenses.AccountActivities"),
 		&entities.CardActivity{},
 		r.GetParams()["cardActivityUUID"],
 	)
@@ -423,7 +425,10 @@ func (m *App) GetAllCardActivitiesForSplitwiseExpenseUUID(w ResponseWriter, r *R
 		splitwiseExpense.AmountPaid-1,
 		splitwiseExpense.Date.Add(-time.Hour*72),
 		splitwiseExpense.Date.Add(time.Hour*72),
-	).Find(&allCardActivities).Error
+	).
+		Preload("SplitwiseExpenses.CardActivities").
+		Preload("SplitwiseExpenses.AccountActivities").
+		Find(&allCardActivities).Error
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}

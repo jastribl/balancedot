@@ -14,7 +14,8 @@ const CardActivitiesTable = (props) => {
             'description',
             'category',
             'type',
-            'amount'
+            'amount',
+            'splitwise_expense_count',
         ]}
         customRenders={{
             'uuid': (data) =>
@@ -22,6 +23,17 @@ const CardActivitiesTable = (props) => {
             'transaction_date': (data) => formatAsDate(data['transaction_date']),
             'post_date': (data) => formatAsDate(data['post_date']),
             'amount': (data) => formatAsMoney(data['amount']),
+            'splitwise_expense_count': (data) => {
+                const splitwiseExpenses = data['splitwise_expenses']
+                const num = splitwiseExpenses.length
+                if (num > 0) {
+                    const sum = splitwiseExpenses
+                        .map(d => d.amount_paid)
+                        .reduce((a, b) => a + b, 0)
+                    return `${num} (${sum})`
+                }
+                return ''
+            },
         }}
         initialSortColumn='transaction_date'
         customSortComparators={{

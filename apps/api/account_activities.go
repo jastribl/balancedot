@@ -14,7 +14,7 @@ import (
 // GetAllAccountActivitiesForAccount gets all the Account Activities
 func (m *App) GetAllAccountActivitiesForAccount(w ResponseWriter, r *Request) WriterResponse {
 	var account entities.Account
-	err := repos.NewGenericRepo(m.db.Preload("Activities")).
+	err := repos.NewGenericRepo(m.db.Preload("Activities.SplitwiseExpenses")).
 		GetByUUID(&account, r.GetParams()["accountUUID"])
 	if err != nil {
 		return w.SendUnexpectedError(err)
@@ -27,7 +27,9 @@ func (m *App) GetAllAccountActivitiesForAccount(w ResponseWriter, r *Request) Wr
 func (m *App) GetAccountActivityByUUID(w ResponseWriter, r *Request) WriterResponse {
 	return m.genericGetByUUID(
 		w, r,
-		m.db.Preload("SplitwiseExpenses"),
+		m.db.
+			Preload("SplitwiseExpenses.CardActivities").
+			Preload("SplitwiseExpenses.AccountActivities"),
 		&entities.AccountActivity{},
 		r.GetParams()["accountActivityUUID"],
 	)
@@ -132,7 +134,10 @@ func (m *App) GetAllAccountActivitiesForSplitwiseExpenseUUID(w ResponseWriter, r
 		splitwiseExpense.AmountPaid-1,
 		splitwiseExpense.Date.Add(-time.Hour*72),
 		splitwiseExpense.Date.Add(time.Hour*72),
-	).Find(&allAccountActivities).Error
+	).
+		Preload("SplitwiseExpenses.CardActivities").
+		Preload("SplitwiseExpenses.AccountActivities").
+		Find(&allAccountActivities).Error
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}

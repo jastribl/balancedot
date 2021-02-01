@@ -59,9 +59,8 @@ func (m *App) SplitwiseOauthCallback(w ResponseWriter, r *Request) WriterRespons
 // GetAllUnlinkedSplitwiseExpenses gets all the SplitwiseExpenses that aren't already linked
 func (m *App) GetAllUnlinkedSplitwiseExpenses(w ResponseWriter, r *Request) WriterResponse {
 	return m.genricRawFindAll(
-		w,
-		r,
-		m.db,
+		w, r,
+		m.db.Preload("CardActivities").Preload("AccountActivities"),
 		entities.SplitwiseExpense{},
 		`
 			SELECT e.* 
@@ -84,7 +83,9 @@ func (m *App) GetAllUnlinkedSplitwiseExpenses(w ResponseWriter, r *Request) Writ
 func (m *App) GetSplitwiseExpenseByUUID(w ResponseWriter, r *Request) WriterResponse {
 	return m.genericGetByUUID(
 		w, r,
-		m.db.Preload("CardActivities").Preload("AccountActivities"),
+		m.db.
+			Preload("CardActivities.SplitwiseExpenses").
+			Preload("AccountActivities.SplitwiseExpenses"),
 		&entities.SplitwiseExpense{},
 		r.GetParams()["splitwiseExpenseUUID"],
 	)
@@ -94,7 +95,7 @@ func (m *App) GetSplitwiseExpenseByUUID(w ResponseWriter, r *Request) WriterResp
 func (m *App) GetAllSplitwiseExpenses(w ResponseWriter, r *Request) WriterResponse {
 	return m.genericGetAll(
 		w, r,
-		m.db,
+		m.db.Preload("CardActivities").Preload("AccountActivities"),
 		entities.SplitwiseExpense{},
 		&repos.GetAllOfOptions{
 			Where: "splitwise_deleted_at IS NULL", // Don't load deleted expense
