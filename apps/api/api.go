@@ -23,10 +23,27 @@ func NewApp(db *gorm.DB, config *config.Config) (*App, error) {
 func (m *App) genericGetAll(
 	w ResponseWriter,
 	r *Request,
+	repo *gorm.DB,
 	typeRef interface{},
 	options *repos.GetAllOfOptions,
 ) WriterResponse {
-	items, err := repos.NewGenericRepo(m.db).GetAllOf(typeRef, options)
+	items, err := repos.NewGenericRepo(repo).GetAllOf(typeRef, options)
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	return w.SendResponse(items)
+}
+
+func (m *App) genricRawFindAll(
+	w ResponseWriter,
+	r *Request,
+	repo *gorm.DB,
+	typeRef interface{},
+	query string,
+	params ...interface{},
+) WriterResponse {
+	items, err := repos.NewGenericRepo(repo).GetAllOfRaw(typeRef, query, params...)
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}

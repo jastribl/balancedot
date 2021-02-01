@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS splitwise_expenses (
   splitwise_updated_at TIMESTAMP,
   splitwise_deleted_at TIMESTAMP,
   category             TEXT,
+  creation_method      TEXT,
 
   CONSTRAINT splitwise_expenses_splitwise_id_unique UNIQUE (splitwise_id)
 );
@@ -77,6 +78,14 @@ CREATE TABLE IF NOT EXISTS expense_links (
     PRIMARY KEY(card_activity_uuid, splitwise_expense_uuid)
 );
 
+CREATE TABLE IF NOT EXISTS account_activity_links (
+  account_activity_uuid  UUID NOT NULL REFERENCES account_activities(uuid),
+  splitwise_expense_uuid UUID NOT NULL REFERENCES splitwise_expenses(uuid),
+
+  CONSTRAINT fk_account_activitiy_splitwise_expense
+    PRIMARY KEY(account_activity_uuid, splitwise_expense_uuid)
+);
+
 -- Example data
 -- TODO: remove eventually
 INSERT INTO accounts (last_four, description) VALUES (3682, 'Chase Chequing Account');
@@ -85,6 +94,7 @@ INSERT INTO cards (last_four, description) VALUES (9307, 'Chase Sapphire Reserve
 
 -- +goose Down
 -- SQL in this section is executed when the migration is rolled back.
+DROP TABLE IF EXISTS account_activity_links;
 DROP TABLE IF EXISTS expense_links;
 DROP TABLE IF EXISTS splitwise_expenses;
 DROP TABLE IF EXISTS card_activities;

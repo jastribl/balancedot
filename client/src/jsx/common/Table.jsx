@@ -1,10 +1,21 @@
 import React, { useState } from 'react'
 
+import { defaultSort } from '../../utils/sorting'
 import { snakeToSentenceCase } from '../../utils/strings'
 
-const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, initialSortInverse, customSortComparators }) => {
+const Table = ({
+    rowKey,
+    columns,
+    rows,
+    customRenders,
+    initialSortColumn,
+    initialSortInverse,
+    customSortComparators,
+    hideFilters
+}) => {
     customRenders ??= {}
     customSortComparators ??= {}
+    hideFilters ??= false
 
     if (!rows) {
         return <div />
@@ -12,6 +23,8 @@ const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, initia
 
     const [sortColumn, setSortColumn] = useState(initialSortColumn)
     const [sortInverse, setSortInverse] = useState(initialSortInverse ?? false)
+
+    const [filters, setFilters] = useState({})
 
     const onHeaderClick = (header_name) => {
         if (sortInverse) {
@@ -25,27 +38,58 @@ const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, initia
         }
     }
 
+    const handleFilterChange = (event) => {
+        const filterKey = event.target.name
+        const filterValue = event.target.value
+        setFilters({
+            ...filters,
+            [filterKey]: filterValue,
+        })
+    }
+
     let toRender = rows.slice()
+
+    toRender = toRender.filter(row => {
+        return !Object.keys(filters).some(filterKey => {
+            const cellValue = ("" + row[filterKey]).toLowerCase()
+            const searchTerm = filters[filterKey].toLowerCase()
+            return !cellValue.includes(searchTerm)
+        })
+    })
+
+
     if (sortColumn) {
-        toRender.sort(((a, b) => customSortComparators[sortColumn](a[sortColumn], b[sortColumn])) ??
-            ((a, b) => {
-                if (a[sortColumn] < b[sortColumn]) {
-                    return -1
-                } else if (a[sortColumn] > b[sortColumn]) {
-                    return 1
-                } else {
-                    return 0
-                }
-            }))
+        toRender.sort((a, b) => (customSortComparators[sortColumn] ?? defaultSort)(
+            a[sortColumn],
+            b[sortColumn],
+        ))
     }
     if (sortInverse) {
         toRender.reverse()
+    }
+
+    let filterDiv = null
+    if (!hideFilters) {
+        filterDiv = <tr>
+            {columns.map(key =>
+                <td key={key} >
+                    <input
+                        type={"text"}
+                        name={key}
+                        value={filters[key]}
+                        onChange={handleFilterChange}
+                        placeholder={"Filter for " + snakeToSentenceCase(key)}
+                    />
+                </td>
+            )}
+        </tr>
     }
 
     return (
         <div>
             <table className='styled-table'>
                 <thead>
+                    {filterDiv}
                     <tr>
                         {columns.map(key =>
                             <th
@@ -56,7 +100,7 @@ const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, initia
                     </tr>
                 </thead>
                 <tbody>
-                    {toRender.map((row, i) =>
+                    {toRender.map((row, _i) =>
                         <tr key={row[rowKey]}>{
                             columns.map(key =>
                                 <td key={key}>{
@@ -67,7 +111,7 @@ const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, initia
                     )}
                 </tbody>
             </table>
-        </div>
+        </div >
     )
 }
 

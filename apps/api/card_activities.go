@@ -391,3 +391,51 @@ func (m *App) UploadCardActivities(w ResponseWriter, r *Request) WriterResponse 
 
 	return WriterResponseSuccess
 }
+
+// GetAllCardActivitiesForSplitwiseExpenseUUID gets all card activities that might be related to a given splitwise expense
+func (m *App) GetAllCardActivitiesForSplitwiseExpenseUUID(w ResponseWriter, r *Request) WriterResponse {
+	var splitwiseExpense entities.SplitwiseExpense
+	err := repos.NewGenericRepo(m.db).GetByUUID(&splitwiseExpense, r.GetParams()["splitwiseExpenseUUID"])
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	var allCardActivities []*entities.CardActivity
+	err = m.db.Where(
+		`
+			(amount = ?) OR
+			(-amount >= (?) AND -amount <= (?)) OR
+			(-amount >= (?) AND transaction_date BETWEEN (?) AND (?))
+		`,
+		-splitwiseExpense.AmountPaid,
+		splitwiseExpense.AmountPaid-0.03,
+		splitwiseExpense.AmountPaid+0.03,
+		splitwiseExpense.AmountPaid-1,
+		splitwiseExpense.Date.Add(-time.Hour*72),
+		splitwiseExpense.Date.Add(time.Hour*72),
+	).Find(&allCardActivities).Error
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	return w.SendResponse(allCardActivities)
+}
+
+// LinkCardActivityToSplitwiseExpense links a card activitiy to a splitwise expense
+func (m *App) LinkCardActivityToSplitwiseExpense(w ResponseWriter, r *Request) WriterResponse {
+	err := m.db.Exec(`
+			INSERT INTO expense_links (
+				card_activity_uuid,
+				splitwise_expense_uuid
+			)
+			VALUES (?, ?)
+		`,
+		r.GetParams()["cardActivityUUID"],
+		r.GetParams()["splitwiseExpenseUUID"],
+	).Error
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	return w.SendSimpleMessage("success")
+}

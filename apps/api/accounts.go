@@ -9,7 +9,7 @@ import (
 
 // GetAllAccounts get all the Accounts
 func (m *App) GetAllAccounts(w ResponseWriter, r *Request) WriterResponse {
-	return m.genericGetAll(w, r, entities.Account{}, nil)
+	return m.genericGetAll(w, r, m.db, entities.Account{}, nil)
 }
 
 type newAccountParams struct {

@@ -11,6 +11,7 @@ import SplitwiseLoginCheck from '../SplitwiseLoginCheck'
 const SplitwiseExpensesPage = () => {
     const [splitwiseExpenses, setSplitwiseExpenses] = useState(null)
     const [pageLoading, setPageLoading] = useState(false)
+    const [isRefreshing, setIsRefreshing] = useState(false)
     const [errorMessage, setErrorMessage] = useState(null)
     const [refreshResponse, setRefreshResponse] = useState(null)
 
@@ -29,9 +30,9 @@ const SplitwiseExpensesPage = () => {
     }
 
     const handleRefreshExpenses = () => {
-        setPageLoading(true)
-        return postJSON('/api/refresh_splitwise', null, 'follow')
-            .then((data) => {
+        setIsRefreshing(true)
+        return postJSON('/api/refresh_splitwise')
+            .then(data => {
                 setRefreshResponse(data)
                 refreshSplitwiseExpenses()
             })
@@ -43,13 +44,13 @@ const SplitwiseExpensesPage = () => {
                 setErrorMessage(e.message)
             })
             .finally(() => {
-                setPageLoading(false)
+                setIsRefreshing(false)
             })
     }
 
     useEffect(() => {
         refreshSplitwiseExpenses()
-    }, [setSplitwiseExpenses])
+    }, [setPageLoading, setSplitwiseExpenses, setErrorMessage])
 
     // todo: make this nicer looking and more functional
     let refreshResponseRender = null
@@ -61,7 +62,7 @@ const SplitwiseExpensesPage = () => {
 
     return (
         <div>
-            <Spinner visible={pageLoading} />
+            <Spinner visible={pageLoading || isRefreshing} />
             <h1>Splitwise Expenses</h1>
             <ErrorRow message={errorMessage} />
             <SplitwiseLoginCheck>
@@ -71,12 +72,12 @@ const SplitwiseExpensesPage = () => {
                     <Table
                         rowKey='uuid'
                         rows={splitwiseExpenses}
-                        columns={['uuid', 'splitwise_id', 'description', 'details', 'amount', 'amount_paid', 'date', 'category']}
+                        columns={['uuid', 'splitwise_id', 'description', 'details', 'creation_method', 'amount', 'amount_paid', 'date', 'category']}
                         customRenders={{
                             'details': (data) => data['details'].trim(),
                             'date': (data) => formatAsDate(data['date']),
                             'amount': (data) => formatAsMoney(data['amount'], data['currency_code']),
-                            'amount_paid': (data) => formatAsMoney(data['amount_paid'], data['currency_code'])
+                            'amount_paid': (data) => formatAsMoney(data['amount_paid'], data['currency_code']),
                         }}
                         initialSortColumn='date'
                         initialSortInverse={true}

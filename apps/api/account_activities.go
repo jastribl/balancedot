@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"time"
 
 	"gihub.com/jastribl/balancedot/chase/models"
 	"gihub.com/jastribl/balancedot/entities"
@@ -98,4 +99,52 @@ func (m *App) UploadAccountActivities(w ResponseWriter, r *Request) WriterRespon
 	}
 
 	return WriterResponseSuccess
+}
+
+// GetAllAccountActivitiesForSplitwiseExpenseUUID gets all account activities that might be related to a given splitwise expense
+func (m *App) GetAllAccountActivitiesForSplitwiseExpenseUUID(w ResponseWriter, r *Request) WriterResponse {
+	var splitwiseExpense entities.SplitwiseExpense
+	err := repos.NewGenericRepo(m.db).GetByUUID(&splitwiseExpense, r.GetParams()["splitwiseExpenseUUID"])
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	var allAccountActivities []*entities.AccountActivity
+	err = m.db.Where(
+		`
+			(amount = ?) OR
+			(-amount >= (?) AND -amount <= (?)) OR
+			(-amount >= (?) AND posting_date BETWEEN (?) AND (?))
+		`,
+		-splitwiseExpense.AmountPaid,
+		splitwiseExpense.AmountPaid-0.03,
+		splitwiseExpense.AmountPaid+0.03,
+		splitwiseExpense.AmountPaid-1,
+		splitwiseExpense.Date.Add(-time.Hour*72),
+		splitwiseExpense.Date.Add(time.Hour*72),
+	).Find(&allAccountActivities).Error
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	return w.SendResponse(allAccountActivities)
+}
+
+// LinkAccountActivityToSplitwiseExpense links a account activitiy to a splitwise expense
+func (m *App) LinkAccountActivityToSplitwiseExpense(w ResponseWriter, r *Request) WriterResponse {
+	err := m.db.Exec(`
+			INSERT INTO account_activity_links (
+				account_activity_uuid,
+				splitwise_expense_uuid
+			)
+			VALUES (?, ?)
+		`,
+		r.GetParams()["accountActivityUUID"],
+		r.GetParams()["splitwiseExpenseUUID"],
+	).Error
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	return w.SendSimpleMessage("success")
 }
