@@ -14,6 +14,8 @@ const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, initia
     const [sortColumn, setSortColumn] = useState(initialSortColumn)
     const [sortInverse, setSortInverse] = useState(initialSortInverse ?? false)
 
+    const [filters, setFilters] = useState({})
+
     const onHeaderClick = (header_name) => {
         if (sortInverse) {
             setSortColumn(null)
@@ -26,7 +28,26 @@ const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, initia
         }
     }
 
+    const handleFilterChange = (event) => {
+        const filterKey = event.target.name
+        const filterValue = event.target.value
+        setFilters({
+            ...filters,
+            [filterKey]: filterValue,
+        })
+    }
+
     let toRender = rows.slice()
+
+    toRender = toRender.filter(row => {
+        return !Object.keys(filters).some(filterKey => {
+            const cellValue = ("" + row[filterKey]).toLowerCase()
+            const searchTerm = filters[filterKey].toLowerCase()
+            return !cellValue.includes(searchTerm)
+        })
+    })
+
+
     if (sortColumn) {
         toRender.sort((a, b) => (customSortComparators[sortColumn] ?? defaultSort)(
             a[sortColumn],
@@ -41,6 +62,19 @@ const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, initia
         <div>
             <table className='styled-table'>
                 <thead>
+                    <tr>
+                        {columns.map(key =>
+                            <td key={key} >
+                                <input
+                                    type={"text"}
+                                    name={key}
+                                    value={filters[key]}
+                                    onChange={handleFilterChange}
+                                    placeholder={"Filter for " + snakeToSentenceCase(key)}
+                                />
+                            </td>
+                        )}
+                    </tr>
                     <tr>
                         {columns.map(key =>
                             <th
@@ -62,7 +96,7 @@ const Table = ({ rowKey, columns, rows, customRenders, initialSortColumn, initia
                     )}
                 </tbody>
             </table>
-        </div>
+        </div >
     )
 }
 
