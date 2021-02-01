@@ -76,7 +76,6 @@ func (m *App) GetAllUnlinkedSplitwiseExpenses(w ResponseWriter, r *Request) Writ
 				AND el.splitwise_expense_uuid IS NULL
 				AND al.splitwise_expense_uuid IS NULL
 				AND e.date > '2019-08-25'::date -- todo: remove this
-			ORDER BY e.date DESC
 		`,
 	)
 }
@@ -95,7 +94,6 @@ func (m *App) GetSplitwiseExpenseByUUID(w ResponseWriter, r *Request) WriterResp
 // GetAllSplitwiseExpenses gets all the SplitwiseExpenses
 func (m *App) GetAllSplitwiseExpenses(w ResponseWriter, r *Request) WriterResponse {
 	return m.genericGetAll(w, r, m.db, entities.SplitwiseExpense{}, &repos.GetAllOfOptions{
-		Order: "date DESC",
 		Where: "splitwise_deleted_at IS NULL", // Don't load deleted expense
 	})
 }
