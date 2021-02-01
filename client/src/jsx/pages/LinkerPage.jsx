@@ -1,34 +1,20 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { getWithHandling } from '../../utils/api'
-import ErrorRow from '../common/ErrorRow'
-import Spinner from '../common/Spinner'
+import LoaderComponent from '../common/LoaderComponent'
 import SplitwiseExpenseTable from '../tables/SplitwiseExpenseTable'
 
 const LinkerPage = () => {
     const [splitwiseExpenses, setSplitwiseExpenses] = useState(null)
-    const [pageLoading, setPageLoading] = useState(false)
-    const [errorMessage, setErrorMessage] = useState(null)
-
-    useEffect(() => {
-        getWithHandling(
-            '/api/splitwise_expenses/unlinked',
-            setSplitwiseExpenses,
-            setErrorMessage,
-            setPageLoading
-        )
-    }, [
-        setPageLoading,
-        setSplitwiseExpenses,
-        setErrorMessage,
-    ])
 
     return (
         <div>
-            <Spinner visible={pageLoading} />
             <h1>Splitwise Expense Linking</h1>
-            <ErrorRow message={errorMessage} />
+            <LoaderComponent
+                path={'/api/splitwise_expenses/unlinked'}
+                parentLoading={false}
+                setData={setSplitwiseExpenses}
+            />
             <SplitwiseExpenseTable
                 data={splitwiseExpenses}
                 extraColumns={['link']}

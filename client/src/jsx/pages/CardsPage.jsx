@@ -1,54 +1,39 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { getWithHandling, postJSON } from '../../utils/api'
-import ErrorRow from '../common/ErrorRow'
+import { postJSON } from '../../utils/api'
 import Form from '../common/Form'
+import LoaderComponent from '../common/LoaderComponent'
 import Modal from '../common/Modal'
-import Spinner from '../common/Spinner'
 import Table from '../common/Table'
 
 const CardsPage = () => {
     const [cards, setCards] = useState(null)
-    const [cardsLoading, setCardsLoading] = useState(false)
     const [modalVisible, setShowModal] = useState(false)
-    const [errorMessage, setErrorMessage] = useState(null)
+    const [addingNewCard, setAddingNewCard] = useState(false)
 
     const showModal = () => { setShowModal(true) }
     const hideModal = () => { setShowModal(false) }
 
-    const refreshCards = () => getWithHandling(
-        '/api/cards',
-        setCards,
-        setErrorMessage,
-        setCardsLoading
-    )
-
     const handleNewCardSubmit = (newCardData) => {
+        setAddingNewCard(true)
         return postJSON('/api/card', newCardData)
             .then(() => {
                 hideModal()
-                refreshCards()
             })
-            .catch(e => {
-                throw e.message
-            })
+            .catch(e => { throw e.message })
+            .finally(() => setAddingNewCard(false))
     }
-
-    useEffect(() => {
-        refreshCards()
-    }, [
-        setCards,
-        setErrorMessage,
-        setCardsLoading,
-    ])
 
     return (
         <div>
-            <Spinner visible={cardsLoading} />
             <h1>Cards</h1>
             <input type='button' onClick={showModal} value='New Card' style={{ marginBottom: 25 + 'px' }} />
-            <ErrorRow message={errorMessage} />
+            <LoaderComponent
+                path={'/api/cards'}
+                parentLoading={addingNewCard}
+                setData={setCards}
+            />
             <Table
                 rowKey='uuid'
                 rows={cards}

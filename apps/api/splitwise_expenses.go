@@ -91,6 +91,42 @@ func (m *App) GetSplitwiseExpenseByUUID(w ResponseWriter, r *Request) WriterResp
 	)
 }
 
+type splitwiseLinkResponse struct {
+	*entities.SplitwiseExpense
+	CardActivityLinks    []*entities.CardActivity    `json:"card_activity_links"`
+	AccountActivityLinks []*entities.AccountActivity `json:"account_activity_links"`
+}
+
+// GetSplitwiseExpenseByUUIDForLinking gets a single SplitwiseExpense by UUID along with all linking info
+func (m *App) GetSplitwiseExpenseByUUIDForLinking(w ResponseWriter, r *Request) WriterResponse {
+	splitwiseExpenseUUID := r.GetParams()["splitwiseExpenseUUID"]
+
+	splitwiseExpense := &entities.SplitwiseExpense{}
+	err := repos.NewGenericRepo(m.db.
+		Preload("CardActivities.SplitwiseExpenses").
+		Preload("AccountActivities.SplitwiseExpenses"),
+	).GetByUUID(splitwiseExpense, splitwiseExpenseUUID)
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	allCardActivityLinks, err := m.getAllCardActivitiesForSplitwiseExpenseUUID(splitwiseExpenseUUID)
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	allAccountActivityLinks, err := m.getAllAccountActivitiesForSplitwiseExpenseUUID(splitwiseExpenseUUID)
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	return w.SendResponse(&splitwiseLinkResponse{
+		SplitwiseExpense:     splitwiseExpense,
+		CardActivityLinks:    allCardActivityLinks,
+		AccountActivityLinks: allAccountActivityLinks,
+	})
+}
+
 // GetAllSplitwiseExpenses gets all the SplitwiseExpenses
 func (m *App) GetAllSplitwiseExpenses(w ResponseWriter, r *Request) WriterResponse {
 	return m.genericGetAll(

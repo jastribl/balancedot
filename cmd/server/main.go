@@ -56,6 +56,10 @@ func main() {
 		api.Handler(apiApp.GetSplitwiseExpenseByUUID),
 	).Methods("GET")
 	mainRouter.Handle(
+		"/api/splitwise_expenses/{splitwiseExpenseUUID}/for_linking",
+		api.Handler(apiApp.GetSplitwiseExpenseByUUIDForLinking),
+	).Methods("GET")
+	mainRouter.Handle(
 		"/api/splitwise_expenses",
 		api.Handler(apiApp.GetAllSplitwiseExpenses),
 	).Methods("GET")
@@ -67,19 +71,11 @@ func main() {
 	// Card Activities
 	mainRouter.Handle(
 		"/api/cards/{cardUUID}/activities",
-		api.Handler(apiApp.GetAllCardActivitiesForCard),
-	).Methods("GET")
-	mainRouter.Handle(
-		"/api/cards/{cardUUID}/activities",
 		api.Handler(apiApp.UploadCardActivities),
 	).Methods("POST")
 	mainRouter.Handle(
 		"/api/card_activities/{cardActivityUUID}",
 		api.Handler(apiApp.GetCardActivityByUUID),
-	).Methods("GET")
-	mainRouter.Handle(
-		"/api/card_activities/for_link/{splitwiseExpenseUUID}",
-		api.Handler(apiApp.GetAllCardActivitiesForSplitwiseExpenseUUID),
 	).Methods("GET")
 	mainRouter.Handle(
 		"/api/card_activities/{cardActivityUUID}/link/{splitwiseExpenseUUID}",
@@ -103,19 +99,11 @@ func main() {
 	// Account Activities
 	mainRouter.Handle(
 		"/api/accounts/{accountUUID}/activities",
-		api.Handler(apiApp.GetAllAccountActivitiesForAccount),
-	).Methods("GET")
-	mainRouter.Handle(
-		"/api/accounts/{accountUUID}/activities",
 		api.Handler(apiApp.UploadAccountActivities),
 	).Methods("POST")
 	mainRouter.Handle(
 		"/api/account_activities/{accountActivityUUID}",
 		api.Handler(apiApp.GetAccountActivityByUUID),
-	).Methods("GET")
-	mainRouter.Handle(
-		"/api/account_activities/for_link/{splitwiseExpenseUUID}",
-		api.Handler(apiApp.GetAllAccountActivitiesForSplitwiseExpenseUUID),
 	).Methods("GET")
 	mainRouter.Handle(
 		"/api/account_activities/{accountActivityUUID}/link/{splitwiseExpenseUUID}",

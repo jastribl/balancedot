@@ -1,31 +1,23 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 
-import { getWithHandling, postForm } from '../../utils/api'
-import ErrorRow from '../common/ErrorRow'
+import { postForm } from '../../utils/api'
 import Form from '../common/Form'
+import LoaderComponent from '../common/LoaderComponent'
 import Modal from '../common/Modal'
-import Spinner from '../common/Spinner'
 import CardActivitiesTable from '../tables/CardActivitiesTable'
 
 const CardActivitiesPage = ({ match }) => {
     const cardUUID = match.params.cardUUID
 
     const [card, setCard] = useState(null)
-    const [cardLoading, setCardLoading] = useState(false)
     const [modalVisible, setShowModal] = useState(false)
-    const [errorMessage, setErrorMessage] = useState(null)
+    const [uploading, setUploading] = useState(false)
 
     const showModal = () => { setShowModal(true) }
     const hideModal = () => { setShowModal(false) }
 
-    const refreshCard = () => getWithHandling(
-        `/api/cards/${cardUUID}`,
-        setCard,
-        setErrorMessage,
-        setCardLoading
-    )
-
     const handleActivityUpload = (activityData) => {
+        setUploading(true)
         let formData = new FormData()
         for (let i = 0; i < activityData['files'].length; i++) {
             formData.append(`file${i}`, activityData['files'][i])
@@ -33,27 +25,22 @@ const CardActivitiesPage = ({ match }) => {
         return postForm(`/api/cards/${cardUUID}/activities`, formData)
             .then(() => {
                 hideModal()
-                refreshCard()
             })
-            .catch(e => {
-                throw e.message
-            })
+            .catch(e => { throw e.message })
+            .finally(() => setUploading(false))
     }
 
-    useEffect(() => {
-        refreshCard()
-    }, [
-        setCard,
-        setErrorMessage,
-        setCardLoading,
-    ])
 
     return (
         <div>
-            <Spinner visible={cardLoading} />
             <h1>Card Activities for {card ? (card.last_four + " (" + card.description + ")") : null}</h1>
             <input type='button' onClick={showModal} value='Upload Activities' style={{ marginBottom: 25 + 'px' }} />
-            <ErrorRow message={errorMessage} />
+            <LoaderComponent
+                path={`/api/cards/${cardUUID}`}
+                parentLoading={uploading}
+                setData={setCard}
+
+            />
             <CardActivitiesTable data={card?.activities ?? []} />
             <Modal headerText='Activity Upload' visible={modalVisible} handleClose={hideModal}>
                 <Form

@@ -1,49 +1,28 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 
-import { getWithHandling, postJSON } from '../../utils/api'
-import ErrorRow from '../common/ErrorRow'
-import Spinner from '../common/Spinner'
+import { postJSON } from '../../utils/api'
+import LoaderComponent from '../common/LoaderComponent'
 import SplitwiseLoginCheck from '../SplitwiseLoginCheck'
 import SplitwiseExpenseTable from '../tables/SplitwiseExpenseTable'
 
 const SplitwiseExpensesPage = () => {
     const [splitwiseExpenses, setSplitwiseExpenses] = useState(null)
     const [pageLoading, setPageLoading] = useState(false)
-    const [errorMessage, setErrorMessage] = useState(null)
     const [refreshResponse, setRefreshResponse] = useState(null)
-
-    const refreshSplitwiseExpenses = () => getWithHandling(
-        '/api/splitwise_expenses',
-        setSplitwiseExpenses,
-        setErrorMessage,
-        setPageLoading,
-    )
-
 
     const handleRefreshExpenses = () => {
         setPageLoading(true)
         return postJSON('/api/refresh_splitwise')
-            .then(data => {
-                setRefreshResponse(data)
-                refreshSplitwiseExpenses()
-            })
+            .then(data => setRefreshResponse(data))
             .catch(e => {
-                setPageLoading(false)
                 if ('redirect_url' in e) {
                     window.open(e.redirect_url)
                     return
                 }
                 setErrorMessage(e.message)
             })
+            .finally(() => setPageLoading(false))
     }
-
-    useEffect(() => {
-        refreshSplitwiseExpenses()
-    }, [
-        setPageLoading,
-        setSplitwiseExpenses,
-        setErrorMessage,
-    ])
 
     // todo: make this nicer looking and more functional
     let refreshResponseRender = null
@@ -55,9 +34,12 @@ const SplitwiseExpensesPage = () => {
 
     return (
         <div>
-            <Spinner visible={pageLoading} />
             <h1>Splitwise Expenses</h1>
-            <ErrorRow message={errorMessage} />
+            <LoaderComponent
+                path={'/api/splitwise_expenses'}
+                parentLoading={pageLoading}
+                setData={setSplitwiseExpenses}
+            />
             <SplitwiseLoginCheck>
                 <input type='button' onClick={handleRefreshExpenses} value='Refresh Splitwise' style={{ marginBottom: 25 + 'px' }} />
                 {refreshResponseRender}

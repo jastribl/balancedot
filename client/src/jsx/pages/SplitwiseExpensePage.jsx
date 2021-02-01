@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 
-import { get } from '../../utils/api'
-import ErrorRow from '../common/ErrorRow'
-import Spinner from '../common/Spinner'
+import LoaderComponent from '../common/LoaderComponent'
 import SplitwiseLoginCheck from '../SplitwiseLoginCheck'
 import AccountActivitiesTable from '../tables/AccountActivitiesTable'
 import CardActivitiesTable from '../tables/CardActivitiesTable'
@@ -12,27 +10,7 @@ const SplitwiseExpensePage = ({ match }) => {
     const splitwiseExpenseUUID = match.params.splitwiseExpenseUUID
 
     const [splitwiseExpense, setSplitwiseExpense] = useState(null)
-    const [pageLoading, setPageLoading] = useState(false)
-    const [errorMessage, setErrorMessage] = useState(null)
 
-    const refreshSplitwiseExpense = () => {
-        setPageLoading(true)
-        get(`/api/splitwise_expenses/${splitwiseExpenseUUID}`)
-            .then(splitwiseExpenseResponse => {
-                setSplitwiseExpense(splitwiseExpenseResponse)
-            })
-            .catch(e => {
-                setErrorMessage(e.message)
-            })
-            .finally(() => {
-                setPageLoading(false)
-            })
-    }
-
-
-    useEffect(() => {
-        refreshSplitwiseExpense()
-    }, [setPageLoading, setSplitwiseExpense, setErrorMessage])
 
     let cardActivitiesTable = null
     if (splitwiseExpense?.card_activities !== null && splitwiseExpense?.card_activities.length > 0) {
@@ -53,9 +31,12 @@ const SplitwiseExpensePage = ({ match }) => {
 
     return (
         <div>
-            <Spinner visible={pageLoading} />
             <h1>Splitwise Expense {splitwiseExpenseUUID} ({splitwiseExpense?.description})</h1>
-            <ErrorRow message={errorMessage} />
+            <LoaderComponent
+                path={`/api/splitwise_expenses/${splitwiseExpenseUUID}`}
+                parentLoading={false}
+                setData={setSplitwiseExpense}
+            />
             <SplitwiseLoginCheck>
                 <SplitwiseExpenseTable data={splitwiseExpense ? [splitwiseExpense] : []} />
                 {cardActivitiesTable}

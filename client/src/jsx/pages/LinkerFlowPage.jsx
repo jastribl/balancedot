@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { getWithHandling, postJSON } from '../../utils/api'
 import { formatAsDate, formatAsMoney } from '../../utils/format'
 import ErrorRow from '../common/ErrorRow'
+import LoaderComponent from '../common/LoaderComponent'
 import Spinner from '../common/Spinner'
 import AccountActivitiesTable from '../tables/AccountActivitiesTable'
 import CardActivitiesTable from '../tables/CardActivitiesTable'
@@ -12,44 +13,8 @@ const LinkerFlowPage = ({ match }) => {
     const splitwiseExpenseUUID = match.params.splitwiseExpenseUUID
 
     const [splitwiseExpense, setSplitwiseExpense] = useState(null)
-    const [cardLinks, setCardLinks] = useState(null)
-    const [accountLinks, setAccountLinks] = useState(null)
-    const [expenseLoading, setExpenseLoading] = useState(false)
-    const [cardLinksLoading, setCardLinksLoading] = useState(false)
-    const [accountLinksLoading, setAccountLinksLoading] = useState(false)
     const [linkLoading, setLinkLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState(null)
-
-    useEffect(() => {
-        getWithHandling(
-            `/api/splitwise_expenses/${splitwiseExpenseUUID}`,
-            setSplitwiseExpense,
-            setErrorMessage,
-            setExpenseLoading
-        )
-
-        getWithHandling(
-            `/api/card_activities/for_link/${splitwiseExpenseUUID}`,
-            setCardLinks,
-            setErrorMessage,
-            setCardLinksLoading
-        )
-
-        getWithHandling(
-            `/api/account_activities/for_link/${splitwiseExpenseUUID}`,
-            setAccountLinks,
-            setErrorMessage,
-            setAccountLinksLoading
-        )
-    }, [
-        setExpenseLoading,
-        setCardLinksLoading,
-        setAccountLinksLoading,
-        setSplitwiseExpense,
-        setCardLinks,
-        setAccountLinks,
-        setErrorMessage,
-    ])
 
     const linkCardActivityToExpense = (cardActivityUUID) => {
         setLinkLoading(true)
@@ -82,7 +47,7 @@ const LinkerFlowPage = ({ match }) => {
 
             <h3>Card Activity Links</h3>
             <CardActivitiesTable
-                data={cardLinks}
+                data={splitwiseExpense.card_activity_links}
                 hideFilters={true}
                 extraColumns={['link']}
                 extraCustomRenders={{
@@ -105,7 +70,7 @@ const LinkerFlowPage = ({ match }) => {
 
             <h3>Account Activity Links</h3>
             <AccountActivitiesTable
-                data={accountLinks}
+                data={splitwiseExpense.account_activity_links}
                 hideFilters={true}
                 extraColumns={['link']}
                 extraCustomRenders={{
@@ -127,9 +92,12 @@ const LinkerFlowPage = ({ match }) => {
 
     return (
         <div>
-            <Spinner visible={expenseLoading || cardLinksLoading || accountLinksLoading || linkLoading} />
             <h1>Splitwise Expense Linking Flow</h1>
-            <ErrorRow message={errorMessage} />
+            <LoaderComponent
+                path={`/api/splitwise_expenses/${splitwiseExpenseUUID}/for_linking`}
+                parentLoading={linkLoading}
+                setData={setSplitwiseExpense}
+            />
             <SplitwiseExpenseTable data={splitwiseExpense !== null ? [splitwiseExpense] : []} hideFilters={true} />
 
             {linksDiv}

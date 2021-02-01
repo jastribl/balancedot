@@ -18,17 +18,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// GetAllCardActivitiesForCard gets all the Card Activities
-func (m *App) GetAllCardActivitiesForCard(w ResponseWriter, r *Request) WriterResponse {
-	var card entities.Card
-	err := repos.NewGenericRepo(m.db.Preload("Activities.SplitwiseExpenses")).
-		GetByUUID(&card, r.GetParams()["cardUUID"])
-	if err != nil {
-		return w.SendUnexpectedError(err)
-	}
-	return w.SendResponse(card.Activities)
-}
-
 // GetCardActivityByUUID gets a single Card Activity by UUID
 func (m *App) GetCardActivityByUUID(w ResponseWriter, r *Request) WriterResponse {
 	return m.genericGetByUUID(
@@ -405,12 +394,13 @@ func (m *App) UploadCardActivities(w ResponseWriter, r *Request) WriterResponse 
 	return WriterResponseSuccess
 }
 
-// GetAllCardActivitiesForSplitwiseExpenseUUID gets all card activities that might be related to a given splitwise expense
-func (m *App) GetAllCardActivitiesForSplitwiseExpenseUUID(w ResponseWriter, r *Request) WriterResponse {
+func (m *App) getAllCardActivitiesForSplitwiseExpenseUUID(
+	splitwiseExpenseUUID string,
+) ([]*entities.CardActivity, error) {
 	var splitwiseExpense entities.SplitwiseExpense
-	err := repos.NewGenericRepo(m.db).GetByUUID(&splitwiseExpense, r.GetParams()["splitwiseExpenseUUID"])
+	err := repos.NewGenericRepo(m.db).GetByUUID(&splitwiseExpense, splitwiseExpenseUUID)
 	if err != nil {
-		return w.SendUnexpectedError(err)
+		return nil, err
 	}
 
 	var allCardActivities []*entities.CardActivity
@@ -431,10 +421,9 @@ func (m *App) GetAllCardActivitiesForSplitwiseExpenseUUID(w ResponseWriter, r *R
 		Preload("SplitwiseExpenses.AccountActivities").
 		Find(&allCardActivities).Error
 	if err != nil {
-		return w.SendUnexpectedError(err)
+		return nil, err
 	}
-
-	return w.SendResponse(allCardActivities)
+	return allCardActivities, nil
 }
 
 // LinkCardActivityToSplitwiseExpense links a card activitiy to a splitwise expense

@@ -25,13 +25,9 @@ const OauthCallbackPage = () => {
                     history.replace('/splitwise_expenses')
                 }
             })
-            .catch(e => {
-                setErrorMessage(e.message)
-            })
-            .finally(() => {
-                setIsSubmitting(false)
-            })
-    }, [setIsSubmitting, setErrorMessage])
+            .catch(e => setErrorMessage(e.message))
+            .finally(() => setIsSubmitting(false))
+    }, [])
 
     return (
         <div>

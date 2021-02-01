@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
-import { getWithHandling } from '../../utils/api'
-import ErrorRow from '../common/ErrorRow'
-import Spinner from '../common/Spinner'
+import LoaderComponent from '../common/LoaderComponent'
 import AccountActivitiesTable from '../tables/AccountActivitiesTable'
 import SplitwiseExpenseTable from '../tables/SplitwiseExpenseTable'
 
@@ -10,23 +8,6 @@ const AccountActivityPage = ({ match }) => {
     const accountActivityUUID = match.params.accountActivityUUID
 
     const [accountActivity, setAccountActivity] = useState(null)
-    const [accountActivityLoading, setAccountActivityLoading] = useState(false)
-    const [errorMessage, setErrorMessage] = useState(null)
-
-    const refreshAccountActivity = () => getWithHandling(
-        `/api/account_activities/${accountActivityUUID}`,
-        setAccountActivity,
-        setErrorMessage,
-        setAccountActivityLoading
-    )
-
-    useEffect(() => {
-        refreshAccountActivity()
-    }, [
-        setAccountActivity,
-        setErrorMessage,
-        setAccountActivityLoading,
-    ])
 
     let splitwiseExpenseTable = null
     if (accountActivity?.splitwise_expenses !== null && accountActivity?.splitwise_expenses.length > 0) {
@@ -40,10 +21,13 @@ const AccountActivityPage = ({ match }) => {
 
     return (
         <div>
-            <Spinner visible={accountActivityLoading} />
             <h1>Account Activity {accountActivityUUID} ({accountActivity?.description}) </h1>
             <h2>For account {account ? (account.last_four + " (" + account.description + ")") : null}</h2>
-            <ErrorRow message={errorMessage} />
+            <LoaderComponent
+                path={`/api/account_activities/${accountActivityUUID}`}
+                parentLoading={false}
+                setData={setAccountActivity}
+            />
             <AccountActivitiesTable
                 data={accountActivity ? [accountActivity] : []}
                 hideFilters={true}
