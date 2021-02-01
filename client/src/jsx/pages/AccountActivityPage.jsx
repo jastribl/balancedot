@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 
 import LoaderComponent from '../common/LoaderComponent'
 import AccountActivitiesTable from '../tables/AccountActivitiesTable'
