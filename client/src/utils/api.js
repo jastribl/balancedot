@@ -29,6 +29,14 @@ export function postForm(path, formData = null) {
     return post(path, formData)
 }
 
+export function postJSONWithHandling(path, setErrorMessage, setLoading) {
+    setLoading(true)
+    return postJSON(path)
+        // .then(response => setResponse(response))
+        .catch(e => setErrorMessage(e.message))
+        .finally(() => setLoading(false))
+}
+
 export function get(path) {
     return errorHandler(
         fetch(path)

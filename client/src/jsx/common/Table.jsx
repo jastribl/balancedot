@@ -71,7 +71,6 @@ const Table = ({
         })
     })
 
-
     if (sortColumn) {
         toRender.sort((a, b) => (customSortComparators[sortColumn] ?? defaultSort)(
             a[sortColumn],

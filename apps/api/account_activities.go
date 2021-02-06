@@ -102,17 +102,15 @@ func (m *App) UploadAccountActivities(w ResponseWriter, r *Request) WriterRespon
 	return WriterResponseSuccess
 }
 
-func (m *App) getAllAccountActivitiesForSplitwiseExpenseUUID(
-	splitwiseExpenseUUID string,
+func (m *App) getAllAccountActivitiesForSplitwiseExpense(
+	splitwiseExpense *entities.SplitwiseExpense,
 ) ([]*entities.AccountActivity, error) {
-	var splitwiseExpense entities.SplitwiseExpense
-	err := repos.NewGenericRepo(m.db).GetByUUID(&splitwiseExpense, splitwiseExpenseUUID)
-	if err != nil {
-		return nil, err
+	exisitngAccountActivityUUIDs := make([]string, len(splitwiseExpense.AccountActivities))
+	for i, accountActivity := range splitwiseExpense.AccountActivities {
+		exisitngAccountActivityUUIDs[i] = accountActivity.UUID.String()
 	}
-
 	var allAccountActivities []*entities.AccountActivity
-	err = m.db.Where(
+	err := m.db.Not(exisitngAccountActivityUUIDs).Where(
 		`
 			(amount = ?) OR
 			(-amount >= (?) AND -amount <= (?)) OR
@@ -143,6 +141,25 @@ func (m *App) LinkAccountActivityToSplitwiseExpense(w ResponseWriter, r *Request
 				splitwise_expense_uuid
 			)
 			VALUES (?, ?)
+		`,
+		r.GetParams()["accountActivityUUID"],
+		r.GetParams()["splitwiseExpenseUUID"],
+	).Error
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	return w.SendSimpleMessage("success")
+}
+
+// UnLinkAccountActivityToSplitwiseExpense links a account activitiy to a splitwise expense
+func (m *App) UnLinkAccountActivityToSplitwiseExpense(w ResponseWriter, r *Request) WriterResponse {
+	err := m.db.Exec(`
+			DELETE FROM
+			account_activity_links
+			WHERE
+				account_activity_uuid = ? AND
+				splitwise_expense_uuid = ?
 		`,
 		r.GetParams()["accountActivityUUID"],
 		r.GetParams()["splitwiseExpenseUUID"],

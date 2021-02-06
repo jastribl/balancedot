@@ -2,18 +2,22 @@ import React, { useState } from 'react'
 
 import { postJSON } from '../../utils/api'
 import LoaderComponent from '../common/LoaderComponent'
+import Toggle from '../common/Toggle'
 import SplitwiseLoginCheck from '../SplitwiseLoginCheck'
 import SplitwiseExpenseTable from '../tables/SplitwiseExpenseTable'
 
 const SplitwiseExpensesPage = () => {
+    const [unlinkedOnly, setUnlinkedOnly] = useState(false)
     const [splitwiseExpenses, setSplitwiseExpenses] = useState(null)
-    const [pageLoading, setPageLoading] = useState(false)
-    const [refreshResponse, setRefreshResponse] = useState(null)
+    const [refreshingSplitwise, setRefreshingSplitwise] = useState(false)
+    const [rawRefreshResponse, setRawRefreshResponse] = useState(null)
+
+    const handleUnlinkedToggle = () => setUnlinkedOnly(!unlinkedOnly)
 
     const handleRefreshExpenses = () => {
-        setPageLoading(true)
+        setRefreshingSplitwise(true)
         return postJSON('/api/refresh_splitwise')
-            .then(data => setRefreshResponse(data))
+            .then(data => setRawRefreshResponse(data))
             .catch(e => {
                 if ('redirect_url' in e) {
                     window.open(e.redirect_url)
@@ -21,14 +25,14 @@ const SplitwiseExpensesPage = () => {
                 }
                 setErrorMessage(e.message)
             })
-            .finally(() => setPageLoading(false))
+            .finally(() => setRefreshingSplitwise(false))
     }
 
     // todo: make this nicer looking and more functional
     let refreshResponseRender = null
-    if (refreshResponse !== null) {
+    if (rawRefreshResponse !== null) {
         refreshResponseRender = (
-            <div><pre>{JSON.stringify(refreshResponse, null, 4)}</pre></div>
+            <div><pre>{JSON.stringify(rawRefreshResponse, null, 4)}</pre></div>
         )
     }
 
@@ -36,14 +40,22 @@ const SplitwiseExpensesPage = () => {
         <div>
             <h1>Splitwise Expenses</h1>
             <LoaderComponent
-                path={'/api/splitwise_expenses'}
-                parentLoading={pageLoading}
+                path={unlinkedOnly ? '/api/splitwise_expenses/unlinked' : '/api/splitwise_expenses'}
+                parentLoading={refreshingSplitwise}
                 setData={setSplitwiseExpenses}
             />
             <SplitwiseLoginCheck>
-                <input type='button' onClick={handleRefreshExpenses} value='Refresh Splitwise' style={{ marginBottom: 25 + 'px' }} />
+                <input
+                    type='button'
+                    onClick={handleRefreshExpenses}
+                    value='Refresh Splitwise'
+                    style={{ marginBottom: 25 + 'px' }}
+                />
                 {refreshResponseRender}
-                <SplitwiseExpenseTable data={splitwiseExpenses} />
+                <div>Unlinked Only: <Toggle onToggle={handleUnlinkedToggle} /></div>
+                <SplitwiseExpenseTable
+                    data={splitwiseExpenses}
+                />
             </SplitwiseLoginCheck>
         </div>
     )

@@ -81,6 +81,10 @@ func main() {
 		"/api/card_activities/{cardActivityUUID}/link/{splitwiseExpenseUUID}",
 		api.Handler(apiApp.LinkCardActivityToSplitwiseExpense),
 	).Methods("POST")
+	mainRouter.Handle(
+		"/api/card_activities/{cardActivityUUID}/unlink/{splitwiseExpenseUUID}",
+		api.Handler(apiApp.UnLinkCardActivityToSplitwiseExpense),
+	).Methods("POST")
 
 	// Cards
 	mainRouter.Handle(
@@ -108,6 +112,10 @@ func main() {
 	mainRouter.Handle(
 		"/api/account_activities/{accountActivityUUID}/link/{splitwiseExpenseUUID}",
 		api.Handler(apiApp.LinkAccountActivityToSplitwiseExpense),
+	).Methods("POST")
+	mainRouter.Handle(
+		"/api/account_activities/{accountActivityUUID}/unlink/{splitwiseExpenseUUID}",
+		api.Handler(apiApp.UnLinkAccountActivityToSplitwiseExpense),
 	).Methods("POST")
 
 	// Chequing Accounts
