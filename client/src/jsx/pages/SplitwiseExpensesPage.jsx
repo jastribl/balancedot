@@ -65,6 +65,10 @@ const SplitwiseExpensesPage = ({ match }) => {
 
                 <SplitwiseExpenseTable
                     data={splitwiseExpenses}
+                    extraColumns={['link']}
+                    extraCustomRenders={{
+                        'link': (data) => <Link to={`/splitwise_expenses/${data['uuid']}/edit`}>Edit Links</Link>,
+                    }}
                 />
             </SplitwiseLoginCheck>
         </div>
