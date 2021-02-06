@@ -22,7 +22,7 @@ const Form = ({ onSubmit, fieldInfos }) => {
         fieldInfo.fieldLabel ??= snakeToSentenceCase(fieldName)
 
         // Default placeholders
-        fieldInfo.placeholder ??= snakeToSentenceCase(fieldName) + "..."
+        fieldInfo.placeholder ??= snakeToSentenceCase(fieldName) + '...'
     })
     const [formState, setFormState] = useState(initialValues)
     const [formValues, setFormValues] = useState(initialValues)
@@ -122,7 +122,7 @@ const Form = ({ onSubmit, fieldInfos }) => {
                 onChange={handleFormFieldChange}
                 placeholder={fieldInfo.placeholder}
                 disabled={isSubmitting}
-                multiple={fieldInfo.multiple ? "multiple" : null}
+                multiple={fieldInfo.multiple ? 'multiple' : null}
             />
         }
     }
