@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import { postJSONWithHandling } from '../../utils/api'
 import { formatAsDate, formatAsMoney } from '../../utils/format'
@@ -8,14 +9,13 @@ import CardActivitiesTable from '../tables/CardActivitiesTable'
 import SplitwiseExpenseTable from '../tables/SplitwiseExpenseTable'
 
 const SplitwiseExpensePage = ({ match }) => {
+    const editMode = match.path.endsWith('/edit')
+
     const splitwiseExpenseUUID = match.params.splitwiseExpenseUUID
 
     const [splitwiseExpense, setSplitwiseExpense] = useState(null)
     const [linking, setLinking] = useState(false)
     const [errorMessage, setErrorMessage] = useState(null)
-    const [editMode, setEditMode] = useState(false)
-
-    const handleEditToggle = () => setEditMode(!editMode)
 
     const handleLinking = (entity, action, uuid) =>
         postJSONWithHandling(
@@ -138,7 +138,6 @@ const SplitwiseExpensePage = ({ match }) => {
         }
     }
 
-
     return (
         <div>
             <h1>Splitwise Expense {splitwiseExpenseUUID}</h1>
@@ -157,12 +156,13 @@ const SplitwiseExpensePage = ({ match }) => {
             {cardActivitiesTable}
             {accountActivitiesTable}
 
-            <input
-                type='button'
-                onClick={handleEditToggle}
-                value={editMode ? 'View' : 'Edit'}
-                style={{ marginTop: 25 + 'px' }}
-            />
+            <Link to={`/splitwise_expenses/${splitwiseExpenseUUID}` + (editMode ? '/' : '/edit')}>
+                <input
+                    type='button'
+                    value={editMode ? 'View' : 'Edit'}
+                    style={{ marginTop: 25 + 'px' }}
+                />
+            </Link>
             {linksDiv}
         </div>
     )
