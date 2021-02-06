@@ -394,17 +394,15 @@ func (m *App) UploadCardActivities(w ResponseWriter, r *Request) WriterResponse 
 	return WriterResponseSuccess
 }
 
-func (m *App) getAllCardActivitiesForSplitwiseExpenseUUID(
-	splitwiseExpenseUUID string,
+func (m *App) getAllCardActivitiesForSplitwiseExpense(
+	splitwiseExpense *entities.SplitwiseExpense,
 ) ([]*entities.CardActivity, error) {
-	var splitwiseExpense entities.SplitwiseExpense
-	err := repos.NewGenericRepo(m.db).GetByUUID(&splitwiseExpense, splitwiseExpenseUUID)
-	if err != nil {
-		return nil, err
+	exisitngCardActivityUUIDs := make([]string, len(splitwiseExpense.CardActivities))
+	for i, cardActivity := range splitwiseExpense.CardActivities {
+		exisitngCardActivityUUIDs[i] = cardActivity.UUID.String()
 	}
-
 	var allCardActivities []*entities.CardActivity
-	err = m.db.Where(
+	err := m.db.Not(exisitngCardActivityUUIDs).Where(
 		`
 			(amount = ?) OR
 			(-amount >= (?) AND -amount <= (?)) OR
@@ -434,6 +432,25 @@ func (m *App) LinkCardActivityToSplitwiseExpense(w ResponseWriter, r *Request) W
 				splitwise_expense_uuid
 			)
 			VALUES (?, ?)
+		`,
+		r.GetParams()["cardActivityUUID"],
+		r.GetParams()["splitwiseExpenseUUID"],
+	).Error
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	return w.SendSimpleMessage("success")
+}
+
+// UnLinkCardActivityToSplitwiseExpense links a card activitiy to a splitwise expense
+func (m *App) UnLinkCardActivityToSplitwiseExpense(w ResponseWriter, r *Request) WriterResponse {
+	err := m.db.Exec(`
+			DELETE FROM
+				expense_links
+			WHERE
+				card_activity_uuid = ? AND
+				splitwise_expense_uuid = ?
 		`,
 		r.GetParams()["cardActivityUUID"],
 		r.GetParams()["splitwiseExpenseUUID"],

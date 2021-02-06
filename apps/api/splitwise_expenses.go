@@ -110,12 +110,12 @@ func (m *App) GetSplitwiseExpenseByUUIDForLinking(w ResponseWriter, r *Request) 
 		return w.SendUnexpectedError(err)
 	}
 
-	allCardActivityLinks, err := m.getAllCardActivitiesForSplitwiseExpenseUUID(splitwiseExpenseUUID)
+	allCardActivityLinks, err := m.getAllCardActivitiesForSplitwiseExpense(splitwiseExpense)
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}
 
-	allAccountActivityLinks, err := m.getAllAccountActivitiesForSplitwiseExpenseUUID(splitwiseExpenseUUID)
+	allAccountActivityLinks, err := m.getAllAccountActivitiesForSplitwiseExpense(splitwiseExpense)
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}

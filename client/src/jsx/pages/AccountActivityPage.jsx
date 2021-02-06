@@ -21,7 +21,7 @@ const AccountActivityPage = ({ match }) => {
 
     return (
         <div>
-            <h1>Account Activity {accountActivityUUID} ({accountActivity?.description}) </h1>
+            <h1>Account Activity {accountActivityUUID}</h1>
             <h2>For account {account ? (account.last_four + " (" + account.description + ")") : null}</h2>
             <LoaderComponent
                 path={`/api/account_activities/${accountActivityUUID}`}

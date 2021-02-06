@@ -11,7 +11,7 @@ const ExtendableTable = ({
     ...props
 }) => {
     columns = columns.concat(extraColumns ?? [])
-    Object.assign(customRenders, extraCustomRenders)
+    Object.assign(customRenders, extraCustomRenders ?? {})
 
     return <Table
         rowKey='uuid'
