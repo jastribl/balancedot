@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -397,30 +398,41 @@ func (m *App) UploadCardActivities(w ResponseWriter, r *Request) WriterResponse 
 func (m *App) getAllCardActivitiesForSplitwiseExpense(
 	splitwiseExpense *entities.SplitwiseExpense,
 ) ([]*entities.CardActivity, error) {
-	exisitngCardActivityUUIDs := make([]string, len(splitwiseExpense.CardActivities))
-	for i, cardActivity := range splitwiseExpense.CardActivities {
-		exisitngCardActivityUUIDs[i] = cardActivity.UUID.String()
+	query := m.db
+	numExistingLinks := len(splitwiseExpense.CardActivities)
+	if numExistingLinks > 0 {
+		exisitngCardActivityUUIDs := make([]string, numExistingLinks)
+		for i, cardActivity := range splitwiseExpense.CardActivities {
+			exisitngCardActivityUUIDs[i] = cardActivity.UUID.String()
+		}
+		query = query.Where(
+			"uuid NOT IN @existing_links",
+			sql.Named("existing_links", exisitngCardActivityUUIDs),
+		)
 	}
-	var allCardActivities []*entities.CardActivity
-	err := m.db.Not(exisitngCardActivityUUIDs).Where(
+	query = query.Where(
 		`
-			(amount = ?) OR
-			(-amount >= (?) AND -amount <= (?)) OR
-			(-amount >= (?) AND transaction_date BETWEEN (?) AND (?))
+			(
+				(-amount >= (@amount - 0.03) AND -amount <= (@amount + 0.03)) OR
+				(
+					transaction_date BETWEEN
+						DATE(@date) - INTERVAL '3 DAY' AND DATE(@date) + INTERVAL '3 DAY'
+				)
+			)
 		`,
-		-splitwiseExpense.AmountPaid,
-		splitwiseExpense.AmountPaid-0.03,
-		splitwiseExpense.AmountPaid+0.03,
-		splitwiseExpense.AmountPaid-1,
-		splitwiseExpense.Date.Add(-time.Hour*72),
-		splitwiseExpense.Date.Add(time.Hour*72),
-	).
+		sql.Named("amount", splitwiseExpense.AmountPaid),
+		sql.Named("date", splitwiseExpense.Date),
+	)
+
+	var allCardActivities []*entities.CardActivity
+	err := query.
 		Preload("SplitwiseExpenses.CardActivities").
 		Preload("SplitwiseExpenses.AccountActivities").
 		Find(&allCardActivities).Error
 	if err != nil {
 		return nil, err
 	}
+
 	return allCardActivities, nil
 }
 

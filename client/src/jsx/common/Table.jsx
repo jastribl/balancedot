@@ -11,7 +11,8 @@ const Table = ({
     initialSortColumn,
     initialSortInverse,
     customSortComparators,
-    hideFilters
+    hideFilters,
+    customSortFunctionOverride,
 }) => {
     customRenders ??= {}
     customSortComparators ??= {}
@@ -76,9 +77,11 @@ const Table = ({
             a[sortColumn],
             b[sortColumn],
         ))
-    }
-    if (sortInverse) {
-        toRender.reverse()
+        if (sortInverse) {
+            toRender.reverse()
+        }
+    } else if (customSortFunctionOverride) {
+        toRender.sort(customSortFunctionOverride)
     }
 
     let filterDiv = null

@@ -5,7 +5,10 @@ import { formatAsDate, formatAsMoney } from '../../utils/format'
 import { dateComparator } from '../../utils/sorting'
 import ExtendableTable from './ExtendableTable'
 
-const CardActivitiesTable = (props) => {
+const CardActivitiesTable = ({ initialSortColumn, ...props }) => {
+    if (initialSortColumn === undefined && initialSortColumn !== null) {
+        initialSortColumn = 'transaction_date'
+    }
     return <ExtendableTable
         columns={[
             'uuid',
@@ -35,7 +38,7 @@ const CardActivitiesTable = (props) => {
                 return ''
             },
         }}
-        initialSortColumn='transaction_date'
+        initialSortColumn={initialSortColumn}
         customSortComparators={{
             'transaction_date': dateComparator,
             'post_date': dateComparator,

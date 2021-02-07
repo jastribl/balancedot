@@ -1,8 +1,8 @@
 package api
 
 import (
+	"database/sql"
 	"net/http"
-	"time"
 
 	"gihub.com/jastribl/balancedot/chase/models"
 	"gihub.com/jastribl/balancedot/entities"
@@ -105,24 +105,34 @@ func (m *App) UploadAccountActivities(w ResponseWriter, r *Request) WriterRespon
 func (m *App) getAllAccountActivitiesForSplitwiseExpense(
 	splitwiseExpense *entities.SplitwiseExpense,
 ) ([]*entities.AccountActivity, error) {
-	exisitngAccountActivityUUIDs := make([]string, len(splitwiseExpense.AccountActivities))
-	for i, accountActivity := range splitwiseExpense.AccountActivities {
-		exisitngAccountActivityUUIDs[i] = accountActivity.UUID.String()
+	query := m.db
+	numExistingLinks := len(splitwiseExpense.AccountActivities)
+	if numExistingLinks > 0 {
+		exisitngAccountActivityUUIDs := make([]string, numExistingLinks)
+		for i, cardActivity := range splitwiseExpense.AccountActivities {
+			exisitngAccountActivityUUIDs[i] = cardActivity.UUID.String()
+		}
+		query = query.Where(
+			"uuid NOT IN @existing_links",
+			sql.Named("existing_links", exisitngAccountActivityUUIDs),
+		)
 	}
-	var allAccountActivities []*entities.AccountActivity
-	err := m.db.Not(exisitngAccountActivityUUIDs).Where(
+	query = query.Where(
 		`
-			(amount = ?) OR
-			(-amount >= (?) AND -amount <= (?)) OR
-			(-amount >= (?) AND posting_date BETWEEN (?) AND (?))
+			(
+				(-amount >= (@amount - 0.03) AND -amount <= (@amount + 0.03)) OR
+				(
+					posting_date BETWEEN
+						DATE(@date) - INTERVAL '3 DAY' AND DATE(@date) + INTERVAL '3 DAY'
+				)
+			)
 		`,
-		-splitwiseExpense.AmountPaid,
-		splitwiseExpense.AmountPaid-0.03,
-		splitwiseExpense.AmountPaid+0.03,
-		splitwiseExpense.AmountPaid-1,
-		splitwiseExpense.Date.Add(-time.Hour*72),
-		splitwiseExpense.Date.Add(time.Hour*72),
-	).
+		sql.Named("amount", splitwiseExpense.AmountPaid),
+		sql.Named("date", splitwiseExpense.Date),
+	)
+
+	var allAccountActivities []*entities.AccountActivity
+	err := query.
 		Preload("SplitwiseExpenses.CardActivities").
 		Preload("SplitwiseExpenses.AccountActivities").
 		Find(&allAccountActivities).Error
