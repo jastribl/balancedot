@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"net/http"
+	"time"
 
 	"gihub.com/jastribl/balancedot/chase/models"
 	"gihub.com/jastribl/balancedot/entities"
@@ -104,6 +105,8 @@ func (m *App) UploadAccountActivities(w ResponseWriter, r *Request) WriterRespon
 
 func (m *App) getAllAccountActivitiesForSplitwiseExpense(
 	splitwiseExpense *entities.SplitwiseExpense,
+	daySpread int,
+	amountSpread float64,
 ) ([]*entities.AccountActivity, error) {
 	query := m.db
 	numExistingLinks := len(splitwiseExpense.AccountActivities)
@@ -120,21 +123,20 @@ func (m *App) getAllAccountActivitiesForSplitwiseExpense(
 	query = query.Where(
 		`
 			(
-				(-amount >= (@amount - 0.03) AND -amount <= (@amount + 0.03)) OR
-				(
-					posting_date BETWEEN
-						DATE(@date) - INTERVAL '3 DAY' AND DATE(@date) + INTERVAL '3 DAY'
-				)
+				(-amount BETWEEN @a1 AND @a2)
+					OR
+				(posting_date BETWEEN DATE(@d1) AND DATE(@d2))
 			)
 		`,
-		sql.Named("amount", splitwiseExpense.AmountPaid),
-		sql.Named("date", splitwiseExpense.Date),
+		sql.Named("a1", splitwiseExpense.AmountPaid-amountSpread),
+		sql.Named("a2", splitwiseExpense.AmountPaid+amountSpread),
+		sql.Named("d1", splitwiseExpense.Date.Add(-time.Hour*24*time.Duration(daySpread))),
+		sql.Named("d2", splitwiseExpense.Date.Add(time.Hour*24*time.Duration(daySpread))),
 	)
 
 	var allAccountActivities []*entities.AccountActivity
 	err := query.
-		Preload("SplitwiseExpenses.CardActivities").
-		Preload("SplitwiseExpenses.AccountActivities").
+		Preload("SplitwiseExpenses").
 		Find(&allAccountActivities).Error
 	if err != nil {
 		return nil, err

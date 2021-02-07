@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { postJSONWithHandling } from '../../utils/api'
@@ -16,8 +16,19 @@ const SplitwiseExpensePage = ({ match }) => {
 
     const [splitwiseExpense, setSplitwiseExpense] = useState(null)
     const [showDetailsSection, setShowDetailsSection] = useState(false)
+    const [linkingQuery, setLinkingQuery] = useState({})
     const [linking, setLinking] = useState(false)
     const [errorMessage, setErrorMessage] = useState(null)
+
+    const [amountSpread, setAmountSpread] = useState(3)
+    const [daySpread, setdaySpread] = useState(3)
+
+    useEffect(() => {
+        setLinkingQuery({
+            'amount_spread': amountSpread,
+            'day_spread': daySpread,
+        })
+    }, [amountSpread, daySpread])
 
     const handleLinking = (entity, action, uuid) =>
         postJSONWithHandling(
@@ -87,6 +98,7 @@ const SplitwiseExpensePage = ({ match }) => {
                 path={editMode ?
                     `/api/splitwise_expenses/${splitwiseExpenseUUID}/for_linking` :
                     `/api/splitwise_expenses/${splitwiseExpenseUUID}`}
+                queryParams={linkingQuery}
                 parentLoading={linking}
                 parentErrorMessage={errorMessage}
                 setData={setSplitwiseExpense}
@@ -99,7 +111,7 @@ const SplitwiseExpensePage = ({ match }) => {
             {accountActivitiesTable}
             <div><input
                 type='button'
-                value={(showDetailsSection ? 'Hide' : 'Show') + ' Details'}
+                value={(showDetailsSection ? 'Hide' : 'Show') + ' Raw Details'}
                 style={{ marginTop: 25 + 'px' }}
                 onClick={() => setShowDetailsSection(!showDetailsSection)}
             /></div>
@@ -112,9 +124,41 @@ const SplitwiseExpensePage = ({ match }) => {
                     style={{ marginTop: 25 + 'px' }}
                 />
             </Link>
+            <div className='row'>
+                <div className='col-25'>
+                    <label>Amount Spread</label>
+                </div>
+                <div className='col-75'>
+                    <input
+                        type={'number'}
+                        value={amountSpread}
+                        onChange={(event) => {
+                            setAmountSpread(event.target.value)
+                        }}
+                        placeholder={'Amount Spread (cents)...'}
+                    />
+                </div>
+            </div>
+                or...
+            <div className='row'>
+                <div className='col-25'>
+                    <label>Day Spread</label>
+                </div>
+                <div className='col-75'>
+                    <input
+                        type={'number'}
+                        value={daySpread}
+                        onChange={(event) => {
+                            setdaySpread(event.target.value)
+                        }}
+                        placeholder={'Day Spread...'}
+                    />
+                </div>
+            </div>
             <SplitwiseLinkingSection
                 splitwiseExpense={splitwiseExpense}
                 handleLinking={handleLinking}
+                setLinkingQuery={setLinkingQuery}
             />
         </div>
     )

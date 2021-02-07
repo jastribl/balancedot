@@ -5,7 +5,7 @@ import { formatAsDate, formatAsMoney } from '../../../utils/format'
 import AccountActivitiesTable from '../../tables/AccountActivitiesTable'
 import CardActivitiesTable from '../../tables/CardActivitiesTable'
 
-const SplitwiseLikingSection = ({ splitwiseExpense, handleLinking }) => {
+const SplitwiseLinkingSection = ({ splitwiseExpense, handleLinking }) => {
     if (splitwiseExpense === null) {
         return null
     }
@@ -137,4 +137,4 @@ const SplitwiseLikingSection = ({ splitwiseExpense, handleLinking }) => {
     return null
 }
 
-export default SplitwiseLikingSection
+export default SplitwiseLinkingSection

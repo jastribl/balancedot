@@ -397,6 +397,8 @@ func (m *App) UploadCardActivities(w ResponseWriter, r *Request) WriterResponse 
 
 func (m *App) getAllCardActivitiesForSplitwiseExpense(
 	splitwiseExpense *entities.SplitwiseExpense,
+	daySpread int,
+	amountSpread float64,
 ) ([]*entities.CardActivity, error) {
 	query := m.db
 	numExistingLinks := len(splitwiseExpense.CardActivities)
@@ -413,21 +415,20 @@ func (m *App) getAllCardActivitiesForSplitwiseExpense(
 	query = query.Where(
 		`
 			(
-				(-amount >= (@amount - 0.03) AND -amount <= (@amount + 0.03)) OR
-				(
-					transaction_date BETWEEN
-						DATE(@date) - INTERVAL '3 DAY' AND DATE(@date) + INTERVAL '3 DAY'
-				)
+				(-amount BETWEEN @a1 AND @a2)
+					OR
+				(transaction_date BETWEEN DATE(@d1) AND DATE(@d2))
 			)
 		`,
-		sql.Named("amount", splitwiseExpense.AmountPaid),
-		sql.Named("date", splitwiseExpense.Date),
+		sql.Named("a1", splitwiseExpense.AmountPaid-amountSpread),
+		sql.Named("a2", splitwiseExpense.AmountPaid+amountSpread),
+		sql.Named("d1", splitwiseExpense.Date.Add(-time.Hour*24*time.Duration(daySpread))),
+		sql.Named("d2", splitwiseExpense.Date.Add(time.Hour*24*time.Duration(daySpread))),
 	)
 
 	var allCardActivities []*entities.CardActivity
 	err := query.
-		Preload("SplitwiseExpenses.CardActivities").
-		Preload("SplitwiseExpenses.AccountActivities").
+		Preload("SplitwiseExpenses").
 		Find(&allCardActivities).Error
 	if err != nil {
 		return nil, err

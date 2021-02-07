@@ -110,12 +110,33 @@ func (m *App) GetSplitwiseExpenseByUUIDForLinking(w ResponseWriter, r *Request) 
 		return w.SendUnexpectedError(err)
 	}
 
-	allCardActivityLinks, err := m.getAllCardActivitiesForSplitwiseExpense(splitwiseExpense)
+	daySpread := r.GetQueryIntDefault("day_spread", 3)
+	amountSpreadCents := r.GetQueryIntDefault("amount_spread", 3)
+
+	if daySpread < 0 {
+		daySpread = 999999999999999999
+	}
+	var amountSpread float64
+	if amountSpreadCents < 0 {
+		amountSpread = 999999999999999999.99
+	} else {
+		amountSpread = float64(amountSpreadCents) / 100
+	}
+
+	allCardActivityLinks, err := m.getAllCardActivitiesForSplitwiseExpense(
+		splitwiseExpense,
+		daySpread,
+		amountSpread,
+	)
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}
 
-	allAccountActivityLinks, err := m.getAllAccountActivitiesForSplitwiseExpense(splitwiseExpense)
+	allAccountActivityLinks, err := m.getAllAccountActivitiesForSplitwiseExpense(
+		splitwiseExpense,
+		daySpread,
+		amountSpread,
+	)
 	if err != nil {
 		return w.SendUnexpectedError(err)
 	}
