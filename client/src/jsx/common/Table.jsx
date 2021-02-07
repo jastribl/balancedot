@@ -58,12 +58,12 @@ const Table = ({
     toRender = toRender.filter(row => {
         return !Object.keys(filters).some(filterKey => {
             const rawValue = filterKey in customRenders ? customRenders[filterKey](row) : row[filterKey]
-            const displayValue = ("" + rawValue).toLowerCase()
+            const displayValue = ('' + rawValue).toLowerCase()
             let searchTerm = filters[filterKey].toLowerCase()
             if (searchTerm.length === 0) {
                 return
             }
-            let isInverse = searchTerm.length > 1 && searchTerm.startsWith("!")
+            let isInverse = searchTerm.length > 1 && searchTerm.startsWith('!')
             if (isInverse) {
                 searchTerm = searchTerm.substring(1)
             }
@@ -90,11 +90,11 @@ const Table = ({
             {columns.map(key =>
                 <td key={key} >
                     <input
-                        type={"text"}
+                        type={'text'}
                         name={key}
                         value={filters[key]}
                         onChange={handleFilterChange}
-                        placeholder={"Filter for " + snakeToSentenceCase(key)}
+                        placeholder={'Filter for ' + snakeToSentenceCase(key)}
                     />
                 </td>
             )}
@@ -111,7 +111,7 @@ const Table = ({
                             <th
                                 key={key}
                                 onClick={() => onHeaderClick(key)}
-                            >{snakeToSentenceCase(key)}{(key === sortColumn ? (sortInverse ? " ↑" : " ↓") : "")}</th>
+                            >{snakeToSentenceCase(key)}{(key === sortColumn ? (sortInverse ? ' ↑' : ' ↓') : '')}</th>
                         )}
                     </tr>
                 </thead>

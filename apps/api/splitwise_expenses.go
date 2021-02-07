@@ -127,6 +127,21 @@ func (m *App) GetSplitwiseExpenseByUUIDForLinking(w ResponseWriter, r *Request) 
 	})
 }
 
+// GetRawSplitwiseExpense gets the raw splitwise expense from the API
+func (m *App) GetRawSplitwiseExpense(w ResponseWriter, r *Request) WriterResponse {
+	splitwiseClient, err := splitwise.NewClientForUser(&m.config.Splitwise)
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	res, err := splitwiseClient.GetRawExpense(r.GetParams()["splitwiseExpenseID"])
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+
+	return w.SendResponse(res)
+}
+
 // GetAllSplitwiseExpenses gets all the SplitwiseExpenses
 func (m *App) GetAllSplitwiseExpenses(w ResponseWriter, r *Request) WriterResponse {
 	return m.genericGetAll(

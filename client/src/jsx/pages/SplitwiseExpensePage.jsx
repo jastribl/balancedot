@@ -6,6 +6,7 @@ import LoaderComponent from '../common/LoaderComponent'
 import AccountActivitiesTable from '../tables/AccountActivitiesTable'
 import CardActivitiesTable from '../tables/CardActivitiesTable'
 import SplitwiseExpenseTable from '../tables/SplitwiseExpenseTable'
+import SplitwiseDetailSection from './sections/SplitwiseDetailSection'
 import SplitwiseLinkingSection from './sections/SplitwiseLinkingSection'
 
 const SplitwiseExpensePage = ({ match }) => {
@@ -14,6 +15,7 @@ const SplitwiseExpensePage = ({ match }) => {
     const splitwiseExpenseUUID = match.params.splitwiseExpenseUUID
 
     const [splitwiseExpense, setSplitwiseExpense] = useState(null)
+    const [showDetailsSection, setShowDetailsSection] = useState(false)
     const [linking, setLinking] = useState(false)
     const [errorMessage, setErrorMessage] = useState(null)
 
@@ -72,6 +74,12 @@ const SplitwiseExpensePage = ({ match }) => {
         </div>
     }
 
+    let detailsSection = null
+    if (showDetailsSection) {
+        detailsSection =
+            <SplitwiseDetailSection splitwiseExpenseID={splitwiseExpense?.splitwise_id} />
+    }
+
     return (
         <div>
             <h1>Splitwise Expense {splitwiseExpenseUUID}</h1>
@@ -89,6 +97,13 @@ const SplitwiseExpensePage = ({ match }) => {
             />
             {cardActivitiesTable}
             {accountActivitiesTable}
+            <div><input
+                type='button'
+                value={(showDetailsSection ? 'Hide' : 'Show') + ' Details'}
+                style={{ marginTop: 25 + 'px' }}
+                onClick={() => setShowDetailsSection(!showDetailsSection)}
+            /></div>
+            {detailsSection}
 
             <Link to={`/splitwise_expenses/${splitwiseExpenseUUID}` + (editMode ? '/' : '/edit')}>
                 <input
