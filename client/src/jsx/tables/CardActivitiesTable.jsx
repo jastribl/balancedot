@@ -33,7 +33,10 @@ const CardActivitiesTable = ({ initialSortColumn, ...props }) => {
                     const sum = splitwiseExpenses
                         .map(d => d.amount_paid)
                         .reduce((a, b) => a + b, 0)
-                    return `${num} (${sum})`
+                        .toFixed(2)
+                    return <div style={{
+                        color: (Math.abs(Math.abs(sum) - Math.abs(data['amount'])) < 0.03 ? 'green' : 'red')
+                    }}>{`${num} (${sum})`}</div>
                 } else if (num === undefined) {
                     return 'Not loaded...'
                 }

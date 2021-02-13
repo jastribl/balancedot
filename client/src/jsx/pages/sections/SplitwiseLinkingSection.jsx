@@ -47,7 +47,7 @@ const SplitwiseLinkingSection = ({ splitwiseExpense, handleLinking }) => {
         const averageDateDiff = (transactionDateDiff + postDateDiff) / 2
         const moneyDiffCents = getMoneyDiffCents(data['amount'], splitwiseExpense['amount_paid'])
 
-        return Math.max(moneyDiffCents, 5) + Math.max(averageDateDiff, 3)
+        return Math.min(moneyDiffCents, 5) + Math.min(averageDateDiff, 3)
         // return averageDateDiff + Math.floor((moneyDiffCents * 1.0) / 5)
     }
 
@@ -68,7 +68,6 @@ const SplitwiseLinkingSection = ({ splitwiseExpense, handleLinking }) => {
                 <h3>Card Activity Links</h3>
                 <CardActivitiesTable
                     data={splitwiseExpense.card_activity_links}
-                    hideFilters={true}
                     extraColumns={['diff', 'link']}
                     extraCustomRenders={{
                         'transaction_date': (data) => <div style={
@@ -100,7 +99,6 @@ const SplitwiseLinkingSection = ({ splitwiseExpense, handleLinking }) => {
                 <h3>Account Activity Links</h3>
                 <AccountActivitiesTable
                     data={splitwiseExpense.account_activity_links}
-                    hideFilters={true}
                     extraColumns={['diff', 'link']}
                     extraCustomRenders={{
                         'posting_date': (data) => <div style={
