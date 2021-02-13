@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/gocarina/gocsv"
@@ -31,6 +32,18 @@ func NewRequest(r *http.Request) *Request {
 // GetParams get the params from the mux request
 func (m *Request) GetParams() map[string]string {
 	return mux.Vars(m.Request)
+}
+
+// GetQueryIntDefault gets a query item as an int or default if not available or error
+func (m *Request) GetQueryIntDefault(key string, def int) int {
+	s := m.URL.Query()[key]
+	if len(s) == 0 {
+		return def
+	}
+	if i, err := strconv.Atoi(s[0]); err == nil {
+		return i
+	}
+	return def
 }
 
 // DecodeParams decodes the request body into the params structure

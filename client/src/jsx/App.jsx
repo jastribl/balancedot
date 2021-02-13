@@ -32,7 +32,9 @@ const App = () => (
                     <Route path='/cards/:cardUUID/activities' component={CardActivitiesPage} exact />
                     <Route path='/cards/:cardUUID/activities/:cardActivityUUID' component={CardActivityPage} />
                     <Route path='/splitwise_expenses' component={SplitwiseExpensesPage} exact />
-                    <Route path='/splitwise_expenses/:splitwiseExpenseUUID' component={SplitwiseExpensePage} />
+                    <Route path='/splitwise_expenses/unlinked' component={SplitwiseExpensesPage} exact />
+                    <Route path='/splitwise_expenses/:splitwiseExpenseUUID' component={SplitwiseExpensePage} exact />
+                    <Route path='/splitwise_expenses/:splitwiseExpenseUUID/edit' component={SplitwiseExpensePage} exact />
                     <Route path='/oauth_callback' component={OauthCallbackPage} />
                     <Route component={ErrorPage} />
                 </Switch>

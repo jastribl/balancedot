@@ -5,7 +5,10 @@ import { formatAsDate, formatAsMoney } from '../../utils/format'
 import { dateComparator } from '../../utils/sorting'
 import ExtendableTable from './ExtendableTable'
 
-const AccountActivitiesTable = (props) => {
+const AccountActivitiesTable = ({ initialSortColumn, ...props }) => {
+    if (initialSortColumn === undefined && initialSortColumn !== null) {
+        initialSortColumn = 'posting_date'
+    }
     return <ExtendableTable
         columns={[
             'uuid',
@@ -23,17 +26,22 @@ const AccountActivitiesTable = (props) => {
             'amount': (data) => formatAsMoney(data['amount']),
             'splitwise_expense_count': (data) => {
                 const splitwiseExpenses = data['splitwise_expenses']
-                const num = splitwiseExpenses.length
+                const num = splitwiseExpenses?.length
                 if (num > 0) {
                     const sum = splitwiseExpenses
                         .map(d => d.amount_paid)
                         .reduce((a, b) => a + b, 0)
-                    return `${num} (${sum})`
+                        .toFixed(2)
+                    return <div style={{
+                        color: (Math.abs(Math.abs(sum) - Math.abs(data['amount'])) < 0.03 ? 'green' : 'red')
+                    }}>{`${num} (${sum})`}</div>
+                } else if (num === undefined) {
+                    return 'Not loaded...'
                 }
                 return ''
             },
         }}
-        initialSortColumn='posting_date'
+        initialSortColumn={initialSortColumn}
         customSortComparators={{
             'posting_date': dateComparator
         }}

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -396,31 +397,43 @@ func (m *App) UploadCardActivities(w ResponseWriter, r *Request) WriterResponse 
 
 func (m *App) getAllCardActivitiesForSplitwiseExpense(
 	splitwiseExpense *entities.SplitwiseExpense,
+	daySpread int,
+	amountSpread float64,
 ) ([]*entities.CardActivity, error) {
-	exisitngCardActivityUUIDs := make([]string, len(splitwiseExpense.CardActivities))
-	for i, cardActivity := range splitwiseExpense.CardActivities {
-		exisitngCardActivityUUIDs[i] = cardActivity.UUID.String()
+	query := m.db
+	numExistingLinks := len(splitwiseExpense.CardActivities)
+	if numExistingLinks > 0 {
+		exisitngCardActivityUUIDs := make([]string, numExistingLinks)
+		for i, cardActivity := range splitwiseExpense.CardActivities {
+			exisitngCardActivityUUIDs[i] = cardActivity.UUID.String()
+		}
+		query = query.Where(
+			"uuid NOT IN @existing_links",
+			sql.Named("existing_links", exisitngCardActivityUUIDs),
+		)
 	}
-	var allCardActivities []*entities.CardActivity
-	err := m.db.Not(exisitngCardActivityUUIDs).Where(
+	query = query.Where(
 		`
-			(amount = ?) OR
-			(-amount >= (?) AND -amount <= (?)) OR
-			(-amount >= (?) AND transaction_date BETWEEN (?) AND (?))
+			(
+				(-amount BETWEEN @a1 AND @a2)
+					OR
+				(transaction_date BETWEEN DATE(@d1) AND DATE(@d2))
+			)
 		`,
-		-splitwiseExpense.AmountPaid,
-		splitwiseExpense.AmountPaid-0.03,
-		splitwiseExpense.AmountPaid+0.03,
-		splitwiseExpense.AmountPaid-1,
-		splitwiseExpense.Date.Add(-time.Hour*72),
-		splitwiseExpense.Date.Add(time.Hour*72),
-	).
-		Preload("SplitwiseExpenses.CardActivities").
-		Preload("SplitwiseExpenses.AccountActivities").
+		sql.Named("a1", splitwiseExpense.AmountPaid-amountSpread),
+		sql.Named("a2", splitwiseExpense.AmountPaid+amountSpread),
+		sql.Named("d1", splitwiseExpense.Date.Add(-time.Hour*24*time.Duration(daySpread))),
+		sql.Named("d2", splitwiseExpense.Date.Add(time.Hour*24*time.Duration(daySpread))),
+	)
+
+	var allCardActivities []*entities.CardActivity
+	err := query.
+		Preload("SplitwiseExpenses").
 		Find(&allCardActivities).Error
 	if err != nil {
 		return nil, err
 	}
+
 	return allCardActivities, nil
 }
 

@@ -22,7 +22,7 @@ const CardActivityPage = ({ match }) => {
     return (
         <div>
             <h1>Card Activity {cardActivityUUID}</h1>
-            <h2>For card {card ? (card.last_four + " (" + card.description + ")") : null}</h2>
+            <h2>For card {card ? (`${card.last_four} (${card.description})`) : null}</h2>
             <LoaderComponent
                 path={`/api/card_activities/${cardActivityUUID}`}
                 parentLoading={false}

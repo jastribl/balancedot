@@ -16,5 +16,5 @@ export function formatAsDate(date) {
     if (date !== null) {
         return Moment.utc(date).format('YYYY-MM-DD')
     }
-    return "????-??-??"
+    return '????-??-??'
 }

@@ -33,7 +33,10 @@ const SplitwiseExpenseTable = (props) => {
                     const sum = cardActivities
                         .map(d => -d.amount)
                         .reduce((a, b) => a + b, 0)
-                    return `${num} (${sum})`
+                        .toFixed(2)
+                    return <div style={{
+                        color: (Math.abs(Math.abs(sum) - Math.abs(data['amount_paid'])) < 0.03 ? 'green' : 'red')
+                    }}>{`${num} (${sum})`}</div>
                 }
                 return ''
             },
@@ -44,7 +47,10 @@ const SplitwiseExpenseTable = (props) => {
                     const sum = accountActivities
                         .map(d => -d.amount)
                         .reduce((a, b) => a + b, 0)
-                    return `${num} (${sum})`
+                        .toFixed(2)
+                    return <div style={{
+                        color: (Math.abs(Math.abs(sum) - Math.abs(data['amount_paid'])) < 0.03 ? 'green' : 'red')
+                    }}>{`${num} (${sum})`}</div>
                 }
                 return ''
             },

@@ -11,6 +11,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const (
+	getExpensesURL = "https://secure.splitwise.com/api/v3.0/get_expenses"
+	getExpenseURL  = "https://secure.splitwise.com/api/v3.0/get_expense/%s"
+)
+
 // Client holds all things for Splitwise requests
 type Client struct {
 	httpClient *http.Client
@@ -78,4 +83,37 @@ func getAuthConfig(cfg *config.Config) *oauth2.Config {
 		},
 		RedirectURL: cfg.OAuthCallbackURL,
 	}
+}
+
+func buildURLWithParams(url string, params map[string]string) (string, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	// If we have any parameters, add them here.
+	if len(params) > 0 {
+		query := req.URL.Query()
+		for k, v := range params {
+			query.Add(k, v)
+		}
+		req.URL.RawQuery = query.Encode()
+	}
+	return req.URL.String(), nil
+}
+
+func (c *Client) getURLWithParams(url string, params map[string]string) (*http.Response, error) {
+	url, err := buildURLWithParams(getExpensesURL, params)
+	if err != nil {
+		return nil, err
+	}
+	return c.httpClient.Get(url)
+}
+
+func (c *Client) getURLWithoutParams(url string) (*http.Response, error) {
+	url, err := buildURLWithParams(url, map[string]string{})
+	if err != nil {
+		return nil, err
+	}
+	return c.httpClient.Get(url)
 }

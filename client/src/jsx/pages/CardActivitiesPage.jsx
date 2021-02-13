@@ -33,7 +33,7 @@ const CardActivitiesPage = ({ match }) => {
 
     return (
         <div>
-            <h1>Card Activities for {card ? (card.last_four + " (" + card.description + ")") : null}</h1>
+            <h1>Card Activities for {card ? (`${card.last_four} (${card.description})`) : null}</h1>
             <input type='button' onClick={showModal} value='Upload Activities' style={{ marginBottom: 25 + 'px' }} />
             <LoaderComponent
                 path={`/api/cards/${cardUUID}`}
