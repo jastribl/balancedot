@@ -1,21 +1,34 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import { postJSONWithHandling } from '../../utils/api'
-import { formatAsDate, formatAsMoney } from '../../utils/format'
 import LoaderComponent from '../common/LoaderComponent'
 import AccountActivitiesTable from '../tables/AccountActivitiesTable'
 import CardActivitiesTable from '../tables/CardActivitiesTable'
 import SplitwiseExpenseTable from '../tables/SplitwiseExpenseTable'
+import SplitwiseDetailSection from './sections/SplitwiseDetailSection'
+import SplitwiseLinkingSection from './sections/SplitwiseLinkingSection'
 
 const SplitwiseExpensePage = ({ match }) => {
+    const editMode = match.path.endsWith('/edit')
+
     const splitwiseExpenseUUID = match.params.splitwiseExpenseUUID
 
     const [splitwiseExpense, setSplitwiseExpense] = useState(null)
+    const [showDetailsSection, setShowDetailsSection] = useState(false)
+    const [linkingQuery, setLinkingQuery] = useState({})
     const [linking, setLinking] = useState(false)
     const [errorMessage, setErrorMessage] = useState(null)
-    const [editMode, setEditMode] = useState(false)
 
-    const handleEditToggle = () => setEditMode(!editMode)
+    const [amountSpread, setAmountSpread] = useState(3)
+    const [daySpread, setdaySpread] = useState(3)
+
+    useEffect(() => {
+        setLinkingQuery({
+            'amount_spread': amountSpread,
+            'day_spread': daySpread,
+        })
+    }, [amountSpread, daySpread])
 
     const handleLinking = (entity, action, uuid) =>
         postJSONWithHandling(
@@ -72,72 +85,11 @@ const SplitwiseExpensePage = ({ match }) => {
         </div>
     }
 
-    let linksDiv = null
-    if (splitwiseExpense !== null && (
-        splitwiseExpense.card_activity_links || splitwiseExpense.account_activity_links
-    )) {
-        let cardLinksDiv = null
-        if (splitwiseExpense.card_activity_links?.length > 0) {
-            cardLinksDiv = <div>
-                <h3>Card Activity Links</h3>
-                <CardActivitiesTable
-                    data={splitwiseExpense.card_activity_links}
-                    hideFilters={true}
-                    extraColumns={['link']}
-                    extraCustomRenders={{
-                        'transaction_date': (data) => <div style={{
-                            color: formatAsDate(data['transaction_date']) === formatAsDate(splitwiseExpense['date']) ? 'green' : null
-                        }}>{formatAsDate(data['transaction_date'])}</div>,
-                        'post_date': (data) => <div style={{
-                            color: formatAsDate(data['post_date']) === formatAsDate(splitwiseExpense['date']) ? 'green' : null
-                        }}>{formatAsDate(data['post_date'])}</div>,
-                        'amount': (data) => <div style={{
-                            color: Math.abs(data['amount']) === Math.abs(splitwiseExpense['amount_paid']) ? 'green' : null
-                        }}>{formatAsMoney(data['amount'])}</div>,
-                        'link': (data) => <input
-                            type='button'
-                            onClick={() => handleLinking('card_activities', 'link', data['uuid'])}
-                            value='Link'
-                        />,
-                    }}
-                />
-            </div>
-        }
-        let accountLinksDiv = null
-        if (splitwiseExpense.account_activity_links?.length > 0) {
-            accountLinksDiv = <div>
-                <h3>Account Activity Links</h3>
-                <AccountActivitiesTable
-                    data={splitwiseExpense.account_activity_links}
-                    hideFilters={true}
-                    extraColumns={['link']}
-                    extraCustomRenders={{
-                        'posting_date': (data) => <div style={{
-                            color: formatAsDate(data['posting_date']) === formatAsDate(splitwiseExpense['date']) ? 'green' : null
-                        }}>{formatAsDate(data['posting_date'])}</div>,
-                        'amount': (data) => <div style={{
-                            color: Math.abs(data['amount']) === Math.abs(splitwiseExpense['amount_paid']) ? 'green' : null
-                        }}>{formatAsMoney(data['amount'])}</div>,
-                        'link': (data) => <input
-                            type='button'
-                            onClick={() => handleLinking('account_activities', 'link', data['uuid'])}
-                            value='Link'
-                        />
-                    }}
-                />
-            </div>
-        }
-        if (cardLinksDiv !== null || accountLinksDiv !== null) {
-            linksDiv = <div>
-                <h2>Possible Links</h2>
-                {cardLinksDiv}
-                {accountLinksDiv}
-            </div>
-        } else {
-            linksDiv = <h2>No Links Found ;(</h2>
-        }
+    let detailsSection = null
+    if (showDetailsSection) {
+        detailsSection =
+            <SplitwiseDetailSection splitwiseExpenseID={splitwiseExpense?.splitwise_id} />
     }
-
 
     return (
         <div>
@@ -146,6 +98,7 @@ const SplitwiseExpensePage = ({ match }) => {
                 path={editMode ?
                     `/api/splitwise_expenses/${splitwiseExpenseUUID}/for_linking` :
                     `/api/splitwise_expenses/${splitwiseExpenseUUID}`}
+                queryParams={linkingQuery}
                 parentLoading={linking}
                 parentErrorMessage={errorMessage}
                 setData={setSplitwiseExpense}
@@ -156,14 +109,57 @@ const SplitwiseExpensePage = ({ match }) => {
             />
             {cardActivitiesTable}
             {accountActivitiesTable}
-
-            <input
+            <div><input
                 type='button'
-                onClick={handleEditToggle}
-                value={editMode ? 'View' : 'Edit'}
+                value={(showDetailsSection ? 'Hide' : 'Show') + ' Raw Details'}
                 style={{ marginTop: 25 + 'px' }}
+                onClick={() => setShowDetailsSection(!showDetailsSection)}
+            /></div>
+            {detailsSection}
+
+            <Link to={`/splitwise_expenses/${splitwiseExpenseUUID}` + (editMode ? '/' : '/edit')}>
+                <input
+                    type='button'
+                    value={editMode ? 'View' : 'Edit'}
+                    style={{ marginTop: 25 + 'px' }}
+                />
+            </Link>
+            <div className='row'>
+                <div className='col-25'>
+                    <label>Amount Spread</label>
+                </div>
+                <div className='col-75'>
+                    <input
+                        type={'number'}
+                        value={amountSpread}
+                        onChange={(event) => {
+                            setAmountSpread(event.target.value)
+                        }}
+                        placeholder={'Amount Spread (cents)...'}
+                    />
+                </div>
+            </div>
+                or...
+            <div className='row'>
+                <div className='col-25'>
+                    <label>Day Spread</label>
+                </div>
+                <div className='col-75'>
+                    <input
+                        type={'number'}
+                        value={daySpread}
+                        onChange={(event) => {
+                            setdaySpread(event.target.value)
+                        }}
+                        placeholder={'Day Spread...'}
+                    />
+                </div>
+            </div>
+            <SplitwiseLinkingSection
+                splitwiseExpense={splitwiseExpense}
+                handleLinking={handleLinking}
+                setLinkingQuery={setLinkingQuery}
             />
-            {linksDiv}
         </div>
     )
 }

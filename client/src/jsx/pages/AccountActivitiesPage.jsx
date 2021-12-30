@@ -31,7 +31,7 @@ const AccountActivitiesPage = ({ match }) => {
 
     return (
         <div>
-            <h1>Account Activities for {account ? (account.last_four + " (" + account.description + ")") : null}</h1>
+            <h1>Account Activities for {account ? (`${account.last_four} (${account.description})`) : null}</h1>
             <input type='button' onClick={showModal} value='Upload Activities' style={{ marginBottom: 25 + 'px' }} />
             <LoaderComponent
                 path={`/api/accounts/${accountUUID}`}

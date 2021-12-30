@@ -60,6 +60,10 @@ func main() {
 		api.Handler(apiApp.GetSplitwiseExpenseByUUIDForLinking),
 	).Methods("GET")
 	mainRouter.Handle(
+		"/api/splitwise_expenses/{splitwiseExpenseID}/raw",
+		api.Handler(apiApp.GetRawSplitwiseExpense),
+	).Methods("GET")
+	mainRouter.Handle(
 		"/api/splitwise_expenses",
 		api.Handler(apiApp.GetAllSplitwiseExpenses),
 	).Methods("GET")

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react'
 
-import { getWithHandling } from '../../utils/api'
+import { getWithParamsWithHandling } from '../../utils/api'
 import ErrorRow from './ErrorRow'
 import Spinner from './Spinner'
 
 const LoaderComponent = ({
     path,
+    queryParams,
     parentLoading,
     parentErrorMessage,
     setData,
@@ -18,8 +19,9 @@ const LoaderComponent = ({
 
     useEffect(() => {
         if (!parentLoading) {
-            getWithHandling(
+            getWithParamsWithHandling(
                 path,
+                queryParams ?? {},
                 setData,
                 setErrorMessage,
                 setLoading
@@ -27,6 +29,7 @@ const LoaderComponent = ({
         }
     }, [
         path,
+        queryParams,
         parentLoading,
         parentErrorMessage,
     ])

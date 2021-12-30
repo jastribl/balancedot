@@ -1,18 +1,17 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import { postJSON } from '../../utils/api'
 import LoaderComponent from '../common/LoaderComponent'
-import Toggle from '../common/Toggle'
 import SplitwiseLoginCheck from '../SplitwiseLoginCheck'
 import SplitwiseExpenseTable from '../tables/SplitwiseExpenseTable'
 
-const SplitwiseExpensesPage = () => {
-    const [unlinkedOnly, setUnlinkedOnly] = useState(false)
+const SplitwiseExpensesPage = ({ match }) => {
+    const unlinkedOnly = match.path.endsWith('/unlinked')
+
     const [splitwiseExpenses, setSplitwiseExpenses] = useState(null)
     const [refreshingSplitwise, setRefreshingSplitwise] = useState(false)
     const [rawRefreshResponse, setRawRefreshResponse] = useState(null)
-
-    const handleUnlinkedToggle = () => setUnlinkedOnly(!unlinkedOnly)
 
     const handleRefreshExpenses = () => {
         setRefreshingSplitwise(true)
@@ -52,9 +51,24 @@ const SplitwiseExpensesPage = () => {
                     style={{ marginBottom: 25 + 'px' }}
                 />
                 {refreshResponseRender}
-                <div>Unlinked Only: <Toggle onToggle={handleUnlinkedToggle} /></div>
+
+                <div>Showing {unlinkedOnly ? 'Unlinked Expenses' : 'All'}</div>
+                <div>
+                    <Link to={`/splitwise_expenses` + (unlinkedOnly ? '/' : '/unlinked')}>
+                        <input
+                            type='button'
+                            value={unlinkedOnly ? 'View All' : 'View Unlinked'}
+                            style={{ marginTop: 25 + 'px', marginBottom: 25 + 'px' }}
+                        />
+                    </Link>
+                </div>
+
                 <SplitwiseExpenseTable
                     data={splitwiseExpenses}
+                    extraColumns={['link']}
+                    extraCustomRenders={{
+                        'link': (data) => <Link to={`/splitwise_expenses/${data['uuid']}/edit`}>Edit Links</Link>,
+                    }}
                 />
             </SplitwiseLoginCheck>
         </div>

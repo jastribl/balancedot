@@ -4,12 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 
 	"gihub.com/jastribl/balancedot/splitwise/models"
 )
-
-const getExpensesURL = "https://secure.splitwise.com/api/v3.0/get_expenses"
 
 // GetExpenses fetches all expenses for the currently logged in user
 func (c *Client) GetExpenses() (*[]*models.Expense, error) {
@@ -25,11 +22,7 @@ func (c *Client) GetExpenses() (*[]*models.Expense, error) {
 			"limit":  fmt.Sprintf("%v", 100),
 		}
 
-		url, err := buildURLWithParams(getExpensesURL, params)
-		if err != nil {
-			return nil, err
-		}
-		resp, err := c.httpClient.Get(url)
+		resp, err := c.getURLWithParams(getExpensesURL, params)
 		if err != nil {
 			return nil, err
 		}
@@ -49,21 +42,4 @@ func (c *Client) GetExpenses() (*[]*models.Expense, error) {
 		offset += numNewExpenses
 	}
 	return &allExpenses, nil
-}
-
-func buildURLWithParams(url string, params map[string]string) (string, error) {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return "", err
-	}
-
-	// If we have any parameters, add them here.
-	if len(params) > 0 {
-		query := req.URL.Query()
-		for k, v := range params {
-			query.Add(k, v)
-		}
-		req.URL.RawQuery = query.Encode()
-	}
-	return req.URL.String(), nil
 }

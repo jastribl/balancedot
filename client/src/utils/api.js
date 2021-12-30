@@ -43,10 +43,18 @@ export function get(path) {
     )
 }
 
-export function getWithHandling(path, setResponse, setErrorMessage, setLoading) {
+
+export function getWithParamsWithHandling(path, params, setResponse, setErrorMessage, setLoading) {
     setLoading(true)
-    return get(path)
+    const queryParams = Object.keys(params)
+        .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k]))
+        .join('&')
+    return get(`${path}?${queryParams}`)
         .then(response => setResponse(response))
         .catch(e => setErrorMessage(e.message))
         .finally(() => setLoading(false))
+}
+
+export function getWithHandling(path, setResponse, setErrorMessage, setLoading) {
+    return getWithParamsWithHandling(path, {}, setResponse, setErrorMessage, setLoading)
 }
