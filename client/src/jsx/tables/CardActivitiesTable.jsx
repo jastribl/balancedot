@@ -62,6 +62,7 @@ const CardActivitiesTable = ({ initialSortColumn, ...props }) => {
             },
         }}
         initialSortColumn={initialSortColumn}
+        initialSortInverse
         customSortComparators={{
             'transaction_date': dateComparator,
             'post_date': dateComparator,

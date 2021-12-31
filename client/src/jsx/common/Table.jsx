@@ -31,7 +31,6 @@ const Table = ({
     })
     const [filters, setFilters] = useState(initialFilters)
 
-
     const onHeaderClick = (header_name) => {
         if (sortInverse) {
             setSortColumn(null)

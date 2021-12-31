@@ -60,6 +60,7 @@ const AccountActivitiesTable = ({ initialSortColumn, ...props }) => {
             },
         }}
         initialSortColumn={initialSortColumn}
+        initialSortInverse
         customSortComparators={{
             'posting_date': dateComparator
         }}
