@@ -139,7 +139,7 @@ const SplitwiseExpensePage = ({ match }) => {
                     />
                 </div>
             </div>
-                or...
+            or...
             <div className='row'>
                 <div className='col-25'>
                     <label>Day Spread</label>
