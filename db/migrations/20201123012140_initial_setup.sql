@@ -94,6 +94,14 @@ CREATE TABLE IF NOT EXISTS splitwise_links (
     PRIMARY KEY(splitwise_expense_uuid, linked_splitwise_expense_uuid)
 );
 
+CREATE TABLE IF NOT EXISTS account_card_links (
+  card_activity_uuid     UUID NOT NULL REFERENCES card_activities(uuid),
+  account_activity_uuid  UUID NOT NULL REFERENCES account_activities(uuid),
+
+  CONSTRAINT fk_card_activity_account_activity
+    PRIMARY KEY(card_activity_uuid, account_activity_uuid)
+);
+
 -- Example data
 -- TODO: remove eventually
 INSERT INTO accounts (last_four, description) VALUES (3682, 'Chase Chequing Account');

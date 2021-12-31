@@ -30,7 +30,6 @@ const CardActivitiesPage = ({ match }) => {
             .finally(() => setUploading(false))
     }
 
-
     return (
         <div>
             <h1>Card Activities for {card ? (`${card.last_four} (${card.description})`) : null}</h1>

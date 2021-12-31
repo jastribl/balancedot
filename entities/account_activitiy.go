@@ -17,4 +17,5 @@ type AccountActivity struct {
 	Amount            float64             `json:"amount"`
 	Type              string              `json:"type"`
 	SplitwiseExpenses []*SplitwiseExpense `json:"splitwise_expenses" gorm:"many2many:account_activity_links;"`
+	CardActivites     []*CardActivity     `json:"card_activities" gorm:"many2many:account_card_links;"`
 }
