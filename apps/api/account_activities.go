@@ -18,6 +18,7 @@ func (m *App) GetAccountActivityByUUID(w ResponseWriter, r *Request) WriterRespo
 		w, r,
 		m.db.
 			Preload("Account").
+			Preload("CardActivites").
 			Preload("SplitwiseExpenses.CardActivities").
 			Preload("SplitwiseExpenses.AccountActivities"),
 		&entities.AccountActivity{},

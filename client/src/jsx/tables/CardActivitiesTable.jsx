@@ -19,6 +19,7 @@ const CardActivitiesTable = ({ initialSortColumn, ...props }) => {
             'type',
             'amount',
             'splitwise_expense_count',
+            'account_activities_count',
         ]}
         customRenders={{
             'uuid': (data) =>
@@ -31,6 +32,23 @@ const CardActivitiesTable = ({ initialSortColumn, ...props }) => {
                 const num = splitwiseExpenses?.length
                 if (num > 0) {
                     const sum = splitwiseExpenses
+                        .map(d => d.amount_paid)
+                        .reduce((a, b) => a + b, 0)
+                        .toFixed(2)
+                    return <div style={{
+                        color: (Math.abs(Math.abs(sum) - Math.abs(data['amount'])) < 0.03 ? 'green' : 'red')
+                    }}>{`${num} (${sum})`}</div>
+                } else if (num === undefined) {
+                    return 'Not loaded...'
+                }
+                return ''
+            },
+            'account_activities_count': (data) => {
+                const accountActivities = data['account_activities']
+                // todo: check this adding here
+                const num = accountActivities?.length
+                if (num > 0) {
+                    const sum = accountActivities
                         .map(d => d.amount_paid)
                         .reduce((a, b) => a + b, 0)
                         .toFixed(2)
