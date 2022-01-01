@@ -77,7 +77,7 @@ func (m *App) UploadAccountActivities(w ResponseWriter, r *Request) WriterRespon
 	newAccountActivities := make([]*entities.AccountActivity, len(accountActivities))
 	success := helpers.NewTransaction(m.db, func(tx *gorm.DB) helpers.TransactionAction {
 		for i, accountActivity := range accountActivities {
-			newAccountActivity := accountActivity.ToAccountActivitiyEntity(&account)
+			newAccountActivity := accountActivity.ToAccountActivityEntity(&account)
 			exists, err := helpers.RowExists(tx, &entities.AccountActivity{}, newAccountActivity)
 			if err != nil {
 				w.SendUnexpectedError(err)
@@ -146,7 +146,7 @@ func (m *App) getAllAccountActivitiesForSplitwiseExpense(
 	return allAccountActivities, nil
 }
 
-// LinkAccountActivityToSplitwiseExpense links a account activitiy to a splitwise expense
+// LinkAccountActivityToSplitwiseExpense links a account activity to a splitwise expense
 func (m *App) LinkAccountActivityToSplitwiseExpense(w ResponseWriter, r *Request) WriterResponse {
 	err := m.db.Exec(`
 			INSERT INTO account_activity_links (
@@ -165,11 +165,11 @@ func (m *App) LinkAccountActivityToSplitwiseExpense(w ResponseWriter, r *Request
 	return w.SendSimpleMessage("success")
 }
 
-// UnLinkAccountActivityToSplitwiseExpense links a account activitiy to a splitwise expense
+// UnLinkAccountActivityToSplitwiseExpense links a account activity to a splitwise expense
 func (m *App) UnLinkAccountActivityToSplitwiseExpense(w ResponseWriter, r *Request) WriterResponse {
 	err := m.db.Exec(`
 			DELETE FROM
-			account_activity_links
+				account_activity_links
 			WHERE
 				account_activity_uuid = ? AND
 				splitwise_expense_uuid = ?

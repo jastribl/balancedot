@@ -6,7 +6,7 @@ import (
 
 // AccountActivity is the interface for account activities
 type AccountActivity interface {
-	ToAccountActivitiyEntity(account *entities.Account) *entities.AccountActivity
+	ToAccountActivityEntity(account *entities.Account) *entities.AccountActivity
 }
 
 // ChaseAccountActivity holds line items from the Chase Chequing Account Activity Report file
@@ -20,8 +20,8 @@ type ChaseAccountActivity struct {
 	CheckOrSlipNumber string      `csv:"Check or Slip #"`
 }
 
-// ToAccountActivitiyEntity converts to an AccountActivity entity
-func (m *ChaseAccountActivity) ToAccountActivitiyEntity(account *entities.Account) *entities.AccountActivity {
+// ToAccountActivityEntity converts to an AccountActivity entity
+func (m *ChaseAccountActivity) ToAccountActivityEntity(account *entities.Account) *entities.AccountActivity {
 	return &entities.AccountActivity{
 		AccountUUID: account.UUID,
 		Details:     m.Details,
@@ -51,8 +51,8 @@ type BofAAccountActivity struct {
 	RunningBalance MoneyAmount `csv:"Running Bal."`
 }
 
-// ToAccountActivitiyEntity converts to an AccountActivity entity
-func (m *BofAAccountActivity) ToAccountActivitiyEntity(account *entities.Account) *entities.AccountActivity {
+// ToAccountActivityEntity converts to an AccountActivity entity
+func (m *BofAAccountActivity) ToAccountActivityEntity(account *entities.Account) *entities.AccountActivity {
 	return &entities.AccountActivity{
 		AccountUUID: account.UUID,
 		PostingDate: m.Date.Time,

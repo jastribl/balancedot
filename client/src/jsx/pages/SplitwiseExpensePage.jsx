@@ -32,7 +32,7 @@ const SplitwiseExpensePage = ({ match }) => {
 
     const handleLinking = (entity, action, uuid) =>
         postJSONWithHandling(
-            `/api/${entity}/${uuid}/${action}/${splitwiseExpenseUUID}`,
+            `/api/${entity}/${uuid}/${action}_splitwise/${splitwiseExpenseUUID}`,
             setErrorMessage,
             setLinking,
         )

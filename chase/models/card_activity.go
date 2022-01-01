@@ -8,8 +8,8 @@ import (
 
 // CardActivity is the interface for card activities
 type CardActivity interface {
-	ToCardActivitiyEntity(card *entities.Card) *entities.CardActivity
-	ToCardActivitiyUniqueMatcher(card *entities.Card) *entities.CardActivity
+	ToCardActivityEntity(card *entities.Card) *entities.CardActivity
+	ToCardActivityUniqueMatcher(card *entities.Card) *entities.CardActivity
 }
 
 // ChaseCardActivity holds line items from the Chase Card Activity Report file
@@ -23,8 +23,8 @@ type ChaseCardActivity struct {
 	Memo            string      `csv:"Memo"`
 }
 
-// ToCardActivitiyEntity converts to an CardActivity entity
-func (m *ChaseCardActivity) ToCardActivitiyEntity(card *entities.Card) *entities.CardActivity {
+// ToCardActivityEntity converts to an CardActivity entity
+func (m *ChaseCardActivity) ToCardActivityEntity(card *entities.Card) *entities.CardActivity {
 	return &entities.CardActivity{
 		CardUUID:        card.UUID,
 		TransactionDate: m.TransactionDate.Time,
@@ -36,8 +36,8 @@ func (m *ChaseCardActivity) ToCardActivitiyEntity(card *entities.Card) *entities
 	}
 }
 
-// ToCardActivitiyUniqueMatcher converts to an CardActivity entity matcher
-func (m *ChaseCardActivity) ToCardActivitiyUniqueMatcher(card *entities.Card) *entities.CardActivity {
+// ToCardActivityUniqueMatcher converts to an CardActivity entity matcher
+func (m *ChaseCardActivity) ToCardActivityUniqueMatcher(card *entities.Card) *entities.CardActivity {
 	return &entities.CardActivity{
 		CardUUID:        card.UUID,
 		TransactionDate: m.TransactionDate.Time,
@@ -58,8 +58,8 @@ type BofACardActivity struct {
 	Amount          MoneyAmount
 }
 
-// ToCardActivitiyEntity converts to an CardActivity entity
-func (m *BofACardActivity) ToCardActivitiyEntity(card *entities.Card) *entities.CardActivity {
+// ToCardActivityEntity converts to an CardActivity entity
+func (m *BofACardActivity) ToCardActivityEntity(card *entities.Card) *entities.CardActivity {
 	return &entities.CardActivity{
 		CardUUID:        card.UUID,
 		TransactionDate: m.TransactionDate.Time,
@@ -70,7 +70,7 @@ func (m *BofACardActivity) ToCardActivitiyEntity(card *entities.Card) *entities.
 	}
 }
 
-// ToCardActivitiyUniqueMatcher  converts to an CardActivity entity macher
-func (m *BofACardActivity) ToCardActivitiyUniqueMatcher(card *entities.Card) *entities.CardActivity {
-	return m.ToCardActivitiyEntity(card)
+// ToCardActivityUniqueMatcher  converts to an CardActivity entity macher
+func (m *BofACardActivity) ToCardActivityUniqueMatcher(card *entities.Card) *entities.CardActivity {
+	return m.ToCardActivityEntity(card)
 }

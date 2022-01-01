@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS expense_links (
   card_activity_uuid     UUID NOT NULL REFERENCES card_activities(uuid),
   splitwise_expense_uuid UUID NOT NULL REFERENCES splitwise_expenses(uuid),
 
-  CONSTRAINT fk_card_activitiy_splitwise_expense
+  CONSTRAINT fk_card_activity_splitwise_expense
     PRIMARY KEY(card_activity_uuid, splitwise_expense_uuid)
 );
 
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS account_activity_links (
   account_activity_uuid  UUID NOT NULL REFERENCES account_activities(uuid),
   splitwise_expense_uuid UUID NOT NULL REFERENCES splitwise_expenses(uuid),
 
-  CONSTRAINT fk_account_activitiy_splitwise_expense
+  CONSTRAINT fk_account_activity_splitwise_expense
     PRIMARY KEY(account_activity_uuid, splitwise_expense_uuid)
 );
 

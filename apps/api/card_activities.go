@@ -369,7 +369,7 @@ func (m *App) UploadCardActivities(w ResponseWriter, r *Request) WriterResponse 
 	newCardActivities := make([]*entities.CardActivity, len(cardActivities))
 	success := helpers.NewTransaction(m.db, func(tx *gorm.DB) helpers.TransactionAction {
 		for i, cardActivity := range cardActivities {
-			search := cardActivity.ToCardActivitiyUniqueMatcher(&card)
+			search := cardActivity.ToCardActivityUniqueMatcher(&card)
 			exists, err := helpers.RowExists(tx, &entities.CardActivity{}, search)
 			if err != nil {
 				w.SendUnexpectedError(err)
@@ -379,7 +379,7 @@ func (m *App) UploadCardActivities(w ResponseWriter, r *Request) WriterResponse 
 				w.SendError("Duplicate activity found", http.StatusConflict)
 				return helpers.TransactionActionRollback
 			}
-			newCardActivities[i] = cardActivity.ToCardActivitiyEntity(&card)
+			newCardActivities[i] = cardActivity.ToCardActivityEntity(&card)
 		}
 		return helpers.TransactionActionCommit
 	})
@@ -438,7 +438,7 @@ func (m *App) getAllCardActivitiesForSplitwiseExpense(
 	return allCardActivities, nil
 }
 
-// LinkCardActivityToSplitwiseExpense links a card activitiy to a splitwise expense
+// LinkCardActivityToSplitwiseExpense links a card activity to a splitwise expense
 func (m *App) LinkCardActivityToSplitwiseExpense(w ResponseWriter, r *Request) WriterResponse {
 	err := m.db.Exec(`
 			INSERT INTO expense_links (
@@ -457,7 +457,7 @@ func (m *App) LinkCardActivityToSplitwiseExpense(w ResponseWriter, r *Request) W
 	return w.SendSimpleMessage("success")
 }
 
-// UnLinkCardActivityToSplitwiseExpense links a card activitiy to a splitwise expense
+// UnLinkCardActivityToSplitwiseExpense links a card activity to a splitwise expense
 func (m *App) UnLinkCardActivityToSplitwiseExpense(w ResponseWriter, r *Request) WriterResponse {
 	err := m.db.Exec(`
 			DELETE FROM
