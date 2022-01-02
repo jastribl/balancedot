@@ -43,15 +43,14 @@ const AccountActivitiesTable = ({ initialSortColumn, ...props }) => {
             },
             'card_activities_count': (data) => {
                 const cardActivities = data['card_activities']
-                // todo: check this adding here
                 const num = cardActivities?.length
                 if (num > 0) {
                     const sum = cardActivities
-                        .map(d => d.amount_paid)
+                        .map(d => d.amount)
                         .reduce((a, b) => a + b, 0)
                         .toFixed(2)
                     return <div style={{
-                        color: (Math.abs(Math.abs(sum) - Math.abs(data['amount'])) < 0.03 ? 'green' : 'red')
+                        color: (Math.abs(Math.abs(sum) - Math.abs(data['amount'])) === 0.00 ? 'green' : 'red')
                     }}>{`${num} (${sum})`}</div>
                 } else if (num === undefined) {
                     return 'Not loaded...'

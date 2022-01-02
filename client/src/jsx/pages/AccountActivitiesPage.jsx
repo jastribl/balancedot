@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-import { postForm } from '../../utils/api'
+import { postForm, postJSON } from '../../utils/api'
 import Form from '../common/Form'
 import LoaderComponent from '../common/LoaderComponent'
 import Modal from '../common/Modal'
@@ -12,8 +12,9 @@ const AccountActivitiesPage = ({ match }) => {
     const [account, setAccount] = useState(null)
     const [modalVisible, setShowModal] = useState(false)
     const [uploading, setUploading] = useState(false)
+    const [isAutoLinking, setIsAutoLinking] = useState(false)
 
-    const showModal = () => { setShowModal(true) }
+    const showUploadModal = () => { setShowModal(true) }
     const hideModal = () => { setShowModal(false) }
 
     const handleActivityUpload = (activityData) => {
@@ -29,13 +30,21 @@ const AccountActivitiesPage = ({ match }) => {
             .finally(() => setUploading(false))
     }
 
+    const handleAutoLinkCards = () => {
+        setIsAutoLinking(true)
+        return postJSON(`/api/accounts/${accountUUID}/auto_link_with_card_activities`)
+            .catch(e => setErrorMessage(e.message))
+            .finally(() => setIsAutoLinking(false))
+    }
     return (
         <div>
             <h1>Account Activities for {account ? (`${account.last_four} (${account.description})`) : null}</h1>
-            <input type='button' onClick={showModal} value='Upload Activities' style={{ marginBottom: 25 + 'px' }} />
+            <input type='button' onClick={showUploadModal} value='Upload Activities' style={{ marginBottom: 25 + 'px' }} />
+            <br />
+            <input type='button' onClick={handleAutoLinkCards} value='Auto Link with Card Activities' style={{ marginBottom: 25 + 'px' }} />
             <LoaderComponent
                 path={`/api/accounts/${accountUUID}`}
-                parentLoading={uploading}
+                parentLoading={uploading || isAutoLinking}
                 setData={(account) => setAccount(account)}
             />
             <AccountActivitiesTable data={account?.activities ?? []} />

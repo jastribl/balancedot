@@ -110,6 +110,10 @@ func main() {
 		api.Handler(apiApp.UploadAccountActivities),
 	).Methods("POST")
 	mainRouter.Handle(
+		"/api/accounts/{accountUUID}/auto_link_with_card_activities",
+		api.Handler(apiApp.AutoLinkAccountToCardActivities),
+	).Methods("POST")
+	mainRouter.Handle(
 		"/api/account_activities/{accountActivityUUID}",
 		api.Handler(apiApp.GetAccountActivityByUUID),
 	).Methods("GET")
