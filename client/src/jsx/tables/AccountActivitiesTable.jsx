@@ -18,6 +18,7 @@ const AccountActivitiesTable = ({ initialSortColumn, ...props }) => {
             'amount',
             'type',
             'splitwise_expense_count',
+            'card_activities_count',
         ]}
         customRenders={{
             'uuid': (data) =>
@@ -40,8 +41,25 @@ const AccountActivitiesTable = ({ initialSortColumn, ...props }) => {
                 }
                 return ''
             },
+            'card_activities_count': (data) => {
+                const cardActivities = data['card_activities']
+                const num = cardActivities?.length
+                if (num > 0) {
+                    const sum = cardActivities
+                        .map(d => d.amount)
+                        .reduce((a, b) => a + b, 0)
+                        .toFixed(2)
+                    return <div style={{
+                        color: (Math.abs(Math.abs(sum) - Math.abs(data['amount'])) === 0.00 ? 'green' : 'red')
+                    }}>{`${num} (${sum})`}</div>
+                } else if (num === undefined) {
+                    return 'Not loaded...'
+                }
+                return ''
+            },
         }}
         initialSortColumn={initialSortColumn}
+        initialSortInverse
         customSortComparators={{
             'posting_date': dateComparator
         }}

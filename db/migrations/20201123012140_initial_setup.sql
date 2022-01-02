@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS expense_links (
   card_activity_uuid     UUID NOT NULL REFERENCES card_activities(uuid),
   splitwise_expense_uuid UUID NOT NULL REFERENCES splitwise_expenses(uuid),
 
-  CONSTRAINT fk_card_activitiy_splitwise_expense
+  CONSTRAINT fk_card_activity_splitwise_expense
     PRIMARY KEY(card_activity_uuid, splitwise_expense_uuid)
 );
 
@@ -82,8 +82,24 @@ CREATE TABLE IF NOT EXISTS account_activity_links (
   account_activity_uuid  UUID NOT NULL REFERENCES account_activities(uuid),
   splitwise_expense_uuid UUID NOT NULL REFERENCES splitwise_expenses(uuid),
 
-  CONSTRAINT fk_account_activitiy_splitwise_expense
+  CONSTRAINT fk_account_activity_splitwise_expense
     PRIMARY KEY(account_activity_uuid, splitwise_expense_uuid)
+);
+
+CREATE TABLE IF NOT EXISTS splitwise_links (
+  splitwise_expense_uuid UUID NOT NULL REFERENCES splitwise_expenses(uuid),
+  linked_splitwise_expense_uuid UUID NOT NULL REFERENCES splitwise_expenses(uuid),
+
+  CONSTRAINT fk_splitwise_expense_splitwise_expense
+    PRIMARY KEY(splitwise_expense_uuid, linked_splitwise_expense_uuid)
+);
+
+CREATE TABLE IF NOT EXISTS account_card_links (
+  card_activity_uuid     UUID NOT NULL REFERENCES card_activities(uuid),
+  account_activity_uuid  UUID NOT NULL REFERENCES account_activities(uuid),
+
+  CONSTRAINT fk_card_activity_account_activity
+    PRIMARY KEY(card_activity_uuid, account_activity_uuid)
 );
 
 -- Example data
@@ -94,6 +110,7 @@ INSERT INTO cards (last_four, description) VALUES (9307, 'Chase Sapphire Reserve
 
 -- +goose Down
 -- SQL in this section is executed when the migration is rolled back.
+DROP TABLE IF EXISTS splitwise_links;
 DROP TABLE IF EXISTS account_activity_links;
 DROP TABLE IF EXISTS expense_links;
 DROP TABLE IF EXISTS splitwise_expenses;

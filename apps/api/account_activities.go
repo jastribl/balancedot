@@ -2,7 +2,10 @@ package api
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
+	"regexp"
+	"strings"
 	"time"
 
 	"gihub.com/jastribl/balancedot/chase/models"
@@ -18,6 +21,7 @@ func (m *App) GetAccountActivityByUUID(w ResponseWriter, r *Request) WriterRespo
 		w, r,
 		m.db.
 			Preload("Account").
+			Preload("CardActivites").
 			Preload("SplitwiseExpenses.CardActivities").
 			Preload("SplitwiseExpenses.AccountActivities"),
 		&entities.AccountActivity{},
@@ -76,7 +80,7 @@ func (m *App) UploadAccountActivities(w ResponseWriter, r *Request) WriterRespon
 	newAccountActivities := make([]*entities.AccountActivity, len(accountActivities))
 	success := helpers.NewTransaction(m.db, func(tx *gorm.DB) helpers.TransactionAction {
 		for i, accountActivity := range accountActivities {
-			newAccountActivity := accountActivity.ToAccountActivitiyEntity(&account)
+			newAccountActivity := accountActivity.ToAccountActivityEntity(&account)
 			exists, err := helpers.RowExists(tx, &entities.AccountActivity{}, newAccountActivity)
 			if err != nil {
 				w.SendUnexpectedError(err)
@@ -101,6 +105,158 @@ func (m *App) UploadAccountActivities(w ResponseWriter, r *Request) WriterRespon
 	}
 
 	return WriterResponseSuccess
+}
+
+func (m *App) AutoLinkAccountToCardActivities(w ResponseWriter, r *Request) WriterResponse {
+	var account entities.Account
+	err := repos.NewGenericRepo(
+		m.db.Preload("Activities.CardActivites"),
+	).GetByUUID(&account, r.GetParams()["accountUUID"])
+	if err != nil {
+		return w.SendUnexpectedError(err)
+	}
+	var cards []*entities.Card
+	if m.db.Preload("Activities").Find(&cards).Error != nil {
+		return w.SendUnexpectedError(err)
+	}
+	bofACards, chaseCards := []*entities.Card{}, []*entities.Card{}
+	last4ToCard := map[string]*entities.Card{}
+	for _, card := range cards {
+		last4ToCard[card.LastFour] = card
+		switch card.BankName {
+		case entities.BofABankName:
+			bofACards = append(bofACards, card)
+		case entities.ChaseBankName:
+			chaseCards = append(chaseCards, card)
+		default:
+			log.Fatal("Found card with unexpected bank name")
+		}
+	}
+
+	if account.BankName == entities.ChaseBankName {
+		matcher1 := regexp.MustCompile(`Payment to Chase card ending in [0-9]{4}`)
+	ACCOUNT_ACTIVITY_LOOP1:
+		for _, accountActivity := range account.Activities {
+			if len(accountActivity.CardActivites) == 1 {
+				continue
+			}
+			accountActivityDescription := accountActivity.Description
+			if strings.Contains(accountActivityDescription, "Payment to Chase card ending in") {
+				// Payment from Chase account to Chase card
+				res := matcher1.FindString(accountActivityDescription)
+				if card, ok := last4ToCard[res[len(res)-4:]]; ok {
+					_, err := m.linkChaseAccountActivityToChaseCard(&accountActivity, card)
+					if err != nil {
+						return w.SendUnexpectedError(err)
+					}
+					continue ACCOUNT_ACTIVITY_LOOP1
+				}
+			} else if strings.Contains(accountActivityDescription, "CHASE CREDIT CRD EPAY ONUS") {
+				// Payment from Chase account to Chase card (special case)
+				for _, card := range chaseCards {
+					linked, err := m.linkChaseAccountActivityToChaseCard(&accountActivity, card)
+					if err != nil {
+						return w.SendUnexpectedError(err)
+					}
+					if linked {
+						continue ACCOUNT_ACTIVITY_LOOP1
+					}
+				}
+			}
+		}
+	} else if account.BankName == entities.BofABankName {
+		matcher2 := regexp.MustCompile(`Online Banking payment to CRD [0-9]{4}`)
+	ACCOUNT_ACTIVITY_LOOP2:
+		for _, accountActivity := range account.Activities {
+			if len(accountActivity.CardActivites) == 1 {
+				continue
+			}
+			accountActivityDescription := accountActivity.Description
+			if strings.Contains(accountActivityDescription, "Online Banking payment to CRD") {
+				// Payment from BofA account to Bofa Card
+				res := matcher2.FindString(accountActivityDescription)
+				if card, ok := last4ToCard[res[len(res)-4:]]; ok {
+					_, err := m.linkBofAAccountActivityToBofaCard(&accountActivity, card)
+					if err != nil {
+						return w.SendUnexpectedError(err)
+					}
+					continue ACCOUNT_ACTIVITY_LOOP2
+				}
+			} else if strings.Contains(accountActivityDescription, "CHASE CREDIT CRD DES:EPAY") {
+				// Payment from BofA account to Chase Card
+				for _, card := range chaseCards {
+					linked, err := m.linkBofAAccountActivityToChaseCard(&accountActivity, card)
+					if err != nil {
+						return w.SendUnexpectedError(err)
+					}
+					if linked {
+						continue ACCOUNT_ACTIVITY_LOOP2
+					}
+				}
+			}
+		}
+	}
+
+	return w.SendSimpleMessage("success")
+}
+
+func (m *App) linkChaseAccountActivityToChaseCard(
+	accountActivity *entities.AccountActivity,
+	card *entities.Card,
+) (bool, error) {
+	return m.linkAccountActivityToCard("Payment Thank You", 2, accountActivity, card)
+}
+
+func (m *App) linkBofAAccountActivityToChaseCard(
+	accountActivity *entities.AccountActivity,
+	card *entities.Card,
+) (bool, error) {
+	return m.linkAccountActivityToCard("Payment Thank You", 4, accountActivity, card)
+}
+
+func (m *App) linkBofAAccountActivityToBofaCard(
+	accountActivity *entities.AccountActivity,
+	card *entities.Card,
+) (bool, error) {
+	return m.linkAccountActivityToCard("Online payment from CHK", 3, accountActivity, card)
+}
+
+func (m *App) linkAccountActivityToCard(
+	descriptionContains string,
+	maxDateSpread int,
+	accountActivity *entities.AccountActivity,
+	card *entities.Card,
+) (bool, error) {
+	dateRange := 0
+START:
+	for _, cardActivity := range card.Activities {
+		if strings.Contains(cardActivity.Description, descriptionContains) {
+			datDuration := time.Duration(int64(time.Hour * 24 * time.Duration(int64(dateRange))))
+			if cardActivity.Amount == -accountActivity.Amount &&
+				(cardActivity.PostDate.Add(datDuration) == accountActivity.PostingDate ||
+					cardActivity.PostDate.Add(-datDuration) == accountActivity.PostingDate) {
+				err := m.db.Exec(`
+					INSERT INTO account_card_links (
+						card_activity_uuid,
+						account_activity_uuid
+					)
+					VALUES (?, ?)
+					`,
+					cardActivity.UUID,
+					accountActivity.UUID,
+				).Error
+				if err != nil {
+					return false, err
+				}
+				return true, nil
+			}
+		}
+	}
+	if dateRange < maxDateSpread {
+		dateRange += 1
+		goto START
+	}
+	return false, nil
 }
 
 func (m *App) getAllAccountActivitiesForSplitwiseExpense(
@@ -145,7 +301,7 @@ func (m *App) getAllAccountActivitiesForSplitwiseExpense(
 	return allAccountActivities, nil
 }
 
-// LinkAccountActivityToSplitwiseExpense links a account activitiy to a splitwise expense
+// LinkAccountActivityToSplitwiseExpense links a account activity to a splitwise expense
 func (m *App) LinkAccountActivityToSplitwiseExpense(w ResponseWriter, r *Request) WriterResponse {
 	err := m.db.Exec(`
 			INSERT INTO account_activity_links (
@@ -164,11 +320,11 @@ func (m *App) LinkAccountActivityToSplitwiseExpense(w ResponseWriter, r *Request
 	return w.SendSimpleMessage("success")
 }
 
-// UnLinkAccountActivityToSplitwiseExpense links a account activitiy to a splitwise expense
+// UnLinkAccountActivityToSplitwiseExpense links a account activity to a splitwise expense
 func (m *App) UnLinkAccountActivityToSplitwiseExpense(w ResponseWriter, r *Request) WriterResponse {
 	err := m.db.Exec(`
 			DELETE FROM
-			account_activity_links
+				account_activity_links
 			WHERE
 				account_activity_uuid = ? AND
 				splitwise_expense_uuid = ?

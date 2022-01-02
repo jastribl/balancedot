@@ -44,7 +44,7 @@ func (m *App) CreateNewCard(w ResponseWriter, r *Request) WriterResponse {
 func (m *App) GetCardByUUID(w ResponseWriter, r *Request) WriterResponse {
 	return m.genericGetByUUID(
 		w, r,
-		m.db.Preload("Activities.SplitwiseExpenses"),
+		m.db.Preload("Activities.SplitwiseExpenses").Preload("Activities.AccountActivites"),
 		&entities.Card{},
 		r.GetParams()["cardUUID"],
 	)

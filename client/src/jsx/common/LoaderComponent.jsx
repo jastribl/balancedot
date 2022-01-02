@@ -19,6 +19,7 @@ const LoaderComponent = ({
 
     useEffect(() => {
         if (!parentLoading) {
+            // todo: figure out why this is hitting twice
             getWithParamsWithHandling(
                 path,
                 queryParams ?? {},
@@ -38,8 +39,6 @@ const LoaderComponent = ({
         <Spinner visible={loading || parentLoading} />
         <ErrorRow message={errorMessage ?? parentErrorMessage} />
     </div>
-
-
 }
 
 export default LoaderComponent

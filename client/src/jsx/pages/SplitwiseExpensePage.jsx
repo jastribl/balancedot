@@ -32,7 +32,7 @@ const SplitwiseExpensePage = ({ match }) => {
 
     const handleLinking = (entity, action, uuid) =>
         postJSONWithHandling(
-            `/api/${entity}/${uuid}/${action}/${splitwiseExpenseUUID}`,
+            `/api/${entity}/${uuid}/${action}_splitwise/${splitwiseExpenseUUID}`,
             setErrorMessage,
             setLinking,
         )
@@ -139,7 +139,7 @@ const SplitwiseExpensePage = ({ match }) => {
                     />
                 </div>
             </div>
-                or...
+            or...
             <div className='row'>
                 <div className='col-25'>
                     <label>Day Spread</label>

@@ -43,7 +43,6 @@ export function get(path) {
     )
 }
 
-
 export function getWithParamsWithHandling(path, params, setResponse, setErrorMessage, setLoading) {
     setLoading(true)
     const queryParams = Object.keys(params)
