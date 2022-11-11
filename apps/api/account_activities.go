@@ -15,6 +15,15 @@ import (
 	"gorm.io/gorm"
 )
 
+// GetAllAccountActivities gets all Account Activities
+func (m *App) GetAllAccountActivities(w ResponseWriter, r *Request) WriterResponse {
+	return m.genericGetAll(w, r,
+		m.db.Preload("SplitwiseExpenses").Preload("CardActivites"),
+		entities.AccountActivity{},
+		nil,
+	)
+}
+
 // GetAccountActivityByUUID gets a single Account Activity by UUID
 func (m *App) GetAccountActivityByUUID(w ResponseWriter, r *Request) WriterResponse {
 	return m.genericGetByUUID(
@@ -166,6 +175,7 @@ func (m *App) AutoLinkAccountToCardActivities(w ResponseWriter, r *Request) Writ
 		}
 	} else if account.BankName == entities.BofABankName {
 		matcher2 := regexp.MustCompile(`Online Banking payment to CRD [0-9]{4}`)
+		matcher3 := regexp.MustCompile(`Online scheduled payment to CRD [0-9]{4}`)
 	ACCOUNT_ACTIVITY_LOOP2:
 		for _, accountActivity := range account.Activities {
 			if len(accountActivity.CardActivites) == 1 {
@@ -173,8 +183,18 @@ func (m *App) AutoLinkAccountToCardActivities(w ResponseWriter, r *Request) Writ
 			}
 			accountActivityDescription := accountActivity.Description
 			if strings.Contains(accountActivityDescription, "Online Banking payment to CRD") {
-				// Payment from BofA account to Bofa Card
+				// Payment from BofA account to Bofa Card 1
 				res := matcher2.FindString(accountActivityDescription)
+				if card, ok := last4ToCard[res[len(res)-4:]]; ok {
+					_, err := m.linkBofAAccountActivityToBofaCard(&accountActivity, card)
+					if err != nil {
+						return w.SendUnexpectedError(err)
+					}
+					continue ACCOUNT_ACTIVITY_LOOP2
+				}
+			} else if strings.Contains(accountActivityDescription, "Online scheduled payment to CRD") {
+				// Payment from BofA account to Bofa Card 2
+				res := matcher3.FindString(accountActivityDescription)
 				if card, ok := last4ToCard[res[len(res)-4:]]; ok {
 					_, err := m.linkBofAAccountActivityToBofaCard(&accountActivity, card)
 					if err != nil {
@@ -204,25 +224,25 @@ func (m *App) linkChaseAccountActivityToChaseCard(
 	accountActivity *entities.AccountActivity,
 	card *entities.Card,
 ) (bool, error) {
-	return m.linkAccountActivityToCard("Payment Thank You", 2, accountActivity, card)
+	return m.linkAccountActivityToCard([]string{"Payment Thank You"}, 2, accountActivity, card)
 }
 
 func (m *App) linkBofAAccountActivityToChaseCard(
 	accountActivity *entities.AccountActivity,
 	card *entities.Card,
 ) (bool, error) {
-	return m.linkAccountActivityToCard("Payment Thank You", 4, accountActivity, card)
+	return m.linkAccountActivityToCard([]string{"Payment Thank You"}, 4, accountActivity, card)
 }
 
 func (m *App) linkBofAAccountActivityToBofaCard(
 	accountActivity *entities.AccountActivity,
 	card *entities.Card,
 ) (bool, error) {
-	return m.linkAccountActivityToCard("Online payment from CHK", 3, accountActivity, card)
+	return m.linkAccountActivityToCard([]string{"Online payment from CHK", "Online scheduled payment"}, 3, accountActivity, card)
 }
 
 func (m *App) linkAccountActivityToCard(
-	descriptionContains string,
+	descriptionContains []string,
 	maxDateSpread int,
 	accountActivity *entities.AccountActivity,
 	card *entities.Card,
@@ -230,25 +250,31 @@ func (m *App) linkAccountActivityToCard(
 	dateRange := 0
 START:
 	for _, cardActivity := range card.Activities {
-		if strings.Contains(cardActivity.Description, descriptionContains) {
-			datDuration := time.Duration(int64(time.Hour * 24 * time.Duration(int64(dateRange))))
-			if cardActivity.Amount == -accountActivity.Amount &&
-				(cardActivity.PostDate.Add(datDuration) == accountActivity.PostingDate ||
-					cardActivity.PostDate.Add(-datDuration) == accountActivity.PostingDate) {
-				err := m.db.Exec(`
+		if len(cardActivity.AccountActivites) == 1 {
+			continue
+		}
+		for _, strContains := range descriptionContains {
+			if strings.Contains(cardActivity.Description, strContains) {
+				datDuration := time.Duration(int64(time.Hour * 24 * time.Duration(int64(dateRange))))
+				if cardActivity.Amount == -accountActivity.Amount &&
+					(cardActivity.PostDate.Add(datDuration) == accountActivity.PostingDate ||
+						cardActivity.PostDate.Add(-datDuration) == accountActivity.PostingDate) {
+					err := m.db.Exec(`
 					INSERT INTO account_card_links (
 						card_activity_uuid,
 						account_activity_uuid
 					)
 					VALUES (?, ?)
 					`,
-					cardActivity.UUID,
-					accountActivity.UUID,
-				).Error
-				if err != nil {
-					return false, err
+						cardActivity.UUID,
+						accountActivity.UUID,
+					).Error
+					cardActivity.AccountActivites = append(cardActivity.AccountActivites, accountActivity)
+					if err != nil {
+						return false, err
+					}
+					return true, nil
 				}
-				return true, nil
 			}
 		}
 	}

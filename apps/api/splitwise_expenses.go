@@ -167,7 +167,7 @@ func (m *App) GetRawSplitwiseExpense(w ResponseWriter, r *Request) WriterRespons
 func (m *App) GetAllSplitwiseExpenses(w ResponseWriter, r *Request) WriterResponse {
 	return m.genericGetAll(
 		w, r,
-		m.db.Preload("CardActivities").Preload("AccountActivities"),
+		m.db.Preload("CardActivities").Preload("AccountActivities").Preload("LinkedSplitwiseExpenses"),
 		entities.SplitwiseExpense{},
 		&repos.GetAllOfOptions{
 			Where: "splitwise_deleted_at IS NULL", // Don't load deleted expense

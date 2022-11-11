@@ -19,6 +19,15 @@ import (
 	"gorm.io/gorm"
 )
 
+// GetAllCardActivities gets all Activities
+func (m *App) GetAllCardActivities(w ResponseWriter, r *Request) WriterResponse {
+	return m.genericGetAll(w, r,
+		m.db.Preload("SplitwiseExpenses").Preload("AccountActivites"),
+		entities.CardActivity{},
+		nil,
+	)
+}
+
 // GetCardActivityByUUID gets a single Card Activity by UUID
 func (m *App) GetCardActivityByUUID(w ResponseWriter, r *Request) WriterResponse {
 	return m.genericGetByUUID(

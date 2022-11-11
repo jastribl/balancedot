@@ -10,6 +10,7 @@ import CardsPage from './pages/CardsPage'
 import ErrorPage from './pages/ErrorPage'
 import HomePage from './pages/HomePage'
 import OauthCallbackPage from './pages/OauthCallbackPage'
+import SpendingPage from './pages/SpendingPage'
 import SplitwiseExpensePage from './pages/SplitwiseExpensePage'
 import SplitwiseExpensesPage from './pages/SplitwiseExpensesPage'
 
@@ -22,6 +23,7 @@ const App = () => (
                     <NavLink className='nav-item' activeClassName='active-nav-item' to='/accounts'>Accounts</NavLink>
                     <NavLink className='nav-item' activeClassName='active-nav-item' to='/cards'>Cards</NavLink>
                     <NavLink className='nav-item' activeClassName='active-nav-item' to='/splitwise_expenses'>Splitwise Expenses</NavLink>
+                    <NavLink className='nav-item' activeClassName='active-nav-item' to='/spending'>Spending</NavLink>
                 </div>
                 <Switch>
                     <Route path='/' component={HomePage} exact />
@@ -35,6 +37,7 @@ const App = () => (
                     <Route path='/splitwise_expenses/unlinked' component={SplitwiseExpensesPage} exact />
                     <Route path='/splitwise_expenses/:splitwiseExpenseUUID' component={SplitwiseExpensePage} exact />
                     <Route path='/splitwise_expenses/:splitwiseExpenseUUID/edit' component={SplitwiseExpensePage} exact />
+                    <Route path='/spending' component={SpendingPage} exact />
                     <Route path='/oauth_callback' component={OauthCallbackPage} />
                     <Route component={ErrorPage} />
                 </Switch>

@@ -26,6 +26,9 @@ const AccountActivitiesTable = ({ initialSortColumn, ...props }) => {
             'posting_date': (data) => formatAsDate(data['posting_date']),
             'amount': (data) => formatAsMoney(data['amount']),
             'splitwise_expense_count': (data) => {
+                console.log(data)
+                // TODO: figure out when to use amount_paid vs amount
+                // example broken page: http://localhost:8080/accounts/0d28297c-43e7-47a0-ac0b-0a9625c705c3/activities/c820fa57-3002-462b-b41c-515d80d03d87
                 const splitwiseExpenses = data['splitwise_expenses']
                 const num = splitwiseExpenses?.length
                 if (num > 0) {
